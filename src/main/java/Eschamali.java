@@ -21,7 +21,6 @@ public class Eschamali {
             System.out.println("Logged in!");
             client.getDispatcher().registerListener(new Listener());
             System.out.println("Listener added.");
-            System.out.println("Ready.");
         } catch (DiscordException e) {
             e.printStackTrace();
         }
