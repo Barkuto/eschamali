@@ -31,7 +31,7 @@ public class Eschamali {
         e.run();
         Thread t = new Thread("Pinger"){
             public void run(){
-                System.out.println(ping);
+                System.out.println("ping");
                 try {
                     this.sleep(10000);
                 } catch (InterruptedException e1) {
