@@ -1,0 +1,1 @@
+web: java -jar Discord4j-2.5.2-shaded.jar MjE0NDQyMTExNzIwNzUxMTA0.CpJ29A.QSwROIbc0VMXjQoboqs2atNgNAs
