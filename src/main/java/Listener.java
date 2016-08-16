@@ -16,6 +16,19 @@ public class Listener {
     public void onReady(ReadyEvent event){
         System.out.println("Ready!");
         Eschamali.client.changeStatus(Status.game("with REM rates"));
+        Thread t = new Thread("Pinger") {
+            public void run() {
+                while (true) {
+                    System.out.println("ping");
+                    try {
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }
+        };
+        t.start();
     }
 
 //    @EventSubscriber
