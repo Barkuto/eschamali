@@ -5,7 +5,7 @@ import sx.blah.discord.modules.IModule;
  * Created by Iggie on 8/14/2016.
  */
 public class RolesModule implements IModule {
-    static IDiscordClient client;
+    public static IDiscordClient client;
 
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {

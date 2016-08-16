@@ -7,8 +7,8 @@ import sx.blah.discord.util.RateLimitException;
  * Created by Iggie on 8/14/2016.
  */
 public class Eschamali {
-    String clientID = "214442111720751104";
-    static IDiscordClient client;
+    private String clientID = "214442111720751104";
+    public static IDiscordClient client;
 
     public Eschamali(){
         //Stuff
@@ -29,5 +29,16 @@ public class Eschamali {
     public static void main(String[] args){
         Eschamali e = new Eschamali();
         e.run();
+        Thread t = new Thread("Pinger"){
+            public void run(){
+                System.out.println(ping);
+                try {
+                    this.sleep(10000);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        };
+        t.start();
     }
 }
