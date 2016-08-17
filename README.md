@@ -1,0 +1,2 @@
+# Eschamali
+A Discord Bot
