@@ -23,7 +23,7 @@
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.1.7" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.1.7" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.20" level="project" />
-    <orderEntry type="library" name="Maven: com.github.austinv11:Discord4J:dev-2.5.3-g1ded4b5-48" level="project" />
+    <orderEntry type="library" name="Maven: com.github.austinv11:Discord4J:dev-2.5.3-g8fe9188-49" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.5.2" level="project" />
     <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.2" level="project" />
