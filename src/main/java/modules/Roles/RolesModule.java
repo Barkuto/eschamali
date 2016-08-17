@@ -1,4 +1,4 @@
-package modules;
+package modules.Roles;
 
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;

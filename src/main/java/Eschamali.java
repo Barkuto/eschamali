@@ -1,4 +1,4 @@
-import modules.RolesModule;
+import modules.Roles.RolesModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;

@@ -1,4 +1,4 @@
-package modules;
+package modules.Roles;
 
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
