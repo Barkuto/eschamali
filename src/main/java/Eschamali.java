@@ -16,11 +16,8 @@ public class Eschamali {
 
     public void run() {
         try {
-            System.out.println("Logging in...");
             client = new ClientBuilder().withToken("MjE0NDQyMTExNzIwNzUxMTA0.CpJCxA.AJ98RRi5B5VyP7lNjTBmR4ynPO0").login();
-            System.out.println("Logged in!");
             client.getDispatcher().registerListener(new Listener());
-            System.out.println("Listener added.");
 
             RolesModule rm = new RolesModule();
             rm.enable(client);

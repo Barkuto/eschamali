@@ -1,15 +1,19 @@
 package modules.Roles;
 
 import modules.BufferedMessage.BufferedMessage;
+import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IRole;
 import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.Permissions;
 import sx.blah.discord.util.*;
 
+import java.awt.*;
 import java.io.*;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Scanner;
 
@@ -128,7 +132,14 @@ public class RolesListener {
                 String output = "`A list of your roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
                 for (IRole r : userRoles) {
                     System.out.println(r.getName());
-                    output += "\n-" + r.getName().replace("@", "");
+                    output += "\n•" + r.getName().replace("@", "");
+                }
+                BufferedMessage.sendMessage(RolesModule.client, event, output);
+            } else if (args[0].equalsIgnoreCase("roles")) {
+                String output = "`List of roles:`";
+                List<IRole> roles = guild.getRoles();
+                for (IRole r : roles) {
+                    output += "\n•" + r.getName().replace("@", "");
                 }
                 BufferedMessage.sendMessage(RolesModule.client, event, output);
             }
