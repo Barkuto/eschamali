@@ -1,1 +1,1 @@
-web: mvn exec:java -Dexec.mainClass="Eschamali"
+web: java -jar Eschamali.jar
