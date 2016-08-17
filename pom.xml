@@ -12,7 +12,6 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
-
         </repository>
     </repositories>
 
@@ -34,17 +33,24 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.4</version>
-        <executions>
-            <execution>
-                <id>copy-dependencies</id>
-                <phase>package</phase>
-                <goals><goal>copy-dependencies</goal></goals>
-            </execution>
-        </executions>
-    </plugin>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>Eschamali</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

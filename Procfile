@@ -1,1 +1,1 @@
-web: java -cp target/classes:target/dependency/* Eschamali
+web: mvn exec:java -Dexec.mainClass="Eschamali"
