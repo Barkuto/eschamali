@@ -1,7 +1,7 @@
+import modules.RolesModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.RateLimitException;
 
 /**
  * Created by Iggie on 8/14/2016.

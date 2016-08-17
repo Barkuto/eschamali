@@ -1,3 +1,5 @@
+package modules;
+
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;
 

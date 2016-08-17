@@ -1,16 +1,13 @@
+package modules;
+
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.impl.obj.Guild;
-import sx.blah.discord.handle.impl.obj.Message;
-import sx.blah.discord.handle.impl.obj.Role;
-import sx.blah.discord.handle.impl.obj.User;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IRole;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.*;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
@@ -29,6 +26,8 @@ public class RolesListener {
             String[] args = message.split(" ");
             args[0] = args[0].substring(1, args[0].length());
             if (args[0].equalsIgnoreCase("ar")) {//Add role to person
+
+            } else if (args[0].equalsIgnoreCase("rr")) {//Remove role from person
 
             } else if (args[0].equalsIgnoreCase("iam")) {//Add role to self, if self assignable
                 if (args.length > 1) {
