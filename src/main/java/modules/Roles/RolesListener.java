@@ -1,5 +1,6 @@
 package modules.Roles;
 
+import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IGuild;
@@ -42,19 +43,9 @@ public class RolesListener {
                             if (roleISA(guild.getID(), role)) {
                                 try {
                                     event.getMessage().getAuthor().addRole(r);
-                                    String msg = "You now the have the " + r.getName() + " role.";
-                                    RequestBuffer.request(() -> {
-                                        try {
-                                            new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent(msg).build();
-                                        } catch (RateLimitException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
-                                            e.printStackTrace();
-                                        } catch (MissingPermissionsException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + r.getName() + " role.");
                                 } catch (MissingPermissionsException e) {
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "Your roles are too high to add that role to yourself.");
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
                                     e.printStackTrace();
@@ -62,17 +53,7 @@ public class RolesListener {
                                     e.printStackTrace();
                                 }
                             } else {
-                                RequestBuffer.request(() -> {
-                                    try {
-                                        new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent("That role is not self assignable.").build();
-                                    } catch (RateLimitException e) {
-                                        e.printStackTrace();
-                                    } catch (DiscordException e) {
-                                        e.printStackTrace();
-                                    } catch (MissingPermissionsException e) {
-                                        e.printStackTrace();
-                                    }
-                                });
+                                BufferedMessage.sendMessage(RolesModule.client, event, "That role is not self assignable.");
                             }
                             return;
                         }
@@ -92,18 +73,7 @@ public class RolesListener {
                             if (roleISA(guild.getID(), role)) {
                                 try {
                                     event.getMessage().getAuthor().removeRole(r);
-                                    String msg = "Removed " + r.getName() + " role from you.";
-                                    RequestBuffer.request(() -> {
-                                        try {
-                                            new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent(msg).build();
-                                        } catch (RateLimitException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
-                                            e.printStackTrace();
-                                        } catch (MissingPermissionsException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + r.getName() + " role from you.");
                                 } catch (MissingPermissionsException e) {
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
@@ -112,17 +82,7 @@ public class RolesListener {
                                     e.printStackTrace();
                                 }
                             } else {
-                                RequestBuffer.request(() -> {
-                                    try {
-                                        new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent("That role is not self assignable.").build();
-                                    } catch (RateLimitException e) {
-                                        e.printStackTrace();
-                                    } catch (DiscordException e) {
-                                        e.printStackTrace();
-                                    } catch (MissingPermissionsException e) {
-                                        e.printStackTrace();
-                                    }
-                                });
+                                BufferedMessage.sendMessage(RolesModule.client, event, "That role is not self assignable.");
                             }
                             return;
                         }
@@ -146,17 +106,7 @@ public class RolesListener {
                         }
                     }
                     if (irole == null) {
-                        RequestBuffer.request(() -> {
-                            try {
-                                new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent("That is not a role").build();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            }
-                        });
+                        BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role");
                     } else {
                         String output = "`Here is a list of people in the role " + '"' + irole.getName() + '"' + ":`\n";
                         List<IUser> users = event.getMessage().getGuild().getUsers();
@@ -169,19 +119,7 @@ public class RolesListener {
                             }
                         }
                         output = output.substring(0, output.length() - 2);
-
-                        String finalOutput = output;
-                        RequestBuffer.request(() -> {
-                            try {
-                                new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent(finalOutput).build();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            }
-                        });
+                        BufferedMessage.sendMessage(RolesModule.client, event, output);
                     }
                 }
             } else if (args[0].equalsIgnoreCase("myroles")) {
@@ -192,18 +130,7 @@ public class RolesListener {
                     System.out.println(r.getName());
                     output += "\n-" + r.getName().replace("@", "");
                 }
-                String finalOutput = output;
-                RequestBuffer.request(() -> {
-                    try {
-                        new MessageBuilder(RolesModule.client).withChannel(event.getMessage().getChannel()).withContent(finalOutput).build();
-                    } catch (RateLimitException e) {
-                        e.printStackTrace();
-                    } catch (DiscordException e) {
-                        e.printStackTrace();
-                    } catch (MissingPermissionsException e) {
-                        e.printStackTrace();
-                    }
-                });
+                BufferedMessage.sendMessage(RolesModule.client, event, output);
             }
         }
     }
