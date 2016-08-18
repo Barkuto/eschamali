@@ -13,12 +13,13 @@ import sx.blah.discord.util.*;
 
 import java.awt.*;
 import java.nio.Buffer;
-import java.util.EnumSet;
+import java.util.*;
 
 /**
  * Created by Iggie on 8/14/2016.
  */
 public class Listener {
+    private boolean ayy = false;
 
     @EventSubscriber
     public void onReady(ReadyEvent event) {
@@ -50,11 +51,17 @@ public class Listener {
             BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
         } else if (msg.equalsIgnoreCase("!maker")) {
             BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for the PAD w/ MZeus server. Down with A.LB!");
-        } else {
-            if (msg.equalsIgnoreCase("!ayy")) {
-                //enable/disable ayy module
+        } else if (msg.equalsIgnoreCase("!ayy")) {
+            java.util.List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
+            for (IRole r : roles) {
+                if (r.getPermissions().contains(Permissions.ADMINISTRATOR) || r.getPermissions().contains(Permissions.MANAGE_SERVER)) {
+                    ayy = !ayy;
+                }
             }
+        } else if (msg.equalsIgnoreCase("ayy") && ayy) {
+            BufferedMessage.sendMessage(Eschamali.client, event, "lmao");
         }
+
 
     }
 }

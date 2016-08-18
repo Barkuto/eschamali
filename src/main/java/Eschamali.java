@@ -1,3 +1,4 @@
+import modules.Games.GamesModule;
 import modules.Roles.RolesModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -23,8 +24,14 @@ public class Eschamali {
             client = new ClientBuilder().withToken("MjE0NDQyMTExNzIwNzUxMTA0.CpJCxA.AJ98RRi5B5VyP7lNjTBmR4ynPO0").login();
             client.getDispatcher().registerListener(new Listener());
 
-            RolesModule rm = new RolesModule();
-            rm.enable(client);
+            modules = new ArrayList<IModule>();
+            RolesModule roles = new RolesModule();
+            GamesModule games = new GamesModule();
+            modules.add(roles);
+            modules.add(games);
+
+            roles.enable(client);
+            games.enable(client);
 
         } catch (DiscordException e) {
             e.printStackTrace();
