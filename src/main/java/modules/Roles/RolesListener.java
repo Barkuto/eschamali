@@ -192,11 +192,10 @@ public class RolesListener {
                 IUser user = guild.getUserByID(args[1].substring(1, args[1].length() - 1).replace("@", ""));
                 if (user != null) {
                     List<IRole> theirRoles = user.getRolesForGuild(guild);
-                    String msg = "`List of roles for **" + user.getName() + "**#" + user.getDiscriminator() + ":`\n";
+                    String msg = "`List of roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
                     for (IRole r : theirRoles) {
-                        msg += r.getName() + ", ";
+                        msg += "\n•" + r.getName().replace("@", "") + "";
                     }
-                    msg = msg.substring(0, msg.length() - 2);
                     BufferedMessage.sendMessage(RolesModule.client, event, msg);
                 } else {
                     BufferedMessage.sendMessage(RolesModule.client, event, "Invalid parameter, please @ the user to see their roles.");
