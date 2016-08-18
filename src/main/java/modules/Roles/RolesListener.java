@@ -154,13 +154,7 @@ public class RolesListener {
                     role = role.trim();
 
                     Collection<IRole> roles = RolesModule.client.getRoles();
-                    IRole irole = null;
-
-                    for (IRole r : roles) {
-                        if (r.getName().equalsIgnoreCase(role)) {
-                            irole = r;
-                        }
-                    }
+                    IRole irole = roleFromGuild(guild, role);
                     if (irole == null) {
                         BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role");
                     } else {
@@ -236,15 +230,7 @@ public class RolesListener {
                     }
                     role = role.trim();
 
-                    IRole theRole = null;
-
-                    List<IRole> roles = guild.getRoles();
-                    for (IRole r : roles) {
-                        if (r.getName().equalsIgnoreCase(role)) {
-                            theRole = r;
-                            break;
-                        }
-                    }
+                    IRole theRole = roleFromGuild(guild, role);
 
                     if (theRole != null) {
                         if (!roleISA(guild.getID(), role)) {
@@ -275,15 +261,7 @@ public class RolesListener {
                     }
                     role = role.trim();
 
-                    IRole theRole = null;
-
-                    List<IRole> roles = guild.getRoles();
-                    for (IRole r : roles) {
-                        if (r.getName().equalsIgnoreCase(role)) {
-                            theRole = r;
-                            break;
-                        }
-                    }
+                    IRole theRole = roleFromGuild(guild, role);
 
                     if (theRole == null) {
                         BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
@@ -294,6 +272,7 @@ public class RolesListener {
                                 try {
                                     Scanner s = new Scanner(f);
                                     ArrayList<IRole> currentRoles = new ArrayList<IRole>();
+                                    List<IRole> roles = guild.getRoles();
                                     while (s.hasNextLine()) {
                                         String line = s.nextLine();
 

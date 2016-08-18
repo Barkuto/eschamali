@@ -1,13 +1,17 @@
 import modules.Roles.RolesModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
+
+import java.util.ArrayList;
 
 /**
  * Created by Iggie on 8/14/2016.
  */
 public class Eschamali {
     private String clientID = "214442111720751104";
+    private ArrayList<IModule> modules;
     public static IDiscordClient client;
 
     public Eschamali() {
