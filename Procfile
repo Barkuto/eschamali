@@ -1,1 +1,1 @@
-java -Dserver.port=$PORT -$JAVA_OPTS -jar Eschamali.jar
+web: java -Dserver.port=$PORT $JAVA_OPTS -jar Eschamali.jar
