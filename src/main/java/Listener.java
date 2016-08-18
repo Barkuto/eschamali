@@ -45,6 +45,16 @@ public class Listener {
 
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
+        String msg = event.getMessage().getContent();
+        if (msg.equalsIgnoreCase("!donate")) {
+            BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
+        } else if (msg.equalsIgnoreCase("!maker")) {
+            BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315");
+        } else {
+            if (msg.equalsIgnoreCase("!ayy")) {
+                //enable/disable ayy module
+            }
+        }
 
     }
 }

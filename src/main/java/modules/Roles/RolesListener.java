@@ -28,11 +28,12 @@ public class RolesListener {
         String message = event.getMessage().getContent();
         if (message.startsWith(prefix)) {
             IGuild guild = event.getMessage().getGuild();
+            IUser author = event.getMessage().getAuthor();
             String[] args = message.split(" ");
             args[0] = args[0].substring(1, args[0].length());
 
             if (args[0].equalsIgnoreCase("ar")) {//Add role to person
-                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
+                if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID)) {
                     String user = args[1];
                     String role = "";
                     for (int i = 2; i < args.length; i++) {
@@ -41,15 +42,7 @@ public class RolesListener {
                     role = role.trim();
 
                     IUser theUser = guild.getUserByID(user.substring(1, user.length() - 1).replace("@", ""));
-                    IRole theRole = null;
-
-                    List<IRole> roles = guild.getRoles();
-                    for (IRole r : roles) {
-                        if (r.getName().equalsIgnoreCase(role)) {
-                            theRole = r;
-                            break;
-                        }
-                    }
+                    IRole theRole = roleFromGuild(guild, role);
 
                     if (theRole != null) {
                         try {
@@ -67,7 +60,7 @@ public class RolesListener {
                     BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                 }
             } else if (args[0].equalsIgnoreCase("rr")) {//Remove role from person
-                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES)) {
+                if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID)) {
                     String user = args[1];
                     String role = "";
                     for (int i = 2; i < args.length; i++) {
@@ -76,15 +69,7 @@ public class RolesListener {
                     role = role.trim();
 
                     IUser theUser = guild.getUserByID(user.substring(1, user.length() - 1).replace("@", ""));
-                    IRole theRole = null;
-
-                    List<IRole> roles = guild.getRoles();
-                    for (IRole r : roles) {
-                        if (r.getName().equalsIgnoreCase(role)) {
-                            theRole = r;
-                            break;
-                        }
-                    }
+                    IRole theRole = roleFromGuild(guild, role);
 
                     if (theRole != null) {
                         try {
@@ -113,7 +98,7 @@ public class RolesListener {
                         if (r.getName().equalsIgnoreCase(role)) {
                             if (roleISA(guild.getID(), role)) {
                                 try {
-                                    event.getMessage().getAuthor().addRole(r);
+                                    author.addRole(r);
                                     BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + r.getName() + " role.");
                                 } catch (MissingPermissionsException e) {
                                     BufferedMessage.sendMessage(RolesModule.client, event, "Your roles are too high to add that role to yourself.");
@@ -235,7 +220,7 @@ public class RolesListener {
                 }
                 BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + msg);
             } else if (args[0].equalsIgnoreCase("asar")) {
-                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES)) {
+                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
                     File f = new File("servers/" + guild.getID() + "/selfroles.txt");
                     if (!f.exists()) {
                         f.getParentFile().mkdirs();
@@ -282,7 +267,7 @@ public class RolesListener {
                 } else {
                     BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                 }
-            } else if (args[0].equalsIgnoreCase("rsar")) {
+            } else if (args[0].equalsIgnoreCase("rsar") || event.getMessage().getAuthor().getID().equals(ownerID)) {
                 if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES)) {
                     String role = "";
                     for (int i = 1; i < args.length; i++) {
@@ -384,5 +369,15 @@ public class RolesListener {
             }
         }
         return false;
+    }
+
+    public IRole roleFromGuild(IGuild guild, String roleName) {
+        List<IRole> roles = guild.getRoles();
+        for (IRole r : roles) {
+            if (r.getName().equalsIgnoreCase(roleName)) {
+                return r;
+            }
+        }
+        return null;
     }
 }
