@@ -43,16 +43,8 @@ public class Listener {
 //        BufferedMessage.sendMessage(Eschamali.client, event, "Hello!");
     }
 
-//    @EventSubscriber
-//    public void onMessage(MessageReceivedEvent event){
-//        try {
-//            new MessageBuilder(Eschamali.client).withChannel(event.getMessage().getChannel()).withContent(event.getMessage().getContent()).build();
-//        } catch (RateLimitException e) {
-//            e.printStackTrace();
-//        } catch (DiscordException e) {
-//            e.printStackTrace();
-//        } catch (MissingPermissionsException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    @EventSubscriber
+    public void onMessage(MessageReceivedEvent event) {
+
+    }
 }

@@ -21,6 +21,7 @@ import java.util.List;
  */
 public class RolesListener {
     private String prefix = ".";
+    private String ownerID = "85844964633747456";
 
     @EventSubscriber
     public void messageReceived(MessageReceivedEvent event) {
@@ -31,7 +32,7 @@ public class RolesListener {
             args[0] = args[0].substring(1, args[0].length());
 
             if (args[0].equalsIgnoreCase("ar")) {//Add role to person
-                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES)) {
+                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
                     String user = args[1];
                     String role = "";
                     for (int i = 2; i < args.length; i++) {
