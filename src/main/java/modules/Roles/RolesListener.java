@@ -175,7 +175,7 @@ public class RolesListener {
             } else if (args[0].equalsIgnoreCase("myroles")) {
                 IUser user = event.getMessage().getAuthor();
                 List<IRole> userRoles = user.getRolesForGuild(guild);
-                String output = "`A list of your roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
+                String output = "`A list of your roles, " + user.getName() + "#" + user.getDiscriminator() + ":`";
                 for (IRole r : userRoles) {
                     System.out.println(r.getName());
                     output += "\n•" + r.getName().replace("@", "");
@@ -188,6 +188,19 @@ public class RolesListener {
                     output += "\n•" + r.getName().replace("@", "");
                 }
                 BufferedMessage.sendMessage(RolesModule.client, event, output);
+            } else if (args[0].equalsIgnoreCase("rolesof")) {
+                IUser user = guild.getUserByID(args[1].substring(1, args[1].length() - 1).replace("@", ""));
+                if (user != null) {
+                    List<IRole> theirRoles = user.getRolesForGuild(guild);
+                    String msg = "`List of roles for **" + user.getName() + "**#" + user.getDiscriminator() + ":`\n";
+                    for (IRole r : theirRoles) {
+                        msg += r.getName() + ", ";
+                    }
+                    msg = msg.substring(0, msg.length() - 2);
+                    BufferedMessage.sendMessage(RolesModule.client, event, msg);
+                } else {
+                    BufferedMessage.sendMessage(RolesModule.client, event, "Invalid parameter, please @ the user to see their roles.");
+                }
             } else if (args[0].equalsIgnoreCase("lsar")) {
                 File f = new File("servers/" + guild.getID() + "/selfroles.txt");
                 int count = 0;
@@ -309,7 +322,9 @@ public class RolesListener {
             } else {
                 BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
             }
+
         }
+
     }
 
 

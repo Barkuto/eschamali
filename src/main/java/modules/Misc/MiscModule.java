@@ -3,13 +3,19 @@ package modules.Misc;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;
 
+import java.util.ArrayList;
+
 /**
  * Created by Iggie on 8/17/2016.
  */
 public class MiscModule implements IModule {
+    static IDiscordClient client;
+
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {
-        return false;
+        MiscModule.client = iDiscordClient;
+        iDiscordClient.getDispatcher().registerListener(new MiscListener());
+        return true;
     }
 
     @Override
@@ -19,21 +25,21 @@ public class MiscModule implements IModule {
 
     @Override
     public String getName() {
-        return null;
+        return "Misc";
     }
 
     @Override
     public String getAuthor() {
-        return null;
+        return "Barkuto";
     }
 
     @Override
     public String getVersion() {
-        return null;
+        return "1.0";
     }
 
     @Override
     public String getMinimumDiscord4JVersion() {
-        return null;
+        return "2.5.3";
     }
 }

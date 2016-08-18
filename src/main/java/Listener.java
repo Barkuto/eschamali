@@ -49,7 +49,7 @@ public class Listener {
         if (msg.equalsIgnoreCase("!donate")) {
             BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
         } else if (msg.equalsIgnoreCase("!maker")) {
-            BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315");
+            BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for the PAD w/ MZeus server. Down with A.LB!");
         } else {
             if (msg.equalsIgnoreCase("!ayy")) {
                 //enable/disable ayy module
