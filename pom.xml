@@ -56,7 +56,6 @@
                             </transformers>
                             <outputDirectory>${project.basedir}</outputDirectory>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <finalName>escha</finalName>
                         </configuration>
                     </execution>
                 </executions>
