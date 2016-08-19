@@ -1,0 +1,1 @@
+java -jar target/Eschamali-1.0-SNAPSHOT.jar
