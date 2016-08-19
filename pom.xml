@@ -56,7 +56,6 @@
                             </transformers>
                             <outputDirectory>${project.basedir}</outputDirectory>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName></shadedClassifierName>
                         </configuration>
                     </execution>
                 </executions>

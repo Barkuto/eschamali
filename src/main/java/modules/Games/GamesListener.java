@@ -68,6 +68,10 @@ public class GamesListener {
                     for (int i = 1; i < args.length; i++) {
                         wholeArgs += args[i] + " ";
                     }
+                    wholeArgs = wholeArgs.trim();
+                    if (wholeArgs.charAt(wholeArgs.length() - 1) == ';') {
+                        wholeArgs = wholeArgs.substring(0, wholeArgs.length() - 1);
+                    }
                     String[] choices = wholeArgs.split(";");
                     for (int i = 0; i < choices.length; i++) {
                         choices[i] = choices[i].trim();
