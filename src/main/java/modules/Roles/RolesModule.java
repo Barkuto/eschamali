@@ -8,17 +8,19 @@ import sx.blah.discord.modules.IModule;
  */
 public class RolesModule implements IModule {
     public static IDiscordClient client;
+    private RolesListener rl;
 
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {
-        RolesModule.client = iDiscordClient;
-        iDiscordClient.getDispatcher().registerListener(new RolesListener());
+        client = iDiscordClient;
+        rl = new RolesListener();
+        client.getDispatcher().registerListener(rl);
         return true;
     }
 
     @Override
     public void disable() {
-
+        client.getDispatcher().unregisterListener(rl);
     }
 
     @Override
@@ -38,6 +40,6 @@ public class RolesModule implements IModule {
 
     @Override
     public String getMinimumDiscord4JVersion() {
-        return "2.5.2";
+        return "2.5.4";
     }
 }

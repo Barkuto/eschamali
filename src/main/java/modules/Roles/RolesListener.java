@@ -4,10 +4,7 @@ import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IRole;
-import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.handle.obj.Permissions;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
 import java.awt.*;
@@ -101,10 +98,17 @@ public class RolesListener {
                     Collection<IRole> roles = RolesModule.client.getRoles();
                     for (IRole r : roles) {
                         if (r.getName().equalsIgnoreCase(role)) {
-                            if (roleISA(guild.getID(), role)) {
+                            if (roleISA(guild, role)) {
                                 try {
                                     author.addRole(r);
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + r.getName() + " role.");
+                                    IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + r.getName() + " role.");
+                                    try {
+                                        Thread.sleep(2000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    event.getMessage().delete();
+                                    m.delete();
                                 } catch (MissingPermissionsException e) {
                                     BufferedMessage.sendMessage(RolesModule.client, event, "Your roles are too high to add that role to yourself.");
                                     e.printStackTrace();
@@ -131,10 +135,17 @@ public class RolesListener {
                     Collection<IRole> roles = RolesModule.client.getRoles();
                     for (IRole r : roles) {
                         if (r.getName().equalsIgnoreCase(role)) {
-                            if (roleISA(guild.getID(), role)) {
+                            if (roleISA(guild, role)) {
                                 try {
                                     event.getMessage().getAuthor().removeRole(r);
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + r.getName() + " role from you.");
+                                    IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + r.getName() + " role from you.");
+                                    try {
+                                        Thread.sleep(2000);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    event.getMessage().delete();
+                                    m.delete();
                                 } catch (MissingPermissionsException e) {
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
@@ -205,7 +216,7 @@ public class RolesListener {
                     BufferedMessage.sendMessage(RolesModule.client, event, "Invalid parameter, please @ the user to see their roles.");
                 }
             } else if (args[0].equalsIgnoreCase("lsar")) {
-                File f = new File("servers/" + guild.getID() + "/selfroles.txt");
+                File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
                 int count = 0;
                 String msg = "";
                 if (f.exists()) {
@@ -231,7 +242,7 @@ public class RolesListener {
                 BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + msg);
             } else if (args[0].equalsIgnoreCase("asar") && args.length > 1) {
                 if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                    File f = new File("servers/" + guild.getID() + "/selfroles.txt");
+                    File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
                     if (!f.exists()) {
                         f.getParentFile().mkdirs();
                         try {
@@ -249,7 +260,7 @@ public class RolesListener {
                     IRole theRole = roleFromGuild(guild, role);
 
                     if (theRole != null) {
-                        if (!roleISA(guild.getID(), role)) {
+                        if (!roleISA(guild, role)) {
                             try {
                                 PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
                                 pw.println(theRole.getName());
@@ -272,7 +283,7 @@ public class RolesListener {
             } else if (args[0].equalsIgnoreCase("amsar")) {
                 if (args.length > 2) {
                     if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                        File f = new File("servers/" + guild.getID() + "/selfroles.txt");
+                        File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
                         if (!f.exists()) {
                             f.getParentFile().mkdirs();
                             try {
@@ -302,7 +313,7 @@ public class RolesListener {
                             PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
 
                             for (int i = 0; i < argRoles.size(); i++) {
-                                if (!roleISA(guild.getID(), argRoles.get(i).getName())) {
+                                if (!roleISA(guild, argRoles.get(i).getName())) {
                                     pw.println(argRoles.get(i).getName());
                                     addedRoles.add(argRoles.get(i));
                                 }
@@ -337,8 +348,8 @@ public class RolesListener {
                         if (theRole == null) {
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
                         } else {
-                            if (roleISA(guild.getID(), role)) {
-                                File f = new File("servers/" + guild.getID() + "/selfroles.txt");
+                            if (roleISA(guild, role)) {
+                                File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
                                 if (f.exists()) {
                                     try {
                                         Scanner s = new Scanner(f);
@@ -348,7 +359,7 @@ public class RolesListener {
                                             String line = s.nextLine();
 
                                             for (IRole r : roles) {
-                                                if (!r.getName().equalsIgnoreCase(role) && roleISA(guild.getID(), r.getName()) && !currentRoles.contains(r)) {
+                                                if (!r.getName().equalsIgnoreCase(role) && roleISA(guild, r.getName()) && !currentRoles.contains(r)) {
                                                     currentRoles.add(r);
                                                 }
                                             }
@@ -384,8 +395,8 @@ public class RolesListener {
     }
 
 
-    public boolean roleISA(String guildID, String role) {//checks to see if role is self assignable
-        File f = new File("servers/" + guildID + "/selfroles.txt");
+    public boolean roleISA(IGuild guild, String role) {//checks to see if role is self assignable
+        File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
         if (!f.exists()) {
             f.getParentFile().mkdirs();
             try {

@@ -8,17 +8,19 @@ import sx.blah.discord.modules.IModule;
  */
 public class ParrotModule implements IModule {
     static IDiscordClient client;
+    private ParrotListener pl;
 
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {
-        ParrotModule.client = iDiscordClient;
-        iDiscordClient.getDispatcher().registerListener(new ParrotListener());
+        client = iDiscordClient;
+        pl = new ParrotListener();
+        client.getDispatcher().registerListener(pl);
         return true;
     }
 
     @Override
     public void disable() {
-
+        client.getDispatcher().unregisterListener(pl);
     }
 
     @Override

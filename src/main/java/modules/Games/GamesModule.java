@@ -8,17 +8,19 @@ import sx.blah.discord.modules.IModule;
  */
 public class GamesModule implements IModule {
     static IDiscordClient client;
+    private GamesListener gl;
 
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {
-        GamesModule.client = iDiscordClient;
-        iDiscordClient.getDispatcher().registerListener(new GamesListener());
+        client = iDiscordClient;
+        gl = new GamesListener();
+        client.getDispatcher().registerListener(gl);
         return true;
     }
 
     @Override
     public void disable() {
-
+        client.getDispatcher().unregisterListener(gl);
     }
 
     @Override
