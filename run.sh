@@ -1,1 +1,1 @@
-java -jar target/Eschamali-1.0-SNAPSHOT.jar
+java -jar Eschamali-1.0-SNAPSHOT-shaded.jar

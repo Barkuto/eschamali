@@ -47,12 +47,16 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>Eschamali</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
+                            <outputDirectory>${project.basedir}</outputDirectory>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName></shadedClassifierName>
                         </configuration>
                     </execution>
                 </executions>

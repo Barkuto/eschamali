@@ -23,6 +23,7 @@
                   </manifestEntries>
                 </transformer>
               </transformers>
+              <outputDirectory>${project.basedir}</outputDirectory>
             </configuration>
           </execution>
         </executions>
