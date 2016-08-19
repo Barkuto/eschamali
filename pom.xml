@@ -56,7 +56,7 @@
                             </transformers>
                             <outputDirectory>${project.basedir}</outputDirectory>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <finalName>Escha</finalName>
+                            <finalName>escha</finalName>
                         </configuration>
                     </execution>
                 </executions>
