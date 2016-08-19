@@ -74,36 +74,38 @@ public class GamesListener {
                     }
                 }
             } else if (cmd.equalsIgnoreCase("rps")) {
-                int pick;
-                switch (args[1].toLowerCase()) {
-                    case "r":
-                    case "rock":
-                    case "rocket":
-                        pick = 0;
-                        break;
-                    case "p":
-                    case "paper":
-                    case "paperclip":
-                        pick = 1;
-                        break;
-                    case "scissors":
-                    case "s":
-                        pick = 2;
-                        break;
-                    default:
-                        return;
+                if (args.length > 1) {
+                    int pick;
+                    switch (args[1].toLowerCase()) {
+                        case "r":
+                        case "rock":
+                        case "rocket":
+                            pick = 0;
+                            break;
+                        case "p":
+                        case "paper":
+                        case "paperclip":
+                            pick = 1;
+                            break;
+                        case "scissors":
+                        case "s":
+                            pick = 2;
+                            break;
+                        default:
+                            return;
+                    }
+                    int botPick = new Random().nextInt(3);
+                    String output = "";
+                    if (pick == botPick)
+                        output = "It's a draw! Both picked :" + rpsPick(pick) + ":";
+                    else if ((pick == 0 && botPick == 1) ||
+                            (pick == 1 && botPick == 2) ||
+                            (pick == 2 && botPick == 0))
+                        output = GamesModule.client.getOurUser().mention() + " won! :" + rpsPick(botPick) + ": beats :" + rpsPick(pick) + ":";
+                    else
+                        output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
+                    BufferedMessage.sendMessage(GamesModule.client, event, output);
                 }
-                int botPick = new Random().nextInt(3);
-                String output = "";
-                if (pick == botPick)
-                    output = "It's a draw! Both picked :" + rpsPick(pick) + ":";
-                else if ((pick == 0 && botPick == 1) ||
-                        (pick == 1 && botPick == 2) ||
-                        (pick == 2 && botPick == 0))
-                    output = GamesModule.client.getOurUser().mention() + " won! :" + rpsPick(botPick) + ": beats :" + rpsPick(pick) + ":";
-                else
-                    output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
-                BufferedMessage.sendMessage(GamesModule.client, event, output);
             }
         }
 
