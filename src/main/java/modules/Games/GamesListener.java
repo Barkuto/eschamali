@@ -72,6 +72,7 @@ public class GamesListener {
                     for (int i = 0; i < choices.length; i++) {
                         choices[i] = choices[i].trim();
                     }
+                    BufferedMessage.sendMessage(GamesModule.client, event, choices[new Random().nextInt(choices.length)]);
                 }
             } else if (cmd.equalsIgnoreCase("rps")) {
                 if (args.length > 1) {
