@@ -20,13 +20,11 @@ import java.util.List;
 public class RolesListener {
     private String prefix = ".";
     private String ownerID = "85844964633747456";
-    private File autoroleF;
-    private File selfrolesF;
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
-        autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
-        selfrolesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/selfroles.txt");
+        File autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
+        File selfrolesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/selfroles.txt");
 
         if (!autoroleF.exists()) {
             autoroleF.getParentFile().mkdirs();
@@ -49,6 +47,7 @@ public class RolesListener {
     @EventSubscriber
     public void newUserJoin(UserJoinEvent event) {
         if (ModuleListener.isModuleOn(event.getGuild(), RolesModule.name)) {
+            File autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
             if (autoroleF.exists()) {
                 try {
                     Scanner s = new Scanner(autoroleF);
@@ -78,6 +77,8 @@ public class RolesListener {
     public void messageReceived(MessageReceivedEvent event) {
         if (ModuleListener.isModuleOn(event.getMessage().getGuild(), RolesModule.name)) {
             String message = event.getMessage().getContent();
+            File autoroleF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/autorole.txt");
+            File selfrolesF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/selfroles.txt");
             if (message.startsWith(prefix)) {
                 IGuild guild = event.getMessage().getGuild();
                 IUser author = event.getMessage().getAuthor();
@@ -481,6 +482,7 @@ public class RolesListener {
 
     public boolean roleISA(IGuild guild, String role) {//checks to see if role is self assignable
         try {
+            File selfrolesF = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
             Scanner s = new Scanner(selfrolesF);
             while (s.hasNextLine()) {
                 String line = s.nextLine();

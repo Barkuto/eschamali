@@ -17,11 +17,10 @@ import java.util.Scanner;
  */
 public class ModuleListener {
     private String prefix = "!";
-    private File modulesF;
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
-        modulesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/modules.txt");
+        File modulesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/modules.txt");
         if (!modulesF.exists()) {
             modulesF.getParentFile().mkdirs();
             try {
@@ -44,6 +43,7 @@ public class ModuleListener {
         args[0] = args[0].replace(prefix, "").trim();
         String cmd = args[0];
         IGuild guild = event.getMessage().getGuild();
+        File modulesF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/modules.txt");
         if (message.startsWith(prefix)) {
             if (cmd.equalsIgnoreCase("m") || cmd.equalsIgnoreCase("mods") || cmd.equalsIgnoreCase("modules")) {//Lists modules
                 String msg = "`List of modules: `\n";
