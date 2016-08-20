@@ -25,25 +25,23 @@ public class RolesListener {
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
-        if (ModuleListener.isModuleOn(event.getGuild(), RolesModule.name)) {
-            autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
-            selfrolesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/selfroles.txt");
+        autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
+        selfrolesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/selfroles.txt");
 
-            if (!autoroleF.exists()) {
-                autoroleF.getParentFile().mkdirs();
-                try {
-                    autoroleF.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        if (!autoroleF.exists()) {
+            autoroleF.getParentFile().mkdirs();
+            try {
+                autoroleF.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            if (!selfrolesF.exists()) {
-                selfrolesF.getParentFile().mkdirs();
-                try {
-                    selfrolesF.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        }
+        if (!selfrolesF.exists()) {
+            selfrolesF.getParentFile().mkdirs();
+            try {
+                selfrolesF.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
