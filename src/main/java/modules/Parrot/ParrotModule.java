@@ -8,6 +8,7 @@ import sx.blah.discord.modules.IModule;
  */
 public class ParrotModule implements IModule {
     static IDiscordClient client;
+    static String name = "Parrot";
     private ParrotListener pl;
 
     @Override
@@ -25,12 +26,12 @@ public class ParrotModule implements IModule {
 
     @Override
     public String getName() {
-        return "Parrot";
+        return name;
     }
 
     @Override
     public String getAuthor() {
-        return "Panda";
+        return "Barkuto";
     }
 
     @Override

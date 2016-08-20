@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.austinv11:Discord4J:dev-2.5.4-gced540f-56">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/austinv11/Discord4J/dev-2.5.4-gced540f-56/Discord4J-dev-2.5.4-gced540f-56.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/austinv11/Discord4J/dev-2.5.4-gced540f-56/Discord4J-dev-2.5.4-gced540f-56-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/austinv11/Discord4J/dev-2.5.4-gced540f-56/Discord4J-dev-2.5.4-gced540f-56-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

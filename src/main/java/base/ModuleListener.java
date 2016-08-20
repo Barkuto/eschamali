@@ -1,3 +1,5 @@
+package base;
+
 import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;

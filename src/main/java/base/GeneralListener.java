@@ -1,21 +1,13 @@
+package base;
+
 import modules.BufferedMessage.BufferedMessage;
-import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.impl.obj.Role;
-import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IRole;
 import sx.blah.discord.handle.obj.Permissions;
 import sx.blah.discord.handle.obj.Status;
-import sx.blah.discord.modules.IModule;
-import sx.blah.discord.util.*;
-
-import java.awt.*;
-import java.io.*;
-import java.nio.Buffer;
-import java.util.*;
 
 /**
  * Created by Iggie on 8/14/2016.
@@ -30,7 +22,7 @@ public class GeneralListener {
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
-//        BufferedMessage.sendMessage(Eschamali.client, event, "Online.");
+//        BufferedMessage.sendMessage(base.Eschamali.client, event, "Online.");
 //        IGuild guild = event.getGuild();
     }
 

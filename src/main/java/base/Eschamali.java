@@ -1,3 +1,5 @@
+package base;
+
 import modules.Games.GamesModule;
 import modules.Parrot.ParrotModule;
 import modules.Roles.RolesModule;
@@ -8,7 +10,6 @@ import sx.blah.discord.util.DiscordException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.TreeMap;
 
 /**

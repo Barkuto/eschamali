@@ -8,6 +8,7 @@ import sx.blah.discord.modules.IModule;
  */
 public class GamesModule implements IModule {
     static IDiscordClient client;
+    static String name = "Games";
     private GamesListener gl;
 
     @Override
@@ -25,7 +26,7 @@ public class GamesModule implements IModule {
 
     @Override
     public String getName() {
-        return "Games";
+        return name;
     }
 
     @Override
