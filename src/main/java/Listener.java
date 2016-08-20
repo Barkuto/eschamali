@@ -17,7 +17,6 @@ public class Listener {
         String[] args = message.split(" ");
         args[0] = args[0].replace(prefix, "").trim();
         String cmd = args[0];
-        System.out.println(cmd);
         if (message.startsWith(prefix)) {
             if (cmd.equalsIgnoreCase("m") || cmd.equalsIgnoreCase("mods") || cmd.equalsIgnoreCase("modules")) {
                 String msg = "`List of modules: `\n";

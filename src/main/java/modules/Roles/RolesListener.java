@@ -4,6 +4,7 @@ import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
@@ -21,6 +22,33 @@ public class RolesListener {
     private String ownerID = "85844964633747456";
 
     @EventSubscriber
+    public void newUserJoin(UserJoinEvent event) {
+        File f = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
+        if (f.exists()) {
+            try {
+                Scanner s = new Scanner(f);
+                if (s.hasNextLine()) {
+                    String line = s.nextLine();
+                    IRole r = roleFromGuild(event.getGuild(), line);
+                    if (r != null) {
+                        try {
+                            event.getUser().addRole(r);
+                        } catch (MissingPermissionsException e) {
+                            e.printStackTrace();
+                        } catch (RateLimitException e) {
+                            e.printStackTrace();
+                        } catch (DiscordException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @EventSubscriber
     public void messageReceived(MessageReceivedEvent event) {
         String message = event.getMessage().getContent();
         if (message.startsWith(prefix)) {
@@ -29,7 +57,62 @@ public class RolesListener {
             String[] args = message.split(" ");
             args[0] = args[0].substring(1, args[0].length());
 
-            if (args[0].equalsIgnoreCase("ar")) {//Add role to person
+            if (args[0].equalsIgnoreCase("autorole")) {
+                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
+                    if (args.length > 1) {
+                        File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/autorole.txt");
+                        if (!f.exists()) {
+                            f.getParentFile().mkdirs();
+                            try {
+                                f.createNewFile();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        String role = "";
+                        for (int i = 1; i < args.length; i++) {
+                            role += args[i] + " ";
+                        }
+                        role = role.trim();
+
+                        IRole theRole = roleFromGuild(guild, role);
+
+                        if (theRole != null) {
+                            try {
+                                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, false)));
+                                pw.println(theRole.getName());
+                                pw.close();
+                                BufferedMessage.sendMessage(RolesModule.client, event, theRole.getName() + " role has been added as the auto role.");
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
+                        }
+                    }
+                } else {
+                    BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
+                }
+            } else if (args[0].equalsIgnoreCase("removeautorole")) {
+                if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
+                    File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/autoroles.txt");
+                    if (f.exists()) {
+                        try {
+                            PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, false)));
+                            pw.close();
+                            BufferedMessage.sendMessage(RolesModule.client, event, "Auto role has been removed.");
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
+                }
+            } else if (args[0].equalsIgnoreCase("ar")) {//Add role to person
                 if (args.length > 2) {
                     if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID) && args.length > 2) {
                         String user = args[1];
@@ -107,8 +190,8 @@ public class RolesListener {
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                    event.getMessage().delete();
                                     m.delete();
+                                    event.getMessage().delete();
                                 } catch (MissingPermissionsException e) {
                                     BufferedMessage.sendMessage(RolesModule.client, event, "Your roles are too high to add that role to yourself.");
                                     e.printStackTrace();
@@ -144,8 +227,8 @@ public class RolesListener {
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                    event.getMessage().delete();
                                     m.delete();
+                                    event.getMessage().delete();
                                 } catch (MissingPermissionsException e) {
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
@@ -392,6 +475,7 @@ public class RolesListener {
                 }
             }
         }
+
     }
 
 
