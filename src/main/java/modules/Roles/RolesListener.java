@@ -1,14 +1,13 @@
 package modules.Roles;
 
 import modules.BufferedMessage.BufferedMessage;
-import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
-import java.awt.*;
 import java.io.*;
 import java.nio.Buffer;
 import java.util.*;
@@ -20,13 +19,37 @@ import java.util.List;
 public class RolesListener {
     private String prefix = ".";
     private String ownerID = "85844964633747456";
+    private File autoroleF;
+    private File selfrolesF;
+
+    @EventSubscriber
+    public void onJoin(GuildCreateEvent event) {
+        autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
+        selfrolesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/selfroles.txt");
+
+        if (!autoroleF.exists()) {
+            autoroleF.getParentFile().mkdirs();
+            try {
+                autoroleF.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (!selfrolesF.exists()) {
+            selfrolesF.getParentFile().mkdirs();
+            try {
+                selfrolesF.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     @EventSubscriber
     public void newUserJoin(UserJoinEvent event) {
-        File f = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
-        if (f.exists()) {
+        if (autoroleF.exists()) {
             try {
-                Scanner s = new Scanner(f);
+                Scanner s = new Scanner(autoroleF);
                 if (s.hasNextLine()) {
                     String line = s.nextLine();
                     IRole r = roleFromGuild(event.getGuild(), line);
@@ -60,15 +83,6 @@ public class RolesListener {
             if (args[0].equalsIgnoreCase("autorole")) {
                 if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
                     if (args.length > 1) {
-                        File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/autorole.txt");
-                        if (!f.exists()) {
-                            f.getParentFile().mkdirs();
-                            try {
-                                f.createNewFile();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
                         String role = "";
                         for (int i = 1; i < args.length; i++) {
                             role += args[i] + " ";
@@ -79,17 +93,26 @@ public class RolesListener {
 
                         if (theRole != null) {
                             try {
-                                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, false)));
+                                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(autoroleF, false)));
                                 pw.println(theRole.getName());
                                 pw.close();
                                 BufferedMessage.sendMessage(RolesModule.client, event, theRole.getName() + " role has been added as the auto role.");
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         } else {
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
+                        }
+                    } else if (args.length == 1) {
+                        try {
+                            Scanner s = new Scanner(autoroleF);
+                            if (s.hasNextLine()) {
+                                BufferedMessage.sendMessage(RolesModule.client, event, "The current autorole is " + s.nextLine());
+                            } else {
+                                BufferedMessage.sendMessage(RolesModule.client, event, "There is no autorole.");
+                            }
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
                         }
                     }
                 } else {
@@ -97,14 +120,11 @@ public class RolesListener {
                 }
             } else if (args[0].equalsIgnoreCase("removeautorole")) {
                 if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                    File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/autoroles.txt");
-                    if (f.exists()) {
+                    if (autoroleF.exists()) {
                         try {
-                            PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, false)));
+                            PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(autoroleF, false)));
                             pw.close();
                             BufferedMessage.sendMessage(RolesModule.client, event, "Auto role has been removed.");
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -299,12 +319,11 @@ public class RolesListener {
                     BufferedMessage.sendMessage(RolesModule.client, event, "Invalid parameter, please @ the user to see their roles.");
                 }
             } else if (args[0].equalsIgnoreCase("lsar")) {
-                File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
                 int count = 0;
                 String msg = "";
-                if (f.exists()) {
+                if (selfrolesF.exists()) {
                     try {
-                        Scanner s = new Scanner(f);
+                        Scanner s = new Scanner(selfrolesF);
                         while (s.hasNextLine()) {
                             msg += "**" + s.nextLine() + "**, ";
                             count++;
@@ -325,15 +344,6 @@ public class RolesListener {
                 BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + msg);
             } else if (args[0].equalsIgnoreCase("asar") && args.length > 1) {
                 if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                    File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
-                    if (!f.exists()) {
-                        f.getParentFile().mkdirs();
-                        try {
-                            f.createNewFile();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
                     String role = "";
                     for (int i = 1; i < args.length; i++) {
                         role += args[i] + " ";
@@ -345,12 +355,10 @@ public class RolesListener {
                     if (theRole != null) {
                         if (!roleISA(guild, role)) {
                             try {
-                                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
+                                PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(selfrolesF, true)));
                                 pw.println(theRole.getName());
                                 pw.close();
                                 BufferedMessage.sendMessage(RolesModule.client, event, "Role has been successfully added as self assignable.");
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -366,15 +374,6 @@ public class RolesListener {
             } else if (args[0].equalsIgnoreCase("amsar")) {
                 if (args.length > 2) {
                     if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                        File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
-                        if (!f.exists()) {
-                            f.getParentFile().mkdirs();
-                            try {
-                                f.createNewFile();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
                         ArrayList<IRole> argRoles = new ArrayList<IRole>();
                         String argConcat = "";
                         for (int i = 1; i < args.length; i++) {
@@ -393,7 +392,7 @@ public class RolesListener {
 
                         ArrayList<IRole> addedRoles = new ArrayList<IRole>();
                         try {
-                            PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
+                            PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(selfrolesF, true)));
 
                             for (int i = 0; i < argRoles.size(); i++) {
                                 if (!roleISA(guild, argRoles.get(i).getName())) {
@@ -432,10 +431,9 @@ public class RolesListener {
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
                         } else {
                             if (roleISA(guild, role)) {
-                                File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
-                                if (f.exists()) {
+                                if (selfrolesF.exists()) {
                                     try {
-                                        Scanner s = new Scanner(f);
+                                        Scanner s = new Scanner(selfrolesF);
                                         ArrayList<IRole> currentRoles = new ArrayList<IRole>();
                                         List<IRole> roles = guild.getRoles();
                                         while (s.hasNextLine()) {
@@ -448,17 +446,15 @@ public class RolesListener {
                                             }
                                         }
 
-                                        PrintWriter pw = new PrintWriter(f);
+                                        PrintWriter pw = new PrintWriter(selfrolesF);
                                         pw.close();
 
-                                        pw = new PrintWriter(new BufferedWriter(new FileWriter(f, true)));
+                                        pw = new PrintWriter(new BufferedWriter(new FileWriter(selfrolesF, true)));
                                         for (IRole r : currentRoles) {
                                             pw.println(r.getName());
                                         }
                                         pw.close();
                                         BufferedMessage.sendMessage(RolesModule.client, event, "Role has been successfully removed as self assignable.");
-                                    } catch (FileNotFoundException e) {
-                                        e.printStackTrace();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -480,29 +476,19 @@ public class RolesListener {
 
 
     public boolean roleISA(IGuild guild, String role) {//checks to see if role is self assignable
-        File f = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
-        if (!f.exists()) {
-            f.getParentFile().mkdirs();
-            try {
-                f.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return false;
-        } else {
-            try {
-                Scanner s = new Scanner(f);
-                while (s.hasNextLine()) {
-                    String line = s.nextLine();
-                    if (line.equalsIgnoreCase(role)) {
-                        return true;
-                    }
+        try {
+            Scanner s = new Scanner(selfrolesF);
+            while (s.hasNextLine()) {
+                String line = s.nextLine();
+                if (line.equalsIgnoreCase(role)) {
+                    return true;
                 }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             }
-
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
+
+
         return false;
     }
 

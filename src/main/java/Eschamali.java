@@ -6,6 +6,7 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -15,8 +16,8 @@ import java.util.TreeMap;
  */
 public class Eschamali {
     private String clientID = "214442111720751104";
+    public static ArrayList<IModule> modules;
     public static TreeMap<IModule, Boolean> defaultmodules;
-    public static TreeMap<IModule, Boolean> currentmodules;
     public static IDiscordClient client;
 
     public Eschamali() {
@@ -28,32 +29,28 @@ public class Eschamali {
             }
         };
         defaultmodules = new TreeMap<IModule, Boolean>(cmpr);
-        currentmodules = new TreeMap<IModule, Boolean>(cmpr);
-        GeneralModule general = new GeneralModule();
         RolesModule roles = new RolesModule();
         GamesModule games = new GamesModule();
         ParrotModule parrot = new ParrotModule();
 
-        defaultmodules.put(general, true);
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
         defaultmodules.put(parrot, false);
 
-        currentmodules.put(general, true);
-        currentmodules.put(roles, true);
-        currentmodules.put(games, true);
-        currentmodules.put(parrot, false);
+        modules = new ArrayList<IModule>();
+        modules.add(roles);
+        modules.add(games);
+        modules.add(parrot);
     }
 
     public void run(String token) {
         try {
             client = new ClientBuilder().withToken(token).login();
-            client.getDispatcher().registerListener(new Listener());
+            client.getDispatcher().registerListener(new ModuleListener());
+            client.getDispatcher().registerListener(new GeneralListener());
 
-            for (Map.Entry<IModule, Boolean> entry : defaultmodules.entrySet()) {
-                if (entry.getValue()) {
-                    entry.getKey().enable(client);
-                }
+            for (IModule m : modules) {
+                m.enable(client);
             }
 
         } catch (DiscordException e) {
