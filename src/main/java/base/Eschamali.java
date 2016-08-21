@@ -47,6 +47,12 @@ public class Eschamali {
         modules.add(games);
         modules.add(parrot);
         modules.add(channels);
+        modules.sort(new Comparator<IModule>() {
+            @Override
+            public int compare(IModule o1, IModule o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
     }
 
     public void run(String token) {

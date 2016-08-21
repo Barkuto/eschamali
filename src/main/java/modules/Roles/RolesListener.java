@@ -156,6 +156,7 @@ public class RolesListener {
                                     theUser.addRole(theRole);
                                     BufferedMessage.sendMessage(RolesModule.client, event, theUser.mention() + " now has the " + '"' + theRole.getName() + '"' + " role.");
                                 } catch (MissingPermissionsException e) {
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to add roles.");
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
                                     e.printStackTrace();
@@ -186,6 +187,7 @@ public class RolesListener {
                                     theUser.removeRole(theRole);
                                     BufferedMessage.sendMessage(RolesModule.client, event, theUser.mention() + " now longer has the " + '"' + theRole.getName() + '"' + " role.");
                                 } catch (MissingPermissionsException e) {
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to remove roles.");
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
                                     e.printStackTrace();
@@ -219,7 +221,7 @@ public class RolesListener {
                                         m.delete();
                                         event.getMessage().delete();
                                     } catch (MissingPermissionsException e) {
-                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to add that role to yourself.");
+//                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to add that role to yourself.");
                                         e.printStackTrace();
                                     } catch (RateLimitException e) {
                                         e.printStackTrace();
@@ -256,7 +258,7 @@ public class RolesListener {
                                         m.delete();
                                         event.getMessage().delete();
                                     } catch (MissingPermissionsException e) {
-                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to remove that role from yourself.");
+//                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to remove that role from yourself.");
                                         e.printStackTrace();
                                     } catch (RateLimitException e) {
                                         e.printStackTrace();
