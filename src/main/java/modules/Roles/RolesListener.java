@@ -148,7 +148,7 @@ public class RolesListener {
                             }
                             role = role.trim();
 
-                            IUser theUser = guild.getUserByID(user.substring(1, user.length() - 1).replace("@", ""));
+                            IUser theUser = guild.getUserByID(parseUserID(user));
                             IRole theRole = roleFromGuild(guild, role);
 
                             if (theRole != null) {
@@ -178,7 +178,7 @@ public class RolesListener {
                             }
                             role = role.trim();
 
-                            IUser theUser = guild.getUserByID(user.substring(1, user.length() - 1).replace("@", ""));
+                            IUser theUser = guild.getUserByID(parseUserID(user));
                             IRole theRole = roleFromGuild(guild, role);
 
                             if (theRole != null) {
@@ -219,7 +219,7 @@ public class RolesListener {
                                         m.delete();
                                         event.getMessage().delete();
                                     } catch (MissingPermissionsException e) {
-                                        BufferedMessage.sendMessage(RolesModule.client, event, "Your roles are too high to add that role to yourself.");
+                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to add that role to yourself.");
                                         e.printStackTrace();
                                     } catch (RateLimitException e) {
                                         e.printStackTrace();
@@ -246,7 +246,7 @@ public class RolesListener {
                             if (r.getName().equalsIgnoreCase(role)) {
                                 if (roleISA(guild, role)) {
                                     try {
-                                        event.getMessage().getAuthor().removeRole(r);
+                                        author.removeRole(r);
                                         IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + r.getName() + " role from you.");
                                         try {
                                             Thread.sleep(2000);
@@ -256,6 +256,7 @@ public class RolesListener {
                                         m.delete();
                                         event.getMessage().delete();
                                     } catch (MissingPermissionsException e) {
+                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to remove that role from yourself.");
                                         e.printStackTrace();
                                     } catch (RateLimitException e) {
                                         e.printStackTrace();
@@ -313,13 +314,7 @@ public class RolesListener {
                     }
                     BufferedMessage.sendMessage(RolesModule.client, event, output);
                 } else if (args[0].equalsIgnoreCase("rolesof") && args.length > 1) {
-                    String userID = args[1];
-                    int startIndex = 2;
-                    if (userID.startsWith("<@!")) {
-                        startIndex++;
-                    }
-                    userID = userID.substring(startIndex, userID.length() - 1);
-                    IUser user = guild.getUserByID(userID);
+                    IUser user = guild.getUserByID(parseUserID(args[1]));
                     if (user != null) {
                         List<IRole> theirRoles = user.getRolesForGuild(guild);
                         String msg = "`List of roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
@@ -500,8 +495,6 @@ public class RolesListener {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
-
         return false;
     }
 
@@ -523,5 +516,15 @@ public class RolesListener {
             }
         }
         return null;
+    }
+
+    public String parseUserID(String arg) {
+        String id = "";
+        int startIndex = 2;
+        if (arg.startsWith("<@!")) {
+            startIndex++;
+        }
+        id += arg.substring(startIndex, arg.length() - 1);
+        return id;
     }
 }
