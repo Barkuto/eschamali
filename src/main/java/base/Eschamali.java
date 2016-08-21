@@ -20,6 +20,7 @@ public class Eschamali {
     public static ArrayList<IModule> modules;
     public static TreeMap<IModule, Boolean> defaultmodules;
     public static IDiscordClient client;
+    static String ownerID = "85844964633747456";
 
     public Eschamali() {
         Comparator<IModule> cmpr = new Comparator<IModule>() {
