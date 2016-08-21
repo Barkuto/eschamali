@@ -313,7 +313,13 @@ public class RolesListener {
                     }
                     BufferedMessage.sendMessage(RolesModule.client, event, output);
                 } else if (args[0].equalsIgnoreCase("rolesof") && args.length > 1) {
-                    IUser user = guild.getUserByID(args[1].substring(1, args[1].length() - 1).replace("@", ""));
+                    String userID = args[1];
+                    int startIndex = 2;
+                    if (userID.startsWith("<@!")) {
+                        startIndex++;
+                    }
+                    userID = userID.substring(startIndex, userID.length() - 1);
+                    IUser user = guild.getUserByID(userID);
                     if (user != null) {
                         List<IRole> theirRoles = user.getRolesForGuild(guild);
                         String msg = "`List of roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
