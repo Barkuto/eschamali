@@ -2,6 +2,7 @@ package modules.Roles;
 
 import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
+import modules.Channels.ChannelsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
@@ -75,7 +76,7 @@ public class RolesListener {
 
     @EventSubscriber
     public void messageReceived(MessageReceivedEvent event) {
-        if (ModuleListener.isModuleOn(event.getMessage().getGuild(), RolesModule.name)) {
+        if (ModuleListener.isModuleOn(event.getMessage().getGuild(), RolesModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
             String message = event.getMessage().getContent();
             File autoroleF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/autorole.txt");
             File selfrolesF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/selfroles.txt");

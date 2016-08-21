@@ -7,34 +7,40 @@ import sx.blah.discord.modules.IModule;
  * Created by Iggie on 8/20/2016.
  */
 public class ChannelsModule implements IModule {
+    static IDiscordClient client;
+    static String name = "Channels";
+    private ChannelsListener cl;
 
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {
-        return false;
+        client = iDiscordClient;
+        cl = new ChannelsListener();
+        client.getDispatcher().registerListener(cl);
+        return true;
     }
 
     @Override
     public void disable() {
-
+        client.getDispatcher().unregisterListener(cl);
     }
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
     public String getAuthor() {
-        return null;
+        return "Barkuto";
     }
 
     @Override
     public String getVersion() {
-        return null;
+        return "1.0";
     }
 
     @Override
     public String getMinimumDiscord4JVersion() {
-        return null;
+        return "2.5.3";
     }
 }

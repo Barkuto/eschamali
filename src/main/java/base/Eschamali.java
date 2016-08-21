@@ -1,5 +1,7 @@
 package base;
 
+import modules.Channels.ChannelsListener;
+import modules.Channels.ChannelsModule;
 import modules.Games.GamesModule;
 import modules.Parrot.ParrotModule;
 import modules.Roles.RolesModule;
@@ -24,7 +26,6 @@ public class Eschamali {
 
     public Eschamali() {
         Comparator<IModule> cmpr = new Comparator<IModule>() {
-
             @Override
             public int compare(IModule o1, IModule o2) {
                 return o1.getName().compareTo(o2.getName());
@@ -34,15 +35,18 @@ public class Eschamali {
         RolesModule roles = new RolesModule();
         GamesModule games = new GamesModule();
         ParrotModule parrot = new ParrotModule();
+        ChannelsModule channels = new ChannelsModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
         defaultmodules.put(parrot, false);
+        defaultmodules.put(channels, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
         modules.add(games);
         modules.add(parrot);
+        modules.add(channels);
     }
 
     public void run(String token) {

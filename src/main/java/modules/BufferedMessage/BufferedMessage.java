@@ -1,8 +1,10 @@
 package modules.BufferedMessage;
 
+import modules.Channels.ChannelsListener;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.obj.Channel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.util.*;
 
@@ -24,6 +26,7 @@ public class BufferedMessage {
             }
         });
         return m[0];
+
     }
 
     public static IMessage sendMessage(IDiscordClient client, GuildCreateEvent event, String message) {
