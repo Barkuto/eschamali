@@ -204,7 +204,7 @@ public class RolesListener {
                             role += args[i] + " ";
                         }
                         role = role.trim();
-                        Collection<IRole> roles = RolesModule.client.getRoles();
+                        List<IRole> roles = guild.getRoles();
                         for (IRole r : roles) {
                             if (r.getName().equalsIgnoreCase(role)) {
                                 if (roleISA(guild, role)) {
@@ -241,7 +241,7 @@ public class RolesListener {
                             role += args[i] + " ";
                         }
                         role = role.trim();
-                        Collection<IRole> roles = RolesModule.client.getRoles();
+                        List<IRole> roles = guild.getRoles();
                         for (IRole r : roles) {
                             if (r.getName().equalsIgnoreCase(role)) {
                                 if (roleISA(guild, role)) {
@@ -279,7 +279,7 @@ public class RolesListener {
                         }
                         role = role.trim();
 
-                        Collection<IRole> roles = RolesModule.client.getRoles();
+                        Collection<IRole> roles = guild.getRoles();
                         IRole irole = roleFromGuild(guild, role);
                         if (irole == null) {
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role");
