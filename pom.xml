@@ -13,6 +13,16 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>jcenter</id>
+            <name>jcenter-bintray</name>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+        <repository>
+            <id>jitpack</id>
+            <name>jitpack-center</name>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -25,6 +35,17 @@
             <groupId>com.github.austinv11</groupId>
             <artifactId>Discord4J</artifactId>
             <version>dev-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>d4j-player</artifactId>
+            <version>0.2.2_17</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.austinv11</groupId>
+                    <artifactId>Discord4J</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

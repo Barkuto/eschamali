@@ -3,6 +3,7 @@ package base;
 import modules.Channels.ChannelsListener;
 import modules.Channels.ChannelsModule;
 import modules.Games.GamesModule;
+import modules.Music.MusicModule;
 import modules.Parrot.ParrotModule;
 import modules.Roles.RolesModule;
 import sx.blah.discord.api.ClientBuilder;
@@ -36,17 +37,20 @@ public class Eschamali {
         GamesModule games = new GamesModule();
         ParrotModule parrot = new ParrotModule();
         ChannelsModule channels = new ChannelsModule();
+        MusicModule music = new MusicModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
         defaultmodules.put(parrot, false);
         defaultmodules.put(channels, true);
+        defaultmodules.put(music, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
         modules.add(games);
         modules.add(parrot);
         modules.add(channels);
+        modules.add(music);
         modules.sort(new Comparator<IModule>() {
             @Override
             public int compare(IModule o1, IModule o2) {
