@@ -8,7 +8,7 @@ import sx.blah.discord.modules.IModule;
  */
 public class ChannelsModule implements IModule {
     static IDiscordClient client;
-    static String name = "Channels";
+    public static final String name = "Channels";
     private ChannelsListener cl;
 
     @Override

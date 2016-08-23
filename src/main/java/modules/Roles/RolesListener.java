@@ -19,7 +19,7 @@ import java.util.List;
  * Created by Iggie on 8/14/2016.
  */
 public class RolesListener {
-    private String prefix = ".";
+    public static String prefix = ".";
     private String ownerID = "85844964633747456";
 
     @EventSubscriber
@@ -87,7 +87,7 @@ public class RolesListener {
                 args[0] = args[0].substring(1, args[0].length());
 
                 if (args[0].equalsIgnoreCase("autorole")) {
-                    if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
+                    if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_SERVER) || event.getMessage().getAuthor().getID().equals(ownerID)) {
                         if (args.length > 1) {
                             String role = "";
                             for (int i = 1; i < args.length; i++) {

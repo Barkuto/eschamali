@@ -8,7 +8,7 @@ import sx.blah.discord.modules.IModule;
  */
 public class ParrotModule implements IModule {
     static IDiscordClient client;
-    static String name = "Parrot";
+    public static final String name = "Parrot";
     private ParrotListener pl;
 
     @Override

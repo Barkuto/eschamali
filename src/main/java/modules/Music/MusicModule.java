@@ -8,7 +8,7 @@ import sx.blah.discord.modules.IModule;
  */
 public class MusicModule implements IModule {
     static IDiscordClient client;
-    static String name = "Music";
+    public static final String name = "Music";
     private MusicListener ml;
 
     @Override
