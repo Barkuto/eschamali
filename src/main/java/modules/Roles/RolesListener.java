@@ -156,7 +156,7 @@ public class RolesListener {
                                     theUser.addRole(theRole);
                                     BufferedMessage.sendMessage(RolesModule.client, event, theUser.mention() + " now has the " + '"' + theRole.getName() + '"' + " role.");
                                 } catch (MissingPermissionsException e) {
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to add roles.");
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to that user because they have a role higher than mine.");
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
                                     e.printStackTrace();
@@ -187,7 +187,7 @@ public class RolesListener {
                                     theUser.removeRole(theRole);
                                     BufferedMessage.sendMessage(RolesModule.client, event, theUser.mention() + " now longer has the " + '"' + theRole.getName() + '"' + " role.");
                                 } catch (MissingPermissionsException e) {
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to remove roles.");
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "I cannot remove a role from that user because they have a role higher than mine.");
                                     e.printStackTrace();
                                 } catch (RateLimitException e) {
                                     e.printStackTrace();
@@ -221,7 +221,7 @@ public class RolesListener {
                                         m.delete();
                                         event.getMessage().delete();
                                     } catch (MissingPermissionsException e) {
-//                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to add that role to yourself.");
+                                        BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
                                         e.printStackTrace();
                                     } catch (RateLimitException e) {
                                         e.printStackTrace();
@@ -258,7 +258,7 @@ public class RolesListener {
                                         m.delete();
                                         event.getMessage().delete();
                                     } catch (MissingPermissionsException e) {
-//                                        BufferedMessage.sendMessage(RolesModule.client, event, "Insufficient perms to remove that role from yourself.");
+                                        BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
                                         e.printStackTrace();
                                     } catch (RateLimitException e) {
                                         e.printStackTrace();
@@ -477,6 +477,29 @@ public class RolesListener {
                         }
                     } else {
                         BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
+                    }
+                } else if (args[0].equalsIgnoreCase("servertree")) {
+                    if (author.getID().equalsIgnoreCase(ownerID)) {
+                        List<IRole> roles = RolesModule.client.getGuildByID(guild.getID()).getRoles();
+                        roles.sort(new Comparator<IRole>() {
+                            @Override
+                            public int compare(IRole o1, IRole o2) {
+                                return Integer.compare(o2.getPosition(), o1.getPosition());
+                            }
+                        });
+                        IChannel pm = null;
+                        try {
+                            pm = RolesModule.client.getOrCreatePMChannel(author);
+                            String s = "";
+                            for (IRole r : roles) {
+                                s += r.getName() + "\n";
+                            }
+                            BufferedMessage.sendMessage(RolesModule.client, pm, s);
+                        } catch (DiscordException e) {
+                            e.printStackTrace();
+                        } catch (RateLimitException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }

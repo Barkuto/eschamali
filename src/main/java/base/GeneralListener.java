@@ -6,9 +6,11 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.obj.IRole;
-import sx.blah.discord.handle.obj.Permissions;
-import sx.blah.discord.handle.obj.Status;
+import sx.blah.discord.handle.impl.events.UserJoinEvent;
+import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RateLimitException;
 
 import java.util.List;
 
@@ -27,6 +29,16 @@ public class GeneralListener {
     public void onJoin(GuildCreateEvent event) {
 //        BufferedMessage.sendMessage(base.Eschamali.client, event, "Online.");
 //        IGuild guild = event.getGuild();
+//        try {
+//            IPrivateChannel channel = Eschamali.client.getOrCreatePMChannel(Eschamali.client.getUserByID(Eschamali.ownerID));
+//            channel.sendMessage(guild.getName());
+//        } catch (DiscordException e) {
+//            e.printStackTrace();
+//        } catch (RateLimitException e) {
+//            e.printStackTrace();
+//        } catch (MissingPermissionsException e) {
+//            e.printStackTrace();
+//        }
     }
 
     @EventSubscriber
