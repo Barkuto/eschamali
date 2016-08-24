@@ -133,6 +133,20 @@ public class MusicListener {
                     }
                 } else if (cmd.equalsIgnoreCase("queue") || cmd.equalsIgnoreCase("q")) {
                     if (split.length > 1) {
+                        boolean connected = false;
+                        List<IVoiceChannel> connectedVChannels = MusicModule.client.getConnectedVoiceChannels();
+                        for (IVoiceChannel vc : connectedVChannels) {
+                            if (vc.getGuild().equals(guild)) {
+                                connected = true;
+                            }
+                        }
+                        if (!connected) {
+                            try {
+                                user.getConnectedVoiceChannels().get(0).join();
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         if (split[1].contains("youtu")) {//URL load
                             String url = split[1];
                             if (url.contains("list=")) {
