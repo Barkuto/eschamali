@@ -50,8 +50,10 @@ public class OwnerListener {
                             e.printStackTrace();
                         } catch (IndexOutOfBoundsException e) {
 //                            e.printStackTrace();
+                        } catch (NullPointerException e) {
+
                         }
-                        output += g.getName() + ": " + g.getUsers().size() + " users | " + (invite == null ? "" : invite + " ") + "\n";
+                        output += g.getName() + ": " + g.getUsers().size() + " users | " + (invite == null ? "No invite link." : invite) + "\n";
                     }
                     BufferedMessage.sendMessage(Eschamali.client, event, output);
                 } else if (cmd.equalsIgnoreCase("leave")) {
