@@ -33,7 +33,7 @@ import java.util.List;
  * Created by Iggie on 8/21/2016.
  */
 public class MusicListener {
-    private String prefix = "!";
+    public static String prefix = "!";
     private final float DEFAULT_VOLUME = 0.5f;
 
     @EventSubscriber
@@ -223,27 +223,29 @@ public class MusicListener {
                     } else {
                         aSource = queue.get(queue.size() - 1).getSource();
                     }
-                    try {
-                        URL page = new URL(aSource);
-                        String html = IOUtils.toString(page.openStream(), "utf-8");
-                        html = html.substring(html.indexOf("<div class=\"watch-sidebar-section\">"));
-                        html = html.substring(0, html.indexOf("data-visibility-tracking=\""));
-                        html = html.substring(html.indexOf("href="));
-                        html = html.substring(0, html.indexOf("class="));
-                        html = html.substring(html.indexOf('"') + 1, html.lastIndexOf('"'));
-                        String youtubeurl = "https://www.youtube.com" + html;
-                        System.out.println(youtubeurl);
+                    if (aSource.contains("youtu")) {
+                        try {
+                            URL page = new URL(aSource);
+                            String html = IOUtils.toString(page.openStream(), "utf-8");
+                            html = html.substring(html.indexOf("<div class=\"watch-sidebar-section\">"));
+                            html = html.substring(0, html.indexOf("data-visibility-tracking=\""));
+                            html = html.substring(html.indexOf("href="));
+                            html = html.substring(0, html.indexOf("class="));
+                            html = html.substring(html.indexOf('"') + 1, html.lastIndexOf('"'));
+                            String youtubeurl = "https://www.youtube.com" + html;
+                            System.out.println(youtubeurl);
 
-                        AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
-                        player.getAudioQueue().add(source);
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Queued related: " + source.getInfo().getTitle());
-                        if (player.isStopped()) {
-                            player.play();
+                            AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
+                            player.getAudioQueue().add(source);
+                            BufferedMessage.sendMessage(MusicModule.client, event, "Queued related: " + source.getInfo().getTitle());
+                            if (player.isStopped()) {
+                                player.play();
+                            }
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
                 }
             }

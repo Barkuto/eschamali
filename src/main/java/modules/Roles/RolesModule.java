@@ -51,6 +51,7 @@ public class RolesModule implements IModule, ICommands {
     public ArrayList<String> commands() {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(RolesListener.prefix);
+        cmds.add("__**DESC**__: Manages user roles.");
         cmds.add("`autorole`: Sets the autorole for the server, requires MANAGE SERVER permission. **USAGE**: autorole <role>");
         cmds.add("`removeautorole`: Removes the current autorole, requires MANAGE SERVER permission. **USAGE**: removeautorole");
         cmds.add("`ar`: Adds a role to a user, requires MANAGE ROLES permission. **USAGE**: ar @user <role>");

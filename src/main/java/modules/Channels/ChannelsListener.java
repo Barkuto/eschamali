@@ -17,7 +17,7 @@ import java.util.Scanner;
  * Created by Iggie on 8/20/2016.
  */
 public class ChannelsListener {
-    private String prefix = ";";
+    public static String prefix = ";";
     private String ownerID = "85844964633747456";
 
     @EventSubscriber

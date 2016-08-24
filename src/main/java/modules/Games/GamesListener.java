@@ -14,7 +14,7 @@ import java.util.Random;
  * Created by Iggie on 8/17/2016.
  */
 public class GamesListener {
-    private String prefix = ">";
+    public static String prefix = ">";
     private ArrayList<String> answers;
 
     public GamesListener() {
