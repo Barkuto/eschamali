@@ -10,6 +10,11 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.RateLimitException;
 
 import javax.lang.model.util.ElementScanner6;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -60,6 +65,16 @@ public class OwnerListener {
 
                 } else if (cmd.equalsIgnoreCase("setavatar")) {
 
+                } else if (cmd.equalsIgnoreCase("uptime")) {
+                    RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+                    long uptime = rb.getUptime();
+
+                    long second = (uptime / 1000) % 60;
+                    long minute = (uptime / (1000 * 60)) % 60;
+                    long hour = (uptime / (1000 * 60 * 60)) % 24;
+
+                    String time = String.format("%02dhrs:%02dmins:%02ds:%dms", hour, minute, second, uptime);
+                    BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + time + "`");
                 }
             }
         }
