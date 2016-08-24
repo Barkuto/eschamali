@@ -105,6 +105,7 @@ public class GeneralListener {
                     commands.add("`tilt`: Send a message indicating you are tilted.");
                     commands.add("`riot`: riot.");
                     commands.add("`ping`: Visually check your ping with a pong.");
+                    commands.add("`help`: Lists commands for certains parts of the bot. **USAGE**: help <module name>");
                     Collections.sort(commands);
                     for (int i = 0; i < commands.size(); i++) {
                         output += commands.get(i) + "\n";
