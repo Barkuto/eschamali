@@ -64,6 +64,7 @@ public class Eschamali {
             client = new ClientBuilder().withToken(token).login();
             client.getDispatcher().registerListener(new ModuleListener());
             client.getDispatcher().registerListener(new GeneralListener());
+            client.getDispatcher().registerListener(new OwnerListener());
 
             for (IModule m : modules) {
                 m.enable(client);

@@ -5,6 +5,7 @@ import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
 
 import java.util.ArrayList;
@@ -48,71 +49,73 @@ public class GamesListener {
 
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
-        if (ModuleListener.isModuleOn(event.getMessage().getGuild(), GamesModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
-            String msg = event.getMessage().getContent();
-            IUser user = event.getMessage().getAuthor();
-            if (msg.startsWith(prefix)) {
-                String[] args = msg.split(" ");
-                args[0] = args[0].replace(prefix, "");
-                String cmd = args[0];
-                if (cmd.equalsIgnoreCase("8") || cmd.equalsIgnoreCase("8ball")) {
-                    if (args.length > 1) {
-                        int num = new Random().nextInt(answers.size());
-                        String question = "";
-                        for (int i = 1; i < args.length; i++) {
-                            question += args[i] + " ";
+        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+            if (ModuleListener.isModuleOn(event.getMessage().getGuild(), GamesModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
+                String msg = event.getMessage().getContent();
+                IUser user = event.getMessage().getAuthor();
+                if (msg.startsWith(prefix)) {
+                    String[] args = msg.split(" ");
+                    args[0] = args[0].replace(prefix, "");
+                    String cmd = args[0];
+                    if (cmd.equalsIgnoreCase("8") || cmd.equalsIgnoreCase("8ball")) {
+                        if (args.length > 1) {
+                            int num = new Random().nextInt(answers.size());
+                            String question = "";
+                            for (int i = 1; i < args.length; i++) {
+                                question += args[i] + " ";
+                            }
+                            question.trim();
+                            BufferedMessage.sendMessage(GamesModule.client, event, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers`" + answers.get(num));
                         }
-                        question.trim();
-                        BufferedMessage.sendMessage(GamesModule.client, event, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers`" + answers.get(num));
-                    }
-                } else if (cmd.equalsIgnoreCase("choose")) {
-                    if (args.length > 1) {
-                        String wholeArgs = "";
-                        for (int i = 1; i < args.length; i++) {
-                            wholeArgs += args[i] + " ";
+                    } else if (cmd.equalsIgnoreCase("choose")) {
+                        if (args.length > 1) {
+                            String wholeArgs = "";
+                            for (int i = 1; i < args.length; i++) {
+                                wholeArgs += args[i] + " ";
+                            }
+                            wholeArgs = wholeArgs.trim();
+                            if (wholeArgs.charAt(wholeArgs.length() - 1) == ';') {
+                                wholeArgs = wholeArgs.substring(0, wholeArgs.length() - 1);
+                            }
+                            String[] choices = wholeArgs.split(";");
+                            for (int i = 0; i < choices.length; i++) {
+                                choices[i] = choices[i].trim();
+                            }
+                            BufferedMessage.sendMessage(GamesModule.client, event, choices[new Random().nextInt(choices.length)]);
                         }
-                        wholeArgs = wholeArgs.trim();
-                        if (wholeArgs.charAt(wholeArgs.length() - 1) == ';') {
-                            wholeArgs = wholeArgs.substring(0, wholeArgs.length() - 1);
+                    } else if (cmd.equalsIgnoreCase("rps")) {
+                        if (args.length > 1) {
+                            int pick;
+                            switch (args[1].toLowerCase()) {
+                                case "r":
+                                case "rock":
+                                case "rocket":
+                                    pick = 0;
+                                    break;
+                                case "p":
+                                case "paper":
+                                case "paperclip":
+                                    pick = 1;
+                                    break;
+                                case "scissors":
+                                case "s":
+                                    pick = 2;
+                                    break;
+                                default:
+                                    return;
+                            }
+                            int botPick = new Random().nextInt(3);
+                            String output = "";
+                            if (pick == botPick)
+                                output = "It's a draw! Both picked :" + rpsPick(pick) + ":";
+                            else if ((pick == 0 && botPick == 1) ||
+                                    (pick == 1 && botPick == 2) ||
+                                    (pick == 2 && botPick == 0))
+                                output = GamesModule.client.getOurUser().mention() + " won! :" + rpsPick(botPick) + ": beats :" + rpsPick(pick) + ":";
+                            else
+                                output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
+                            BufferedMessage.sendMessage(GamesModule.client, event, output);
                         }
-                        String[] choices = wholeArgs.split(";");
-                        for (int i = 0; i < choices.length; i++) {
-                            choices[i] = choices[i].trim();
-                        }
-                        BufferedMessage.sendMessage(GamesModule.client, event, choices[new Random().nextInt(choices.length)]);
-                    }
-                } else if (cmd.equalsIgnoreCase("rps")) {
-                    if (args.length > 1) {
-                        int pick;
-                        switch (args[1].toLowerCase()) {
-                            case "r":
-                            case "rock":
-                            case "rocket":
-                                pick = 0;
-                                break;
-                            case "p":
-                            case "paper":
-                            case "paperclip":
-                                pick = 1;
-                                break;
-                            case "scissors":
-                            case "s":
-                                pick = 2;
-                                break;
-                            default:
-                                return;
-                        }
-                        int botPick = new Random().nextInt(3);
-                        String output = "";
-                        if (pick == botPick)
-                            output = "It's a draw! Both picked :" + rpsPick(pick) + ":";
-                        else if ((pick == 0 && botPick == 1) ||
-                                (pick == 1 && botPick == 2) ||
-                                (pick == 2 && botPick == 0))
-                            output = GamesModule.client.getOurUser().mention() + " won! :" + rpsPick(botPick) + ": beats :" + rpsPick(pick) + ":";
-                        else
-                            output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
-                        BufferedMessage.sendMessage(GamesModule.client, event, output);
                     }
                 }
             }
