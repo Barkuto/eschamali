@@ -102,16 +102,31 @@ public class ChannelsListener {
                                 }
 
                                 for (int i = 0; i < currentTalkChannels.size(); i++) {
+                                    boolean add = true;
                                     for (int j = 0; j < deleteTalkChannels.size(); j++) {
-                                        if (!currentTalkChannels.get(i).getName().equalsIgnoreCase(deleteTalkChannels.get(j).getName())) {
-                                            newTalkChannels.add(currentTalkChannels.get(i));
+                                        if (currentTalkChannels.get(i).getName().equalsIgnoreCase(deleteTalkChannels.get(j).getName())) {
+                                            add = false;
                                         }
                                     }
+                                    if (add) {
+                                        newTalkChannels.add(currentTalkChannels.get(i));
+                                    }
                                 }
-                                //Here
-                                System.out.println(currentTalkChannels);
-                                System.out.println(deleteTalkChannels);
-                                System.out.println(newTalkChannels);
+
+                                try {
+                                    PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(new File("servers/" + guild.getName() + "-" + guild.getID() + "/channels.txt"), false)));
+                                    String output = "I can no longer talk in ";
+                                    for (int i = 0; i < newTalkChannels.size(); i++) {
+                                        pw.println(newTalkChannels.get(i).getName());
+                                    }
+                                    for (int i = 0; i < deleteTalkChannels.size(); i++) {
+                                        output += deleteTalkChannels.get(i).mention() + " ";
+                                    }
+                                    pw.close();
+                                    BufferedMessage.sendMessage(ChannelsModule.client, event, output.trim());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
                             }
