@@ -9,6 +9,10 @@ import net.dv8tion.jda.player.source.AudioInfo;
 import net.dv8tion.jda.player.source.AudioSource;
 import net.dv8tion.jda.player.source.AudioTimestamp;
 import org.apache.commons.io.IOUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.audio.IAudioManager;
 import sx.blah.discord.handle.audio.impl.DefaultProvider;
@@ -180,12 +184,16 @@ public class MusicListener {
                                 query = query.substring(0, query.lastIndexOf('+'));
                                 try {
                                     URL page = new URL("https://www.youtube.com/results?search_query=" + query);
-                                    String html = IOUtils.toString(page.openStream(), "utf-8");
-                                    html = html.substring(html.indexOf("<li><div class=\"yt"));
-                                    html = html.substring(html.indexOf("href"));
-                                    html = html.substring(0, html.indexOf("class="));
-                                    html = html.substring(html.indexOf('"') + 1, html.lastIndexOf('"'));
-                                    String youtubeurl = "https://www.youtube.com" + html;
+                                    Document doc = Jsoup.parse(page, 15000);
+                                    Elements es = doc.select("a[aria-hidden]");
+                                    int i = 0;
+                                    Element e = es.get(i);
+                                    while (e.toString().contains("googleads")) {
+                                        i++;
+                                        e = es.get(i);
+                                    }
+                                    String part = e.toString();
+                                    String youtubeurl = "https://www.youtube.com" + part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
                                     System.out.println(youtubeurl);
 
                                     AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
@@ -242,13 +250,18 @@ public class MusicListener {
                         if (aSource.contains("youtu")) {
                             try {
                                 URL page = new URL(aSource);
-                                String html = IOUtils.toString(page.openStream(), "utf-8");
-                                html = html.substring(html.indexOf("<div class=\"watch-sidebar-section\">"));
-                                html = html.substring(0, html.indexOf("data-visibility-tracking=\""));
-                                html = html.substring(html.indexOf("href="));
-                                html = html.substring(0, html.indexOf("class="));
-                                html = html.substring(html.indexOf('"') + 1, html.lastIndexOf('"'));
-                                String youtubeurl = "https://www.youtube.com" + html;
+                                Document d = Jsoup.parse(page, 15000);
+                                Elements elements = d.select("a[href]");
+                                Element e = elements.get(0);
+                                for (int i = 0; i < elements.size(); i++) {
+                                    if (elements.get(i).toString().contains("/watch")) {
+                                        e = elements.get(i);
+                                        break;
+                                    }
+                                }
+                                String part = e.toString();
+                                String watchid = part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
+                                String youtubeurl = "https://www.youtube.com" + watchid;
                                 System.out.println(youtubeurl);
 
                                 AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
