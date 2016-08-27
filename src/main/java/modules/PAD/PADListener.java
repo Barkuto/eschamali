@@ -168,7 +168,11 @@ public class PADListener {
                 shift++;
             }
             String leaderName = abilities.get(6 + shift).child(1).text();
-            String leader = abilities.get(7 + shift).child(1).text();
+            String leader = "";
+            if (!leaderName.contains("None")) {
+                leaderName = "None.";
+                leader = abilities.get(7 + shift).child(1).text();
+            }
             try {
                 if (abilities.get(8 + shift).text().contains("Effect")) {
                     shift++;
