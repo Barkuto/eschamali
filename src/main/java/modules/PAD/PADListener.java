@@ -30,6 +30,7 @@ public class PADListener {
         super();
         abbrMon.put("mzeus", "awoken machine zeus");
         abbrMon.put("mhera", "awoken machine hera");
+        abbrMon.put("miru", "myr");
 
         abbrDun.put("sudr", "super ultimate dragon rush");
     }
@@ -106,7 +107,7 @@ public class PADListener {
             keyword = abbrDun.get(keyword);
         }
         try {
-            keyword = keyword.trim().replace(" ", "+");
+            keyword = keyword.replace(" ", "+").trim();
             URL url = new URL("http://puzzledragonx.com/en/search.asp?q=" + keyword);
             Document doc = Jsoup.parse(url, 15000);
             if (url.toString().equals(doc.location())) {
@@ -116,14 +117,17 @@ public class PADListener {
                 String dunID = dunDoc.select("td.value-end").select("a[href]").attr("href");
                 return "http://puzzledragonx.com/en/" + dunID;
             } else {
-                return doc.location();
+                if (doc.location().contains("mission")) {
+                    return doc.location();
+                } else {
+                    return searchDungeon(keyword.replace("+", " ") + " descended");
+                }
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IndexOutOfBoundsException e) {
-            //Try another search including "descended"
             return "Keyword did not find a dungeon, try different or more keywords.";
         }
         return "Nothing could be found.";

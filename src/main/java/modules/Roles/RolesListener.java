@@ -222,8 +222,12 @@ public class RolesListener {
                                             m.delete();
                                             event.getMessage().delete();
                                         } catch (MissingPermissionsException e) {
-                                            BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
-                                            e.printStackTrace();
+                                            if (e.getErrorMessage().contains("Missing permissions")) {
+                                            } else if (e.getErrorMessage().contains("Edited roles hierarchy is too high")) {
+                                                BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
+                                            } else {
+                                                e.printStackTrace();
+                                            }
                                         } catch (RateLimitException e) {
                                             e.printStackTrace();
                                         } catch (DiscordException e) {
@@ -259,8 +263,12 @@ public class RolesListener {
                                             m.delete();
                                             event.getMessage().delete();
                                         } catch (MissingPermissionsException e) {
-                                            BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
-                                            e.printStackTrace();
+                                            if (e.getErrorMessage().contains("Missing permissions")) {
+                                            } else if (e.getErrorMessage().contains("Edited roles hierarchy is too high")) {
+                                                BufferedMessage.sendMessage(RolesModule.client, event, "I cannot remove a role from you because you have a role that is higher than me.");
+                                            } else {
+                                                e.printStackTrace();
+                                            }
                                         } catch (RateLimitException e) {
                                             e.printStackTrace();
                                         } catch (DiscordException e) {
