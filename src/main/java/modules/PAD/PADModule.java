@@ -51,7 +51,7 @@ public class PADModule implements IModule, ICommands {
     public ArrayList<String> commands() {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(PADListener.prefix);
-        cmds.add("`join`: Makes the bot join your voice channel. **USAGE**: join");
+//        cmds.add("`join`: Makes the bot join your voice channel. **USAGE**: join");
         return cmds;
     }
 }

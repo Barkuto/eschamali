@@ -30,7 +30,8 @@ public class PADListener {
         super();
         abbrMon.put("mzeus", "awoken machine zeus");
         abbrMon.put("mhera", "awoken machine hera");
-        abbrMon.put("miru", "myr");
+        abbrMon.put("miru", "star myr");
+        abbrMon.put("myr", "star myr");
         abbrMon.put("z8", "maleficent phantom zaerog");
         abbrMon.put("radra", "sun god ra dragon");
         abbrMon.put("ra dragon", "sun god ra dragon");
