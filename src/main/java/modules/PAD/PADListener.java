@@ -31,8 +31,17 @@ public class PADListener {
         abbrMon.put("mzeus", "awoken machine zeus");
         abbrMon.put("mhera", "awoken machine hera");
         abbrMon.put("miru", "myr");
+        abbrMon.put("z8", "maleficent phantom zaerog");
+        abbrMon.put("radra", "sun god ra dragon");
+        abbrMon.put("ra dragon", "sun god ra dragon");
+        abbrMon.put("ragdrag", "anti god machine ragnarok");
+        abbrMon.put("rag drag", "anti god machine ragnarok");
+        abbrMon.put("rag dragon", "anti god machine ragnarok");
 
         abbrDun.put("sudr", "super ultimate dragon rush");
+        abbrDun.put("mhera", "machine hera descended");
+        abbrDun.put("mzeus", "machine zeus descended");
+        abbrDun.put("z8", "zaerog descended");
     }
 
     @EventSubscriber
@@ -47,7 +56,7 @@ public class PADListener {
                     IGuild guild = event.getMessage().getGuild();
 
                     if (cmd.equalsIgnoreCase("monster") || cmd.equalsIgnoreCase("mon") || cmd.equalsIgnoreCase("m")) {
-                        BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length())));
+                        BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         try {
                             URL url = new URL(searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length())));
@@ -59,7 +68,7 @@ public class PADListener {
                             e.printStackTrace();
                         }
                     } else if (cmd.equalsIgnoreCase("dungeon") || cmd.equalsIgnoreCase("dun") || cmd.equalsIgnoreCase("d")) {
-                        BufferedMessage.sendMessage(PADModule.client, event, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length())));
+                        BufferedMessage.sendMessage(PADModule.client, event, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("as")) {
                         //List monsters with keyword in active?
                         //List monsters with that active "type"?
@@ -106,6 +115,7 @@ public class PADListener {
         if (abbrDun.containsKey(keyword)) {
             keyword = abbrDun.get(keyword);
         }
+        System.out.println(keyword);
         try {
             keyword = keyword.replace(" ", "+").trim();
             URL url = new URL("http://puzzledragonx.com/en/search.asp?q=" + keyword);
