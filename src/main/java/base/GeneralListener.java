@@ -87,6 +87,20 @@ public class GeneralListener {
                     BufferedMessage.sendMessage(Eschamali.client, event, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
                 } else if (msg.equalsIgnoreCase("!ping")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "pong!");
+                } else if (msg.equalsIgnoreCase("!alert")) {
+                    BufferedMessage.sendMessage(Eschamali.client, event, Eschamali.client.getUserByID(Eschamali.ownerID).mention() + " is on his way! Eventually...");
+                } else if (msg.startsWith("!say")) {
+                    if (event.getMessage().getAuthor().getID().equals(Eschamali.ownerID)) {
+                        BufferedMessage.sendMessage(Eschamali.client, event, msg.substring(msg.indexOf(" ")));
+                        try {
+                            event.getMessage().delete();
+                        } catch (MissingPermissionsException e) {
+                        } catch (RateLimitException e) {
+                            e.printStackTrace();
+                        } catch (DiscordException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }
@@ -102,13 +116,14 @@ public class GeneralListener {
                     if (args.length == 1) {
                         String output = "__Eschamali Bot commands - Prefix:__ !\n";
                         ArrayList<String> commands = new ArrayList<String>();
+                        commands.add("`help`: Lists commands for certains parts of the bot. **USAGE**: help <module name>");
                         commands.add("`donate`: See where you can donate to fund development/server keep up.");
                         commands.add("`maker`: See who made me.");
                         commands.add("`ayy`: Enable ayy mode for the server, requires ADMIN/MANAGE SERVER perm");
                         commands.add("`tilt`: Send a message indicating you are tilted.");
                         commands.add("`riot`: riot.");
                         commands.add("`ping`: Visually check your ping with a pong.");
-                        commands.add("`help`: Lists commands for certains parts of the bot. **USAGE**: help <module name>");
+                        commands.add("`alert`: Alerts Barkuto that something went wrong!");
                         Collections.sort(commands);
                         for (int i = 0; i < commands.size(); i++) {
                             output += commands.get(i) + "\n";
