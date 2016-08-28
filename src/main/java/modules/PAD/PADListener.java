@@ -202,7 +202,7 @@ public class PADListener {
             output += "TYPING: " + typing.replace(" ", "") + "\n";
             output += "ATTR: " + element + "\n";
             output += String.format("RARITY: %-8s COST: %-3s MP: %-6s", rarity, cost, mp) + "\n";
-            output += "ACTIVE: " + cooldown + ", " + (activeName.equals("None") ? "None." : activeName + ": ") + active + "\n";
+            output += "ACTIVE: " + (cooldown.equals("") ? "" : cooldown + ", ") + (activeName.equals("None") ? "None." : activeName + ": ") + active + "\n";
             output += "LEADER: " + (leaderName.equals("None") ? "None." : leaderName + ": ") + leader + "\n";
             output += "AWAKENINGS: ";
             if (spaces == 2) {
