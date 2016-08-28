@@ -436,7 +436,7 @@ public class PADListener {
             }
             output += "\nE: ";
             for (int i = 0; i < a.size(); i++) {
-                output += centerString(a.get(i), colWidths.get(i)) + "|";
+                output += centerString(e.get(i), colWidths.get(i)) + "|";
             }
             output += "\n```";
             return output;
