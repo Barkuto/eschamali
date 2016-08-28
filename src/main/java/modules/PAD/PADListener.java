@@ -350,12 +350,12 @@ public class PADListener {
             }
             output = output.trim().substring(0, output.lastIndexOf(',')) + "\n";
             output += "```";
-            System.out.println(output);
+            return output;
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return "Nothing found.";
     }
 }
