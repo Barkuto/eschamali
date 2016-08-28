@@ -16,6 +16,7 @@ import sx.blah.discord.handle.obj.IUser;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.TreeMap;
 
 /**
@@ -136,9 +137,9 @@ public class PADListener {
         return "Nothing could be found.";
     }
 
-    public String getInfo(String monster) {
+    public String getInfo(String page) {
         try {
-            URL url = new URL(monster);
+            URL url = new URL(page);
             Document doc = Jsoup.parse(url, 15000);
             Elements tables = doc.select("table");
             String avatar = "http://puzzledragonx.com/en/" + doc.select("div.avatar").select("img").attr("src");
@@ -156,49 +157,56 @@ public class PADListener {
             String mp = tableprofileprofile.select("tr").get(8).child(1).text();
             //ABILITIES
             //Account for jp ver ;-;
-            int shift = 0;
             Elements abilities = tables.get(17).child(0).select("tr");
-            String activeName = abilities.get(1).child(1).text();
-            String active = abilities.get(2).child(1).text();
-            if (abilities.get(3).text().contains("Effect") || abilities.get(3).toString().contains("orb")) {
-                shift++;
-            }
-            String cooldown = abilities.get(3 + shift).child(1).text();
-            if (abilities.get(4 + shift).text().contains("Cool")) {
-                shift++;
-            }
-            String leaderName = abilities.get(6 + shift).child(1).text();
+            String activeName = "";
+            String active = "";
+            String cooldown = "";
+            String leaderName = "";
             String leader = "";
-            if (!leaderName.contains("None")) {
-                leaderName = "None.";
-                leader = abilities.get(7 + shift).child(1).text();
-            }
-            try {
-                if (abilities.get(8 + shift).text().contains("Effect")) {
-                    shift++;
-                }
-            } catch (IndexOutOfBoundsException e) {
-
-            }
-            boolean hasAwakenings = true;
-            Elements awakenings = null;
-            try {
-                awakenings = abilities.get(9 + shift).child(1).select("img[src]");
-            } catch (IndexOutOfBoundsException e) {
-                hasAwakenings = false;
-            }
             Elements pantheons = tables.get(20).select("h2");
+
+            int spaces = 0;
+            ArrayList<Integer> spaceIndexes = new ArrayList<Integer>();
+            for (int i = 1; i < abilities.size(); i++) {
+                if (abilities.get(i).toString().contains("colspan")) {
+                    spaces++;
+                    spaceIndexes.add(i);
+                }
+            }
+            spaceIndexes.add(abilities.size() - 1);
+
+            for (int i = 1; i < spaceIndexes.get(0); i++) {
+                Element current = abilities.get(i);
+                if (current.child(0).text().equals("Active Skill:")) {
+                    activeName = current.child(1).text();
+                } else if (current.child(0).text().equals("Effects:")) {
+                    active = current.child(1).text();
+                } else if (current.child(0).text().equals("Cool Down:")) {
+                    cooldown = current.child(1).text();
+                }
+            }
+
+            for (int i = spaceIndexes.get(0); i <= spaceIndexes.get(1); i++) {
+                Element current = abilities.get(i);
+                if (current.child(0).text().equals("Leader Skill:")) {
+                    leaderName = current.child(1).text();
+                } else if (current.child(0).text().equals("Effects:") && leader.equals("")) {
+                    leader = current.child(1).text();
+                }
+            }
 
             String output = "```\n";
             output += doc.location() + "\n";
             output += "NAME: " + name + "\n";
             output += "JP NAME: " + jpName + "\n";
+            output += "TYPING: " + typing.replace(" ", "") + "\n";
             output += "ATTR: " + element + "\n";
             output += String.format("RARITY: %-8s COST: %-3s MP: %-6s", rarity, cost, mp) + "\n";
-            output += String.format("ACTIVE: %s %s: %s", cooldown, activeName, active) + "\n";
-            output += String.format("LEADER: %s: %s", leaderName, leader) + "\n";
-            output += String.format("AWAKENINGS: ");
-            if (hasAwakenings) {
+            output += "ACTIVE: " + cooldown + ", " + (activeName.equals("None") ? "None." : activeName + ": ") + active + "\n";
+            output += "LEADER: " + (leaderName.equals("None") ? "None." : leaderName + ": ") + leader + "\n";
+            output += "AWAKENINGS: ";
+            if (spaces == 2) {
+                Elements awakenings = abilities.get(spaceIndexes.get(2)).select("img[src]");
                 for (int i = 0; i < awakenings.size(); i++) {
                     String awakeningDesc = awakenings.get(i).attr("title");
                     String awakening = awakeningDesc.substring(0, awakeningDesc.indexOf('\n') - 1);
@@ -293,9 +301,48 @@ public class PADListener {
                         case "Enhanced Dark Attribute":
                             smallAwakening = "DarkRow";
                             break;
+
+                        case "Dragon Killer":
+                            smallAwakening = "DragonKill";
+                            break;
+                        case "God Killer":
+                            smallAwakening = "GodKill";
+                            break;
+                        case "Devil Killer":
+                            smallAwakening = "DevilKill";
+                            break;
+                        case "Machine Killer":
+                            smallAwakening = "MachineKill";
+                            break;
+                        case "Attacker Killer":
+                            smallAwakening = "AttackerKill";
+                            break;
+                        case "Physical Killer":
+                            smallAwakening = "PhysicalKill";
+                            break;
+                        case "Healer Killer":
+                            smallAwakening = "HealerKill";
+                            break;
+                        case "Balanced Killer":
+                            smallAwakening = "BalancedKill";
+                            break;
+                        case "Awaken Material Killer":
+                            smallAwakening = "AwakenKill";
+                            break;
+                        case "Enhance Material Killer":
+                            smallAwakening = "EnhanceKill";
+                            break;
+                        case "Vendor Material Killer":
+                            smallAwakening = "VendorKill";
+                            break;
+                        case "Evolve Killer":
+                            smallAwakening = "EvoKill";
+                            break;
                     }
                     output += "[" + smallAwakening + "]";
                 }
+            } else {
+                output += "None.";
             }
             output += "\nPANTHEONS: ";
             for (int i = 0; i < pantheons.size() - 1; i++) {
@@ -303,7 +350,7 @@ public class PADListener {
             }
             output = output.trim().substring(0, output.lastIndexOf(',')) + "\n";
             output += "```";
-            return output;
+            System.out.println(output);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
