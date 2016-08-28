@@ -61,7 +61,7 @@ public class GeneralListener {
                 if (msg.equalsIgnoreCase("!donate")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
                 } else if (msg.equalsIgnoreCase("!maker")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for the PAD w/ MZeus server. Down with A.LB!");
+                    BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers.");
                 } else if (msg.equalsIgnoreCase("!ayy")) {
                     List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
                     if (event.getMessage().getAuthor().getID().equals(Eschamali.ownerID)) {
