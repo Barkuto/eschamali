@@ -19,6 +19,7 @@ import java.net.URL;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.TreeMap;
 
 /**
@@ -62,7 +63,11 @@ public class PADListener {
                     if (cmd.equalsIgnoreCase("monster") || cmd.equalsIgnoreCase("mon") || cmd.equalsIgnoreCase("m")) {
                         BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
-                        BufferedMessage.sendMessage(PADModule.client, event, getInfo(searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1))));
+                        if (split.length == 1) {
+                            BufferedMessage.sendMessage(PADModule.client, event, getInfo((new Random().nextInt(3164) + 1) + ""));
+                        } else {
+                            BufferedMessage.sendMessage(PADModule.client, event, getInfo(searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1))));
+                        }
                     } else if (cmd.equalsIgnoreCase("dungeon") || cmd.equalsIgnoreCase("dun") || cmd.equalsIgnoreCase("d")) {
                         BufferedMessage.sendMessage(PADModule.client, event, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("as")) {
@@ -79,6 +84,27 @@ public class PADListener {
                             BufferedMessage.sendMessage(PADModule.client, event, guerilla(split[1].trim()));
                         } else if (split.length == 3) {
                             BufferedMessage.sendMessage(PADModule.client, event, guerillaGroup(split[1].trim(), split[2].trim()));
+                        }
+                    } else if (cmd.equalsIgnoreCase("pic")) {
+                        if (split[1].contains("sheen")) {
+                            int roll = new Random().nextInt(100);
+                            System.out.println(roll);
+                            if (roll >= 95) {
+                                BufferedMessage.sendMessage(PADModule.client, event, "http://i.imgur.com/oicGMFu.png");
+                                return;
+                            }
+                        }
+                        String found = "";
+                        if (split.length == 1) {
+                            found = searchMonster((new Random().nextInt(3164) + 1) + "");
+                        } else {
+                            found = searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
+                        }
+                        if (found.contains("n=")) {
+                            found = found.substring(found.indexOf("=") + 1);
+                            BufferedMessage.sendMessage(PADModule.client, event, "http://puzzledragonx.com/en/img/monster/MONS_" + found + ".jpg");
+                        } else {
+                            BufferedMessage.sendMessage(PADModule.client, event, found);
                         }
                     }
                 }

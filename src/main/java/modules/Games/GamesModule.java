@@ -55,6 +55,7 @@ public class GamesModule implements IModule, ICommands {
         cmds.add("`8ball`: Asks the magic 8 ball a question. **USAGE**: 8ball \"question\"");
         cmds.add("`choose`: Chooses one of the given choices. **USAGE**: choose option1;option2;option3");
         cmds.add("`rps`: Plays Rock, Paper, Scissors with the both. **USAGE**: rps rock|paper|scissor");
+        cmds.add("`roll`: Rolls a random number from 1 to 100, inclusively. **USAGE**: roll");
         return cmds;
     }
 }

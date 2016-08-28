@@ -51,7 +51,11 @@ public class PADModule implements IModule, ICommands {
     public ArrayList<String> commands() {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(PADListener.prefix);
-//        cmds.add("`join`: Makes the bot join your voice channel. **USAGE**: join");
+        cmds.add("`monster`:  Searches for a monster, and links its PADx page. **USAGE**: monster <query>");
+        cmds.add("`info`:  Displays a monsters PADx info. **USAGE**: info <query>");
+        cmds.add("`dungeon`:  Searches for a dungeon, and links its PADx page. **USAGE**: dungeon <query>");
+        cmds.add("`guerilla`:  Displays the guerilla dungeons for the day. **USAGE**: guerilla <timezone> <group>");
+        cmds.add("`pic`:  Displays a monsters full art from PADx. **USAGE**: pic <query>");
         return cmds;
     }
 }

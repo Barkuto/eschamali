@@ -116,6 +116,8 @@ public class GamesListener {
                                 output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
                             BufferedMessage.sendMessage(GamesModule.client, event, output);
                         }
+                    } else if (cmd.equalsIgnoreCase("roll")) {
+                        BufferedMessage.sendMessage(GamesModule.client, event, "You rolled a `" + (new Random().nextInt(100) + 1) + "`!");
                     }
                 }
             }
