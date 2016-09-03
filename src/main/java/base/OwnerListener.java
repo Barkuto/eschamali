@@ -66,9 +66,10 @@ public class OwnerListener {
                 } else if (cmd.equalsIgnoreCase("setavatar")) {
 
                 } else if (cmd.equalsIgnoreCase("uptime")) {
-                    RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-                    long uptime = rb.getUptime();
-
+                    long uptime = System.currentTimeMillis() - Eschamali.startTime;
+//                    RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
+//                    long uptime = rb.getUptime();
+//
                     long second = (uptime / 1000) % 60;
                     long minute = (uptime / (1000 * 60)) % 60;
                     long hour = (uptime / (1000 * 60 * 60)) % 24;

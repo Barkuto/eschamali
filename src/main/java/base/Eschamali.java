@@ -6,6 +6,7 @@ import modules.Games.GamesModule;
 import modules.Music.MusicModule;
 import modules.PAD.PADModule;
 import modules.Parrot.ParrotModule;
+import modules.Permissions.PermissionsListener;
 import modules.Roles.RolesModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -24,7 +25,8 @@ public class Eschamali {
     public static ArrayList<IModule> modules;
     public static TreeMap<IModule, Boolean> defaultmodules;
     public static IDiscordClient client;
-    static String ownerID = "85844964633747456";
+    public static String ownerID = "85844964633747456";
+    public static long startTime;
 
     public Eschamali() {
         Comparator<IModule> cmpr = new Comparator<IModule>() {
@@ -65,10 +67,12 @@ public class Eschamali {
 
     public void run(String token) {
         try {
+            startTime = System.currentTimeMillis();
             client = new ClientBuilder().withToken(token).login();
             client.getDispatcher().registerListener(new ModuleListener());
             client.getDispatcher().registerListener(new GeneralListener());
             client.getDispatcher().registerListener(new OwnerListener());
+//            client.getDispatcher().registerListener(new PermissionsListener());
 
             for (IModule m : modules) {
                 m.enable(client);

@@ -82,7 +82,7 @@ public class GeneralListener {
                 } else if (msg.equalsIgnoreCase("ayy") && ayy) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "lmao");
                 } else if (msg.equalsIgnoreCase("!tilt")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "*T* *I* *L* *T*");
+                    BufferedMessage.sendMessage(Eschamali.client, event, "*T* *I* *L* *T* *E* *D*");
                 } else if (msg.equalsIgnoreCase("!riot")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
                 } else if (msg.equalsIgnoreCase("!ping")) {
