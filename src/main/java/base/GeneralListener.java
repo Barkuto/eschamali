@@ -1,6 +1,7 @@
 package base;
 
 import com.sun.org.apache.bcel.internal.generic.ARRAYLENGTH;
+import com.sun.org.apache.bcel.internal.generic.IREM;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
 import modules.Channels.ChannelsModule;
@@ -101,6 +102,26 @@ public class GeneralListener {
                             e.printStackTrace();
                         }
                     }
+                } else if (msg.equalsIgnoreCase("!serverinfo")) {
+                    IGuild guild = event.getMessage().getGuild();
+                    String name = guild.getName();
+                    String serverID = guild.getID();
+                    IRegion region = guild.getRegion();
+                    IUser owner = guild.getOwner();
+                    long users = guild.getUsers().size();
+                    long roles = guild.getRoles().size();
+                    String iconURL = guild.getIconURL();
+
+                    String output = "```xl\n";
+                    output += String.format("%-12s %s\n", "Server Name:", name);
+                    output += String.format("%-12s %s\n", "Server ID:", serverID);
+                    output += String.format("%-12s %s\n", "Icon URL:", iconURL);
+                    output += String.format("%-12s %s\n", "Region:", region.getName());
+                    output += String.format("%-12s %s\n", "Owner:", owner.getName() + "#" + owner.getDiscriminator());
+                    output += String.format("%-12s %s\n", "Users:", users);
+                    output += String.format("%-12s %s\n", "Roles:", roles);
+                    output += "```";
+                    BufferedMessage.sendMessage(Eschamali.client, event, output);
                 }
             }
         }
@@ -124,6 +145,7 @@ public class GeneralListener {
                         commands.add("`riot`: riot.");
                         commands.add("`ping`: Visually check your ping with a pong.");
                         commands.add("`alert`: Alerts Barkuto that something went wrong!");
+                        commands.add("`serverinfo`: Shows some information about the current server.");
                         Collections.sort(commands);
                         for (int i = 0; i < commands.size(); i++) {
                             output += commands.get(i) + "\n";

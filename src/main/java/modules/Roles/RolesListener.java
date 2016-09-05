@@ -1,5 +1,6 @@
 package modules.Roles;
 
+import base.Eschamali;
 import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
@@ -239,6 +240,7 @@ public class RolesListener {
                                     return;
                                 }
                             }
+                            BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role!");
                         }
 
                     } else if (args[0].equalsIgnoreCase("iamn")) {//Remove role from self, if self assignable
@@ -249,6 +251,17 @@ public class RolesListener {
                             }
                             role = role.trim();
                             List<IRole> roles = guild.getRoles();
+                            List<IRole> userRoles = author.getRolesForGuild(guild);
+                            boolean found = false;
+                            for (IRole r : userRoles) {
+                                if (r.getName().equalsIgnoreCase(role)) {
+                                    found = true;
+                                }
+                            }
+                            if (!found) {
+                                BufferedMessage.sendMessage(Eschamali.client, event, "You do not have that role.");
+                                return;
+                            }
                             for (IRole r : roles) {
                                 if (r.getName().equalsIgnoreCase(role)) {
                                     if (roleISA(guild, role)) {
@@ -280,6 +293,7 @@ public class RolesListener {
                                     return;
                                 }
                             }
+                            BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role!");
                         }
 
                     } else if (args[0].equalsIgnoreCase("inrole")) {//Check people with given role

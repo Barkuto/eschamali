@@ -3,6 +3,7 @@ package modules.PAD;
 import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
+import modules.Permissions.PermissionsListener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -52,7 +53,8 @@ public class PADListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (ModuleListener.isModuleOn(event.getMessage().getGuild(), PADModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
+            if (PermissionsListener.isModuleOn(event.getMessage().getGuild(), PADModule.name)
+                    && PermissionsListener.canModuleInChannel(event.getMessage().getGuild(), PADModule.name, event.getMessage().getChannel())) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
                     String msg = event.getMessage().getContent();
                     String[] split = msg.split(" ");

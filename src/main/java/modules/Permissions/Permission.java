@@ -37,7 +37,7 @@ public class Permission {
         if (oldVal.length() > 1) {
             oldVal += ";";
         }
-        ResultSet rs = db.executeQuery("SELECT " + col1 + " FROM " + table);
+        ResultSet rs = db.executeQuery("SELECT " + "*" + " FROM " + table + " WHERE " + col1 + "='" + col1Val + "'");
         try {
             if (rs.next()) {
                 db.execute("UPDATE " + table + " SET " + col2 + "='" + oldVal + addVal + "' WHERE " + col1 + "='" + col1Val + "'");
@@ -52,6 +52,16 @@ public class Permission {
 
     public void resetPerms(String table, String col1, String col1Val, String col2) {
         db.execute("UPDATE " + table + " SET " + col2 + "='' WHERE " + col1 + "='" + col1Val + "'");
+    }
+
+    public void createTable(String table, String col1, String col1Type, String col2, String col2Type) {
+        if (!db.tableExists(table)) {
+            db.execute("CREATE TABLE " + table + " (" + col1 + " " + col1Type + ", " + col2 + " " + col2Type + ")");
+        }
+    }
+
+    public void deleteTable(String table) {
+        db.execute("DROP TABLE IF EXISTS " + table);
     }
 
     public void close() {

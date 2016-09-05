@@ -13,6 +13,10 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeMap;
@@ -26,7 +30,7 @@ public class Eschamali {
     public static TreeMap<IModule, Boolean> defaultmodules;
     public static IDiscordClient client;
     public static String ownerID = "85844964633747456";
-    public static long startTime;
+    public static final long startTime = System.currentTimeMillis();
 
     public Eschamali() {
         Comparator<IModule> cmpr = new Comparator<IModule>() {
@@ -39,14 +43,12 @@ public class Eschamali {
         RolesModule roles = new RolesModule();
         GamesModule games = new GamesModule();
         ParrotModule parrot = new ParrotModule();
-        ChannelsModule channels = new ChannelsModule();
         MusicModule music = new MusicModule();
         PADModule pad = new PADModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
         defaultmodules.put(parrot, false);
-        defaultmodules.put(channels, true);
         defaultmodules.put(music, true);
         defaultmodules.put(pad, true);
 
@@ -54,7 +56,6 @@ public class Eschamali {
         modules.add(roles);
         modules.add(games);
         modules.add(parrot);
-        modules.add(channels);
         modules.add(music);
         modules.add(pad);
         modules.sort(new Comparator<IModule>() {
@@ -67,13 +68,10 @@ public class Eschamali {
 
     public void run(String token) {
         try {
-            startTime = System.currentTimeMillis();
             client = new ClientBuilder().withToken(token).login();
-            client.getDispatcher().registerListener(new ModuleListener());
             client.getDispatcher().registerListener(new GeneralListener());
             client.getDispatcher().registerListener(new OwnerListener());
-//            client.getDispatcher().registerListener(new PermissionsListener());
-
+            client.getDispatcher().registerListener(new PermissionsListener());
             for (IModule m : modules) {
                 m.enable(client);
             }

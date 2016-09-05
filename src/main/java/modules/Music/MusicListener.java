@@ -3,6 +3,7 @@ package modules.Music;
 import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
+import modules.Permissions.PermissionsListener;
 import net.dv8tion.d4j.player.MusicPlayer;
 import net.dv8tion.jda.player.Playlist;
 import net.dv8tion.jda.player.source.AudioInfo;
@@ -44,7 +45,8 @@ public class MusicListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (ModuleListener.isModuleOn(event.getMessage().getGuild(), MusicModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
+            if (PermissionsListener.isModuleOn(event.getMessage().getGuild(), MusicModule.name)
+                    && PermissionsListener.canModuleInChannel(event.getMessage().getGuild(), MusicModule.name, event.getMessage().getChannel())) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
                     String msg = event.getMessage().getContent();
                     String[] split = msg.split(" ");
