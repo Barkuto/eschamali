@@ -1,6 +1,5 @@
 package modules.Music;
 
-import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
 import modules.Permissions.PermissionsListener;
@@ -9,7 +8,6 @@ import net.dv8tion.jda.player.Playlist;
 import net.dv8tion.jda.player.source.AudioInfo;
 import net.dv8tion.jda.player.source.AudioSource;
 import net.dv8tion.jda.player.source.AudioTimestamp;
-import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,20 +16,12 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.audio.IAudioManager;
 import sx.blah.discord.handle.audio.impl.DefaultProvider;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPrivateChannel;
-import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.handle.obj.IVoiceChannel;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.MessageBuilder;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.Buffer;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,14 +35,15 @@ public class MusicListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (PermissionsListener.isModuleOn(event.getMessage().getGuild(), MusicModule.name)
-                    && PermissionsListener.canModuleInChannel(event.getMessage().getGuild(), MusicModule.name, event.getMessage().getChannel())) {
+            IGuild guild = event.getMessage().getGuild();
+            IChannel channel = event.getMessage().getChannel();
+            if (PermissionsListener.isModuleOn(guild, MusicModule.name)
+                    && PermissionsListener.canModuleInChannel(guild, MusicModule.name, channel)) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
                     String msg = event.getMessage().getContent();
                     String[] split = msg.split(" ");
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
-                    IGuild guild = event.getMessage().getGuild();
 
                     IAudioManager manager = guild.getAudioManager();
                     MusicPlayer player;

@@ -1,20 +1,20 @@
 package modules.Roles;
 
-import base.Eschamali;
-import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
-import modules.Channels.ChannelsListener;
+import modules.Permissions.Permission;
+import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RateLimitException;
 
-import java.io.*;
-import java.nio.Buffer;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
 
 /**
  * Created by Iggie on 8/14/2016.
@@ -23,124 +23,98 @@ public class RolesListener {
     public static String prefix = ".";
     private String ownerID = "85844964633747456";
 
+    private String miscTableName = "rolesmisc";
+    private String miscCol1 = "field";
+    private String miscCol2 = "roles";
+
+    private String rolesTableName = "roles";
+    private String rolesCol1 = "role";
+    private String rolesCol2 = "general";
+
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
-        File autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
-        File selfrolesF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/selfroles.txt");
-
-        if (!autoroleF.exists()) {
-            autoroleF.getParentFile().mkdirs();
-            try {
-                autoroleF.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        Permission perms = PermissionsListener.getPermissionDB(event.getGuild());
+        if (!perms.tableExists(miscTableName)) {
+            perms.createTable(miscTableName, miscCol1, "string", miscCol2, "string");
+            perms.addPerms(miscTableName, miscCol1, "autorole", miscCol2, "");
+            perms.addPerms(miscTableName, miscCol1, "selfroles", miscCol2, "");
         }
-        if (!selfrolesF.exists()) {
-            selfrolesF.getParentFile().mkdirs();
-            try {
-                selfrolesF.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        perms.close();
     }
 
     @EventSubscriber
     public void newUserJoin(UserJoinEvent event) {
-        if (ModuleListener.isModuleOn(event.getGuild(), RolesModule.name)) {
-            File autoroleF = new File("servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + "/autorole.txt");
-            if (autoroleF.exists()) {
-                try {
-                    Scanner s = new Scanner(autoroleF);
-                    if (s.hasNextLine()) {
-                        String line = s.nextLine();
-                        IRole r = roleFromGuild(event.getGuild(), line);
-                        if (r != null) {
-                            try {
-                                event.getUser().addRole(r);
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            }
-                        }
+        Permission perms = PermissionsListener.getPermissionDB(event.getGuild());
+        if (PermissionsListener.isModuleOn(event.getGuild(), RolesModule.name)) {
+            if (perms.tableExists(miscTableName)) {
+                String role = perms.getPerms(miscTableName, miscCol1, "autorole", miscCol2);
+                IRole r = event.getGuild().getRoleByID(role);
+                if (r != null) {
+                    try {
+                        event.getUser().addRole(r);
+                    } catch (MissingPermissionsException e) {
+                        e.printStackTrace();
+                    } catch (RateLimitException e) {
+                        e.printStackTrace();
+                    } catch (DiscordException e) {
+                        e.printStackTrace();
                     }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
                 }
             }
+            perms.close();
         }
     }
 
     @EventSubscriber
     public void messageReceived(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (ModuleListener.isModuleOn(event.getMessage().getGuild(), RolesModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
-                String message = event.getMessage().getContent();
-                File autoroleF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/autorole.txt");
-                File selfrolesF = new File("servers/" + event.getMessage().getGuild().getName() + "-" + event.getMessage().getGuild().getID() + "/selfroles.txt");
+            String message = event.getMessage().getContent();
+            IUser author = event.getMessage().getAuthor();
+            IGuild guild = event.getMessage().getGuild();
+            IChannel channel = event.getMessage().getChannel();
+            if (PermissionsListener.isModuleOn(guild, RolesModule.name) && PermissionsListener.canModuleInChannel(guild, RolesModule.name, channel)) {
                 if (message.startsWith(prefix)) {
-                    IGuild guild = event.getMessage().getGuild();
-                    IUser author = event.getMessage().getAuthor();
                     String[] args = message.split(" ");
-                    args[0] = args[0].substring(1, args[0].length());
+                    args[0] = args[0].replace(prefix, "").trim();
+                    String cmd = args[0];
+                    String argsconcat;
+                    try {
+                        argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
+                    } catch (StringIndexOutOfBoundsException e) {
+                        argsconcat = "";
+                    }
 
-                    if (args[0].equalsIgnoreCase("autorole")) {
-                        if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_SERVER) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                            if (args.length > 1) {
-                                String role = "";
-                                for (int i = 1; i < args.length; i++) {
-                                    role += args[i] + " ";
-                                }
-                                role = role.trim();
+                    Permission perms = PermissionsListener.getPermissionDB(guild);
 
-                                IRole theRole = roleFromGuild(guild, role);
-
-                                if (theRole != null) {
-                                    try {
-                                        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(autoroleF, false)));
-                                        pw.println(theRole.getName());
-                                        pw.close();
-                                        BufferedMessage.sendMessage(RolesModule.client, event, theRole.getName() + " role has been added as the auto role.");
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
+                    if (cmd.equalsIgnoreCase("db")) {
+                        if (userHasPerm(event.getMessage().getAuthor(), event.getMessage().getGuild(), Permissions.MANAGE_SERVER) || event.getMessage().getAuthor().getID().equals(ownerID)) {
+                            BufferedMessage.sendMessage(RolesModule.client, event, databaseString(guild));
+                        }
+                    } else if (cmd.equalsIgnoreCase("autorole")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID)) {
+                            if (args.length == 1) {
+                                String output = "The current autorole is: ";
+                                IRole role = guild.getRoleByID(perms.getPerms(miscTableName, miscCol1, "autorole", miscCol2));
+                                if (role != null) {
+                                    output += role.getName();
+                                    BufferedMessage.sendMessage(RolesModule.client, event, output);
                                 } else {
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "There is no auto role.");
                                 }
-                            } else if (args.length == 1) {
-                                try {
-                                    Scanner s = new Scanner(autoroleF);
-                                    if (s.hasNextLine()) {
-                                        BufferedMessage.sendMessage(RolesModule.client, event, "The current autorole is " + s.nextLine());
-                                    } else {
-                                        BufferedMessage.sendMessage(RolesModule.client, event, "There is no autorole.");
-                                    }
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
+                            } else {
+                                IRole role = roleFromGuild(guild, argsconcat);
+                                if (role != null) {
+                                    perms.setPerms(miscTableName, miscCol1, "autorole", miscCol2, role.getID());
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "The auto-role is now \"" + role.getName() + "\"");
                                 }
                             }
-                        } else {
-                            BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                         }
-                    } else if (args[0].equalsIgnoreCase("removeautorole")) {
-                        if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                            if (autoroleF.exists()) {
-                                try {
-                                    PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(autoroleF, false)));
-                                    pw.close();
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "Auto role has been removed.");
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        } else {
-                            BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
+                    } else if (cmd.equalsIgnoreCase("removeautorole")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID)) {
+                            perms.setPerms(miscTableName, miscCol1, "autorole", miscCol2, "");
+                            BufferedMessage.sendMessage(RolesModule.client, event, "The auto-role has been removed.");
                         }
-                    } else if (args[0].equalsIgnoreCase("ar")) {//Add role to person
+                    } else if (cmd.equalsIgnoreCase("ar")) {//Add role to person
                         if (args.length > 2) {
                             if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID) && args.length > 2) {
                                 String user = args[1];
@@ -170,8 +144,7 @@ public class RolesListener {
                                 BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                             }
                         }
-
-                    } else if (args[0].equalsIgnoreCase("rr")) {//Remove role from person
+                    } else if (cmd.equalsIgnoreCase("rr")) {//Remove role from person
                         if (args.length > 2) {
                             if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getID().equals(ownerID)) {
                                 String user = args[1];
@@ -201,73 +174,70 @@ public class RolesListener {
                                 BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                             }
                         }
-                    } else if (args[0].equalsIgnoreCase("iam")) {//Add role to self, if self assignable
-                        if (args.length > 1) {
-                            String role = "";
-                            for (int i = 1; i < args.length; i++) {
-                                role += args[i] + " ";
+                    } else if (cmd.equalsIgnoreCase("iam")) {//Add role to self, if self assignable
+                        if (args.length >= 1) {
+                            IRole role = null;
+                            for (IRole r : guild.getRoles()) {
+                                if (r.getName().equalsIgnoreCase(argsconcat.trim())) {
+                                    role = r;
+                                }
                             }
-                            role = role.trim();
-                            List<IRole> roles = guild.getRoles();
-                            for (IRole r : roles) {
-                                if (r.getName().equalsIgnoreCase(role)) {
-                                    if (roleISA(guild, role)) {
+                            if (role != null) {
+                                if (roleISA(guild, role)) {
+                                    try {
+                                        author.addRole(role);
+                                        IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + role.getName() + " role.");
                                         try {
-                                            author.addRole(r);
-                                            IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + r.getName() + " role.");
-                                            try {
-                                                Thread.sleep(2000);
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
-                                            }
-                                            m.delete();
-                                            event.getMessage().delete();
-                                        } catch (MissingPermissionsException e) {
-                                            if (e.getErrorMessage().contains("Missing permissions")) {
-                                            } else if (e.getErrorMessage().contains("Edited roles hierarchy is too high")) {
-                                                BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
-                                            } else {
-                                                e.printStackTrace();
-                                            }
-                                        } catch (RateLimitException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
+                                            Thread.sleep(2000);
+                                        } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
-                                    } else {
-                                        BufferedMessage.sendMessage(RolesModule.client, event, "That role is not self assignable.");
+                                        m.delete();
+                                        event.getMessage().delete();
+                                    } catch (MissingPermissionsException e) {
+                                        if (e.getErrorMessage().contains("Missing permissions")) {
+                                            BufferedMessage.sendMessage(RolesModule.client, event, "I do not have the proper permissions to add a role to you.");
+                                        } else if (e.getErrorMessage().contains("Edited roles hierarchy is too high")) {
+                                            BufferedMessage.sendMessage(RolesModule.client, event, "I cannot add a role to you because you have a role that is higher than me.");
+                                        } else {
+                                            e.printStackTrace();
+                                        }
+                                    } catch (RateLimitException e) {
+                                        e.printStackTrace();
+                                    } catch (DiscordException e) {
+                                        e.printStackTrace();
                                     }
+                                } else {
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "That role is not self assignable.");
                                     return;
                                 }
                             }
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role!");
                         }
-
-                    } else if (args[0].equalsIgnoreCase("iamn")) {//Remove role from self, if self assignable
+                    } else if (cmd.equalsIgnoreCase("iamn")) {//Remove role from self, if self assignable
                         if (args.length > 1) {
-                            String role = "";
-                            for (int i = 1; i < args.length; i++) {
-                                role += args[i] + " ";
-                            }
-                            role = role.trim();
-                            List<IRole> roles = guild.getRoles();
-                            List<IRole> userRoles = author.getRolesForGuild(guild);
-                            boolean found = false;
-                            for (IRole r : userRoles) {
-                                if (r.getName().equalsIgnoreCase(role)) {
-                                    found = true;
+                            //check if role is a role
+                            //check if user has role
+                            //remove role
+                            IRole role = null;
+                            for (IRole r : guild.getRoles()) {
+                                if (r.getName().equalsIgnoreCase(argsconcat.trim())) {
+                                    role = r;
                                 }
                             }
-                            if (!found) {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "You do not have that role.");
-                                return;
-                            }
-                            for (IRole r : roles) {
-                                if (r.getName().equalsIgnoreCase(role)) {
+                            if (role != null) {
+                                boolean hasRole = false;
+                                for (IRole r : author.getRolesForGuild(guild)) {
+                                    if (r.getID().equalsIgnoreCase(role.getID())) {
+                                        hasRole = true;
+                                        break;
+                                    }
+                                }
+                                if (hasRole) {
                                     if (roleISA(guild, role)) {
                                         try {
-                                            author.removeRole(r);
-                                            IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + r.getName() + " role from you.");
+                                            author.removeRole(role);
+                                            IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + role.getName() + " role from you.");
                                             try {
                                                 Thread.sleep(2000);
                                             } catch (InterruptedException e) {
@@ -277,6 +247,7 @@ public class RolesListener {
                                             event.getMessage().delete();
                                         } catch (MissingPermissionsException e) {
                                             if (e.getErrorMessage().contains("Missing permissions")) {
+                                                BufferedMessage.sendMessage(RolesModule.client, event, "I do not have the proper permissions to remove a role from you.");
                                             } else if (e.getErrorMessage().contains("Edited roles hierarchy is too high")) {
                                                 BufferedMessage.sendMessage(RolesModule.client, event, "I cannot remove a role from you because you have a role that is higher than me.");
                                             } else {
@@ -289,14 +260,16 @@ public class RolesListener {
                                         }
                                     } else {
                                         BufferedMessage.sendMessage(RolesModule.client, event, "That role is not self assignable.");
+                                        return;
                                     }
+                                } else {
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "You do not have that role.");
                                     return;
                                 }
                             }
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role!");
                         }
-
-                    } else if (args[0].equalsIgnoreCase("inrole")) {//Check people with given role
+                    } else if (cmd.equalsIgnoreCase("inrole")) {//Check people with given role
                         if (args.length > 1) {
                             String role = "";
                             for (int i = 1; i < args.length; i++) {
@@ -323,22 +296,22 @@ public class RolesListener {
                                 BufferedMessage.sendMessage(RolesModule.client, event, output);
                             }
                         }
-                    } else if (args[0].equalsIgnoreCase("myroles")) {
+                    } else if (cmd.equalsIgnoreCase("myroles")) {
                         IUser user = event.getMessage().getAuthor();
                         List<IRole> userRoles = user.getRolesForGuild(guild);
                         String output = "`A list of your roles, " + user.getName() + "#" + user.getDiscriminator() + ":`";
                         for (IRole r : userRoles) {
-                            output += "\n•" + r.getName().replace("@", "");
+                            output += "\n•" + r.getName();
                         }
                         BufferedMessage.sendMessage(RolesModule.client, event, output);
-                    } else if (args[0].equalsIgnoreCase("roles")) {
+                    } else if (cmd.equalsIgnoreCase("roles")) {
                         String output = "`List of roles:`";
                         List<IRole> roles = guild.getRoles();
                         for (IRole r : roles) {
                             output += "\n•" + r.getName().replace("@", "");
                         }
                         BufferedMessage.sendMessage(RolesModule.client, event, output);
-                    } else if (args[0].equalsIgnoreCase("rolesof") && args.length > 1) {
+                    } else if (cmd.equalsIgnoreCase("rolesof") && args.length > 1) {
                         IUser user = guild.getUserByID(parseUserID(args[1]));
                         if (user != null) {
                             List<IRole> theirRoles = user.getRolesForGuild(guild);
@@ -350,158 +323,141 @@ public class RolesListener {
                         } else {
                             BufferedMessage.sendMessage(RolesModule.client, event, "Invalid parameter, please @ the user to see their roles.");
                         }
-                    } else if (args[0].equalsIgnoreCase("lsar")) {
-                        int count = 0;
-                        String msg = "";
-                        if (selfrolesF.exists()) {
-                            try {
-                                Scanner s = new Scanner(selfrolesF);
-                                while (s.hasNextLine()) {
-                                    msg += "**" + s.nextLine() + "**, ";
+                    } else if (cmd.equalsIgnoreCase("lsar")) {
+                        String selfroles = perms.getPerms(miscTableName, miscCol1, "selfroles", miscCol2);
+                        if (selfroles != null && selfroles.length() > 0) {
+                            String[] roles = selfroles.split(";");
+                            Arrays.sort(roles);
+                            int count = 0;
+                            String output = "";
+                            for (int i = 0; i < roles.length; i++) {
+                                IRole r = guild.getRoleByID(roles[i]);
+                                if (r != null) {
+                                    output += "**" + r.getName() + "**, ";
                                     count++;
                                 }
-                                if (count > 0) {
-                                    msg = msg.substring(0, msg.length() - 2);
-                                }
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
                             }
+                            if (count > 0) {
+                                output = output.substring(0, output.length() - 2);
+                            }
+
+                            String thingy1 = "are";
+                            String thingy2 = "roles";
+                            if (count == 1) {
+                                thingy1 = "is";
+                                thingy2 = "role";
+                            }
+                            BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + output);
                         }
-                        String thingy1 = "are";
-                        String thingy2 = "roles";
-                        if (count == 1) {
-                            thingy1 = "is";
-                            thingy2 = "role";
-                        }
-                        BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + msg);
-                    } else if (args[0].equalsIgnoreCase("asar") && args.length > 1) {
+                    } else if (cmd.equalsIgnoreCase("asar")) {
                         if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                            String role = "";
-                            for (int i = 1; i < args.length; i++) {
-                                role += args[i] + " ";
-                            }
-                            role = role.trim();
-
-                            IRole theRole = roleFromGuild(guild, role);
-
-                            if (theRole != null) {
-                                if (!roleISA(guild, role)) {
-                                    try {
-                                        PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(selfrolesF, true)));
-                                        pw.println(theRole.getName());
-                                        pw.close();
+                            if (args.length > 1 && !message.contains(";")) {
+                                IRole role = roleFromGuild(guild, argsconcat.trim());
+                                if (role != null) {
+                                    if (!roleISA(guild, role)) {
+                                        perms.addPerms(miscTableName, miscCol1, "selfroles", miscCol2, role.getID());
                                         BufferedMessage.sendMessage(RolesModule.client, event, "Role has been successfully added as self assignable.");
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
+                                    } else {
+                                        BufferedMessage.sendMessage(RolesModule.client, event, "That role is already self assignable.");
                                     }
                                 } else {
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "That role is already self assignable.");
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
                                 }
                             } else {
-                                BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
+                                String[] roles = argsconcat.trim().split(";");
+                                ArrayList<IRole> rolesToAdd = new ArrayList<IRole>();
+                                for (int i = 0; i < roles.length; i++) {
+                                    IRole r = roleFromGuild(guild, roles[i].trim());
+                                    if (r != null) {
+                                        rolesToAdd.add(r);
+                                    }
+                                }
+
+                                int added = 0;
+                                String output = "";
+                                for (IRole r : rolesToAdd) {
+                                    if (!roleISA(guild, r)) {
+                                        perms.addPerms(miscTableName, miscCol1, "selfroles", miscCol2, r.getID());
+                                        output += r.getName() + ", ";
+                                        added++;
+                                    }
+                                }
+                                if (added > 0) {
+                                    output = output.substring(0, output.length() - 2).trim();
+                                }
+                                BufferedMessage.sendMessage(RolesModule.client, event, "Added `" + added + "` role" + (added == 1 ? "" : "s") + " as self assignable:\n" + output);
                             }
                         } else {
                             BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                         }
-                    } else if (args[0].equalsIgnoreCase("amsar")) {
-                        if (args.length > 2) {
-                            if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                                ArrayList<IRole> argRoles = new ArrayList<IRole>();
-                                String argConcat = "";
-                                for (int i = 1; i < args.length; i++) {
-                                    argConcat += args[i] + " ";
-                                }
-                                argConcat = argConcat.trim();
-
-                                String[] roles = argConcat.split(";");
-                                for (int i = 0; i < roles.length; i++) {
-                                    roles[i] = roles[i].trim();
-                                    IRole r = roleFromGuild(guild, roles[i]);
-                                    if (r != null) {
-                                        argRoles.add(r);
-                                    }
-                                }
-
-                                ArrayList<IRole> addedRoles = new ArrayList<IRole>();
-                                try {
-                                    PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(selfrolesF, true)));
-
-                                    for (int i = 0; i < argRoles.size(); i++) {
-                                        if (!roleISA(guild, argRoles.get(i).getName())) {
-                                            pw.println(argRoles.get(i).getName());
-                                            addedRoles.add(argRoles.get(i));
-                                        }
-                                    }
-
-                                    pw.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
-                                String output = "";
-                                for (int i = 0; i < addedRoles.size(); i++) {
-                                    output += addedRoles.get(i).getName() + ", ";
-                                }
-                                output = output.trim();
-                                BufferedMessage.sendMessage(RolesModule.client, event, "Successfully added `" + addedRoles.size() + "` roles as self assignable:\n" + output);
-                            } else {
-                                BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
-                            }
-                        }
-                    } else if (args[0].equalsIgnoreCase("rsar")) {
-                        if (args.length > 1) {
-                            if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                                String role = "";
-                                for (int i = 1; i < args.length; i++) {
-                                    role += args[i] + " ";
-                                }
-                                role = role.trim();
-
-                                IRole theRole = roleFromGuild(guild, role);
-
-                                if (theRole == null) {
-                                    BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
-                                } else {
+                    } else if (cmd.equalsIgnoreCase("rsar")) {
+                        if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
+                            if (args.length > 1 && !message.contains(";")) {
+                                IRole role = roleFromGuild(guild, argsconcat.trim());
+                                if (role != null) {
                                     if (roleISA(guild, role)) {
-                                        if (selfrolesF.exists()) {
-                                            try {
-                                                Scanner s = new Scanner(selfrolesF);
-                                                ArrayList<IRole> currentRoles = new ArrayList<IRole>();
-                                                List<IRole> roles = guild.getRoles();
-                                                while (s.hasNextLine()) {
-                                                    String line = s.nextLine();
-
-                                                    for (IRole r : roles) {
-                                                        if (!r.getName().equalsIgnoreCase(role) && roleISA(guild, r.getName()) && !currentRoles.contains(r)) {
-                                                            currentRoles.add(r);
-                                                        }
-                                                    }
-                                                }
-
-                                                PrintWriter pw = new PrintWriter(selfrolesF);
-                                                pw.close();
-
-                                                pw = new PrintWriter(new BufferedWriter(new FileWriter(selfrolesF, true)));
-                                                for (IRole r : currentRoles) {
-                                                    pw.println(r.getName());
-                                                }
-                                                pw.close();
-                                                BufferedMessage.sendMessage(RolesModule.client, event, "Role has been successfully removed as self assignable.");
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
+                                        String[] csar = perms.getPerms(miscTableName, miscCol1, "selfroles", miscCol2).split(";");
+                                        String nsar = "";
+                                        for (int i = 0; i < csar.length; i++) {
+                                            if (!csar[i].equalsIgnoreCase(role.getID())) {
+                                                nsar += csar[i] + ";";
                                             }
-                                        } else {
-                                            BufferedMessage.sendMessage(RolesModule.client, event, "There are no self assignable roles.");
                                         }
+                                        if (nsar.length() > 0) {
+                                            nsar = nsar.substring(0, nsar.lastIndexOf(";"));
+                                        }
+                                        perms.setPerms(miscTableName, miscCol1, "selfroles", miscCol2, nsar);
+                                        BufferedMessage.sendMessage(RolesModule.client, event, "Role has been successfully removed from being self assignable.");
                                     } else {
                                         BufferedMessage.sendMessage(RolesModule.client, event, "That role is not self assignable.");
                                     }
+                                } else {
+                                    BufferedMessage.sendMessage(RolesModule.client, event, "That is not a valid role.");
                                 }
+                            } else {
+                                String[] rolesToRemove = argsconcat.trim().split(";");
+                                List<String> csar = Arrays.asList(perms.getPerms(miscTableName, miscCol1, "selfroles", miscCol2).split(";"));
+                                ArrayList<IRole> removeRoles = new ArrayList<IRole>();
+                                for (int i = 0; i < rolesToRemove.length; i++) {
+                                    IRole r = roleFromGuild(guild, rolesToRemove[i]);
+                                    if (r != null) {
+                                        removeRoles.add(r);
+                                    }
+                                }
+                                ArrayList<String> nsar = new ArrayList<String>();
+                                int removed = 0;
+                                String output = "";
+                                for (int i = 0; i < csar.size(); i++) {
+                                    boolean remove = false;
+                                    for (int j = 0; j < removeRoles.size(); j++) {
+                                        if (csar.get(i).equalsIgnoreCase(removeRoles.get(j).getID())) {
+                                            removed++;
+                                            remove = true;
+                                            output += guild.getRoleByID(removeRoles.get(j).getID()).getName() + ", ";
+                                        }
+                                    }
+                                    if (!remove) {
+                                        nsar.add(csar.get(i));
+                                    }
+                                }
+                                if (output.length() > 0) {
+                                    output = output.substring(0, output.lastIndexOf(","));
+                                }
+
+                                String newPerm = "";
+                                for (int i = 0; i < nsar.size(); i++) {
+                                    newPerm += nsar.get(i) + ";";
+                                }
+                                if (newPerm.length() > 0) {
+                                    newPerm = newPerm.substring(0, newPerm.lastIndexOf(";"));
+                                }
+                                perms.setPerms(miscTableName, miscCol1, "selfroles", miscCol2, newPerm);
+                                BufferedMessage.sendMessage(RolesModule.client, event, "Removed `" + removed + "` role" + (removed == 1 ? "" : "s") + " from being self assignable:\n" + output);
                             }
                         } else {
                             BufferedMessage.sendMessage(RolesModule.client, event, "You do not have permissions to manage roles.");
                         }
-                    } else if (args[0].equalsIgnoreCase("servertree")) {
+                    } else if (cmd.equalsIgnoreCase("servertree")) {
                         if (author.getID().equalsIgnoreCase(ownerID)) {
                             List<IRole> roles = RolesModule.client.getGuildByID(guild.getID()).getRoles();
                             roles.sort(new Comparator<IRole>() {
@@ -525,24 +481,44 @@ public class RolesListener {
                             }
                         }
                     }
+                    perms.close();
                 }
             }
         }
     }
 
-
-    public boolean roleISA(IGuild guild, String role) {//checks to see if role is self assignable
+    public String databaseString(IGuild guild) {
+        //rolemisc:field|roles
+        //         autorole
+        //         selfroles
+        //roles:role|general|roles|pad|music
+        String s = "```\n";
+        s += miscTableName + "\n";
+        Permission perms = PermissionsListener.getPermissionDB(guild);
+        ResultSet rs = perms.selectAllFrom(miscTableName);
         try {
-            File selfrolesF = new File("servers/" + guild.getName() + "-" + guild.getID() + "/selfroles.txt");
-            Scanner s = new Scanner(selfrolesF);
-            while (s.hasNextLine()) {
-                String line = s.nextLine();
-                if (line.equalsIgnoreCase(role)) {
+            while (rs.next()) {
+                s += rs.getString(miscCol1) + ": " + rs.getString(miscCol2) + "\n";
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        perms.close();
+        return s + "\n```";
+    }
+
+
+    public boolean roleISA(IGuild guild, IRole role) {//checks to see if role is self assignable
+        Permission perms = PermissionsListener.getPermissionDB(guild);
+        String selfroles = perms.getPerms(miscTableName, miscCol1, "selfroles", miscCol2);
+        if (selfroles != null && selfroles.length() > 0) {
+            String[] split = selfroles.split(";");
+            for (int i = 0; i < split.length; i++) {
+                if (split[i].equalsIgnoreCase(role.getID())) {
                     return true;
                 }
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         }
         return false;
     }

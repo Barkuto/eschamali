@@ -1,8 +1,8 @@
 package modules.Parrot;
 
-import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
+import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IPrivateChannel;
@@ -15,7 +15,8 @@ public class ParrotListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (ModuleListener.isModuleOn(event.getMessage().getGuild(), ParrotModule.name) && ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
+            if (PermissionsListener.isModuleOn(event.getMessage().getGuild(), ParrotModule.name)
+                    && PermissionsListener.canModuleInChannel(event.getMessage().getGuild(), ParrotModule.name, event.getMessage().getChannel())) {
                 BufferedMessage.sendMessage(ParrotModule.client, event, event.getMessage().getContent());
             }
         }

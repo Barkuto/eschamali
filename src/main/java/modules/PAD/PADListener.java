@@ -1,6 +1,5 @@
 package modules.PAD;
 
-import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
 import modules.Permissions.PermissionsListener;
@@ -10,6 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
@@ -53,14 +53,15 @@ public class PADListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (PermissionsListener.isModuleOn(event.getMessage().getGuild(), PADModule.name)
-                    && PermissionsListener.canModuleInChannel(event.getMessage().getGuild(), PADModule.name, event.getMessage().getChannel())) {
+            IGuild guild = event.getMessage().getGuild();
+            IChannel channel = event.getMessage().getChannel();
+            if (PermissionsListener.isModuleOn(guild, PADModule.name)
+                    && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
                     String msg = event.getMessage().getContent();
                     String[] split = msg.split(" ");
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
-                    IGuild guild = event.getMessage().getGuild();
 
                     if (cmd.equalsIgnoreCase("monster") || cmd.equalsIgnoreCase("mon") || cmd.equalsIgnoreCase("m")) {
                         BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));

@@ -22,39 +22,38 @@ public class PermissionsListener {
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
-        String path = "servers/" + event.getGuild().getName() + "-" + event.getGuild().getID() + ".db";
-        File f = new File(path);
-        if (!f.exists()) {
-            Db db = new Db(path);
-            db.execute("CREATE TABLE channels (module string, channels string)");
-            db.execute("CREATE TABLE modules (module string, enabled string)");
-
-            TreeMap<IModule, Boolean> modules = Eschamali.defaultmodules;
-            for (Map.Entry<IModule, Boolean> e : modules.entrySet()) {
-                db.execute("INSERT INTO modules (module, enabled) VALUES ('" + e.getKey().getName() + "','" + e.getValue() + "')");
-            }
-            db.close();
+        Permission perms = getPermissionDB(event.getGuild());
+        if (!perms.tableExists("channels")) {
+            perms.createTable("channels", "module", "string", "channels", "string");
         }
+        if (!perms.tableExists("modules")) {
+            perms.createTable("modules", "module", "string", "enabled", "string");
+            for (Map.Entry<IModule, Boolean> e : Eschamali.defaultmodules.entrySet()) {
+                perms.addPerms("modules", "module", e.getKey().getName(), "enabled", e.getValue() + "");
+            }
+        }
+        perms.close();
     }
 
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (userHasPerm(event.getMessage().getAuthor(), event.getMessage().getGuild(), Permissions.MANAGE_SERVER) || event.getMessage().getAuthor().getID().equals(ownerID)) {
-                if (event.getMessage().getContent().startsWith(prefix)) {
-                    String message = event.getMessage().getContent();
+            String message = event.getMessage().getContent();
+            IUser author = event.getMessage().getAuthor();
+            IGuild guild = event.getMessage().getGuild();
+            if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID)) {
+                if (message.startsWith(prefix)) {
                     String[] args = message.split(" ");
                     args[0] = args[0].replace(prefix, "").trim();
                     String cmd = args[0];
-                    IGuild guild = event.getMessage().getGuild();
                     String argsconcat;
                     try {
-                        argsconcat = message.substring(cmd.length() + 2, message.length());
+                        argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
                     } catch (StringIndexOutOfBoundsException e) {
                         argsconcat = "";
                     }
 
-                    Permission perms = new Permission(new Db("servers/" + guild.getName() + "-" + guild.getID() + ".db"));
+                    Permission perms = getPermissionDB(guild);
 
                     if (cmd.equalsIgnoreCase("db")) {
                         BufferedMessage.sendMessage(Eschamali.client, event, databaseString(guild));
@@ -216,7 +215,7 @@ public class PermissionsListener {
                             }
                             if (module != null) {
                                 perms.setPerms("modules", "module", module.getName(), "enabled", "false");
-                                BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module has been enabled.");
+                                BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module has been disabled.");
                             } else {
                                 BufferedMessage.sendMessage(Eschamali.client, event, "That is not a valid module.");
                             }
@@ -349,7 +348,7 @@ public class PermissionsListener {
                     } else if (cmd.equalsIgnoreCase("mc") || cmd.equalsIgnoreCase("modulechannels")) {
                         IModule module = null;
                         for (IModule m : Eschamali.modules) {
-                            if (m.getName().equalsIgnoreCase(argsconcat.trim())) {
+                            if (m.getName().equalsIgnoreCase(argsconcat)) {
                                 module = m;
                             }
                         }
@@ -377,12 +376,10 @@ public class PermissionsListener {
     public String databaseString(IGuild guild) {
         //channels:module|channels
         //modules:module|enabled
-        //rolemisc:field|roles
-        //roles:role|general|roles|pad|music
         String s = "```\n";
-        Db db = new Db("servers/" + guild.getName() + "-" + guild.getID() + ".db");
         s += "channels\n";
-        ResultSet rs = db.executeQuery("SELECT * FROM channels");
+        Permission perms = getPermissionDB(guild);
+        ResultSet rs = perms.selectAllFrom("channels");
         try {
             while (rs.next()) {
                 s += rs.getString("module") + ": " + rs.getString("channels") + "\n";
@@ -391,7 +388,7 @@ public class PermissionsListener {
             e.printStackTrace();
         }
         s += "\nmodules\n";
-        rs = db.executeQuery("SELECT * FROM modules");
+        rs = perms.selectAllFrom("modules");
         try {
             while (rs.next()) {
                 s += rs.getString("module") + ": " + rs.getString("enabled") + "\n";
@@ -399,35 +396,42 @@ public class PermissionsListener {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        perms.close();
         return s + "\n```";
     }
 
     public static boolean canTalkInChannel(IGuild guild, IChannel channel) {
-        Permission perms = new Permission(new Db("servers/" + guild.getName() + "-" + guild.getID() + ".db"));
+        Permission perms = getPermissionDB(guild);
         List<String> list = Arrays.asList(perms.getPerms("channels", "module", "General", "channels").split(";"));
         for (String s : list) {
             if (s.equalsIgnoreCase(channel.getID()) || s.equalsIgnoreCase("all")) {
+                perms.close();
                 return true;
             }
         }
+        perms.close();
         return false;
     }
 
     public static boolean canModuleInChannel(IGuild guild, String module, IChannel channel) {
-        Permission perms = new Permission(new Db("servers/" + guild.getName() + "-" + guild.getID() + ".db"));
+        Permission perms = getPermissionDB(guild);
         String chans = perms.getPerms("channels", "module", module, "channels");
         List<String> list = Arrays.asList(chans.split(";"));
         for (String s : list) {
             if (s.equalsIgnoreCase(channel.getID()) || s.equalsIgnoreCase("all")) {
+                perms.close();
                 return true;
             }
         }
+        perms.close();
         return false;
     }
 
     public static boolean isModuleOn(IGuild guild, String module) {
-        Permission perms = new Permission(new Db("servers/" + guild.getName() + "-" + guild.getID() + ".db"));
-        return Boolean.parseBoolean(perms.getPerms("modules", "module", module, "enabled"));
+        Permission perms = getPermissionDB(guild);
+        Boolean enabled = Boolean.parseBoolean(perms.getPerms("modules", "module", module, "enabled"));
+        perms.close();
+        return enabled;
     }
 
     public boolean userHasPerm(IUser user, IGuild guild, Permissions perm) {
@@ -438,5 +442,9 @@ public class PermissionsListener {
             }
         }
         return false;
+    }
+
+    public static Permission getPermissionDB(IGuild guild) {
+        return new Permission(new Db("servers/" + guild.getID() + ".db"));
     }
 }

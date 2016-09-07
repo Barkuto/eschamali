@@ -28,6 +28,10 @@ public class Permission {
         return s;
     }
 
+    public ResultSet selectAllFrom(String table) {
+        return db.executeQuery("SELECT * FROM " + table);
+    }
+
     public void setPerms(String table, String col1, String col1Val, String col2, String newVal) {
         db.execute("UPDATE " + table + " SET " + col2 + "='" + newVal + "' WHERE " + col1 + "='" + col1Val + "'");
     }
@@ -66,5 +70,9 @@ public class Permission {
 
     public void close() {
         db.close();
+    }
+
+    public boolean tableExists(String table) {
+        return db.tableExists(table);
     }
 }

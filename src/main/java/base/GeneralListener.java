@@ -22,10 +22,12 @@ import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
 import java.nio.Buffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.*;
 
 /**
  * Created by Iggie on 8/14/2016.
@@ -106,6 +108,7 @@ public class GeneralListener {
                     IGuild guild = event.getMessage().getGuild();
                     String name = guild.getName();
                     String serverID = guild.getID();
+                    LocalDateTime creationDate = guild.getCreationDate();
                     IRegion region = guild.getRegion();
                     IUser owner = guild.getOwner();
                     long users = guild.getUsers().size();
@@ -116,6 +119,7 @@ public class GeneralListener {
                     output += String.format("%-12s %s\n", "Server Name:", name);
                     output += String.format("%-12s %s\n", "Server ID:", serverID);
                     output += String.format("%-12s %s\n", "Icon URL:", iconURL);
+                    output += String.format("%-12s %s\n", "Created:", creationDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
                     output += String.format("%-12s %s\n", "Region:", region.getName());
                     output += String.format("%-12s %s\n", "Owner:", owner.getName() + "#" + owner.getDiscriminator());
                     output += String.format("%-12s %s\n", "Users:", users);

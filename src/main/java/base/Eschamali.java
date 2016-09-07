@@ -1,7 +1,5 @@
 package base;
 
-import modules.Channels.ChannelsListener;
-import modules.Channels.ChannelsModule;
 import modules.Games.GamesModule;
 import modules.Music.MusicModule;
 import modules.PAD.PADModule;
@@ -13,10 +11,6 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeMap;

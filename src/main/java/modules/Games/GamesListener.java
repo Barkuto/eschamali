@@ -1,12 +1,12 @@
 package modules.Games;
 
-import base.ModuleListener;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Channels.ChannelsListener;
-import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
 
@@ -52,8 +52,9 @@ public class GamesListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (PermissionsListener.isModuleOn(event.getMessage().getGuild(), GamesModule.name)
-                    && PermissionsListener.canModuleInChannel(event.getMessage().getGuild(), GamesModule.name, event.getMessage().getChannel())) {
+            IGuild guild = event.getMessage().getGuild();
+            IChannel channel = event.getMessage().getChannel();
+            if (PermissionsListener.isModuleOn(guild, GamesModule.name) && PermissionsListener.canModuleInChannel(guild, GamesModule.name, channel)) {
                 String msg = event.getMessage().getContent();
                 IUser user = event.getMessage().getAuthor();
                 if (msg.startsWith(prefix)) {
