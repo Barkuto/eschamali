@@ -194,6 +194,7 @@ public class RolesListener {
                                         }
                                         m.delete();
                                         event.getMessage().delete();
+                                        return;
                                     } catch (MissingPermissionsException e) {
                                         if (e.getErrorMessage().contains("Missing permissions")) {
                                             BufferedMessage.sendMessage(RolesModule.client, event, "I do not have the proper permissions to add a role to you.");
@@ -245,6 +246,7 @@ public class RolesListener {
                                             }
                                             m.delete();
                                             event.getMessage().delete();
+                                            return;
                                         } catch (MissingPermissionsException e) {
                                             if (e.getErrorMessage().contains("Missing permissions")) {
                                                 BufferedMessage.sendMessage(RolesModule.client, event, "I do not have the proper permissions to remove a role from you.");
@@ -325,11 +327,11 @@ public class RolesListener {
                         }
                     } else if (cmd.equalsIgnoreCase("lsar")) {
                         String selfroles = perms.getPerms(miscTableName, miscCol1, "selfroles", miscCol2);
+                        int count = 0;
+                        String output = "";
                         if (selfroles != null && selfroles.length() > 0) {
                             String[] roles = selfroles.split(";");
                             Arrays.sort(roles);
-                            int count = 0;
-                            String output = "";
                             for (int i = 0; i < roles.length; i++) {
                                 IRole r = guild.getRoleByID(roles[i]);
                                 if (r != null) {
@@ -340,15 +342,14 @@ public class RolesListener {
                             if (count > 0) {
                                 output = output.substring(0, output.length() - 2);
                             }
-
-                            String thingy1 = "are";
-                            String thingy2 = "roles";
-                            if (count == 1) {
-                                thingy1 = "is";
-                                thingy2 = "role";
-                            }
-                            BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + output);
                         }
+                        String thingy1 = "are";
+                        String thingy2 = "roles";
+                        if (count == 1) {
+                            thingy1 = "is";
+                            thingy2 = "role";
+                        }
+                        BufferedMessage.sendMessage(RolesModule.client, event, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + output);
                     } else if (cmd.equalsIgnoreCase("asar")) {
                         if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getID().equals(ownerID)) {
                             if (args.length > 1 && !message.contains(";")) {
