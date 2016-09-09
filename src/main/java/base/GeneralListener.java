@@ -98,7 +98,7 @@ public class GeneralListener {
                     String name = guild.getName();
                     String serverID = guild.getID();
                     LocalDateTime creationDate = guild.getCreationDate();
-//                    IRegion region = guild.getRegion();
+                    IRegion region = guild.getRegion();
                     IUser owner = guild.getOwner();
                     long users = guild.getUsers().size();
                     long roles = guild.getRoles().size();
@@ -109,7 +109,7 @@ public class GeneralListener {
                     output += String.format("%-12s %s\n", "Server ID:", serverID);
                     output += String.format("%-12s %s\n", "Icon URL:", iconURL);
                     output += String.format("%-12s %s\n", "Created:", creationDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
-//                    output += String.format("%-12s %s\n", "Region:", region.getName());
+                    output += String.format("%-12s %s\n", "Region:", region.getName());
                     output += String.format("%-12s %s\n", "Owner:", owner.getName() + "#" + owner.getDiscriminator());
                     output += String.format("%-12s %s\n", "Users:", users);
                     output += String.format("%-12s %s\n", "Roles:", roles);

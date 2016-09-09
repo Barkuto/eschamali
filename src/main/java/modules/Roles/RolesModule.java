@@ -44,7 +44,7 @@ public class RolesModule implements IModule, ICommands {
 
     @Override
     public String getMinimumDiscord4JVersion() {
-        return "2.5.4";
+        return "2.6.0";
     }
 
     @Override
