@@ -82,6 +82,9 @@ public class OwnerListener {
 
                     String time = String.format("%02dhrs:%02dmins:%02ds:%dms", hour, minute, second, uptime);
                     BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + time + "`");
+                } else if (cmd.equalsIgnoreCase("shutdown")) {
+                    BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Shutting down...");
+                    System.exit(0);
                 }
             }
         }
