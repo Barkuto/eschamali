@@ -1,7 +1,6 @@
 package modules.Parrot;
 
 import modules.BufferedMessage.BufferedMessage;
-import modules.Channels.ChannelsListener;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;

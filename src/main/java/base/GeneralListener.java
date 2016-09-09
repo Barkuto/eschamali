@@ -1,33 +1,22 @@
 package base;
 
-import com.sun.org.apache.bcel.internal.generic.ARRAYLENGTH;
-import com.sun.org.apache.bcel.internal.generic.IREM;
 import modules.BufferedMessage.BufferedMessage;
-import modules.Channels.ChannelsListener;
-import modules.Channels.ChannelsModule;
-import modules.Games.GamesModule;
-import modules.Music.MusicModule;
-import modules.Parrot.ParrotModule;
-import modules.Roles.RolesModule;
-import net.dv8tion.d4j.player.MusicPlayer;
+import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
-import java.nio.Buffer;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Iggie on 8/14/2016.
@@ -59,7 +48,7 @@ public class GeneralListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
+            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
                 String msg = event.getMessage().getContent();
                 if (msg.equalsIgnoreCase("!donate")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
@@ -109,7 +98,7 @@ public class GeneralListener {
                     String name = guild.getName();
                     String serverID = guild.getID();
                     LocalDateTime creationDate = guild.getCreationDate();
-                    IRegion region = guild.getRegion();
+//                    IRegion region = guild.getRegion();
                     IUser owner = guild.getOwner();
                     long users = guild.getUsers().size();
                     long roles = guild.getRoles().size();
@@ -120,7 +109,7 @@ public class GeneralListener {
                     output += String.format("%-12s %s\n", "Server ID:", serverID);
                     output += String.format("%-12s %s\n", "Icon URL:", iconURL);
                     output += String.format("%-12s %s\n", "Created:", creationDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
-                    output += String.format("%-12s %s\n", "Region:", region.getName());
+//                    output += String.format("%-12s %s\n", "Region:", region.getName());
                     output += String.format("%-12s %s\n", "Owner:", owner.getName() + "#" + owner.getDiscriminator());
                     output += String.format("%-12s %s\n", "Users:", users);
                     output += String.format("%-12s %s\n", "Roles:", roles);
@@ -134,7 +123,7 @@ public class GeneralListener {
     @EventSubscriber
     public void helpMessages(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (ChannelsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel().getName())) {
+            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
                 String msg = event.getMessage().getContent();
                 String[] args = msg.split(" ");
                 if (msg.startsWith("!help") || msg.startsWith("!h")) {

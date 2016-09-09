@@ -1,7 +1,6 @@
 package modules.Music;
 
 import modules.BufferedMessage.BufferedMessage;
-import modules.Channels.ChannelsListener;
 import modules.Permissions.PermissionsListener;
 import net.dv8tion.d4j.player.MusicPlayer;
 import net.dv8tion.jda.player.Playlist;
@@ -123,7 +122,7 @@ public class MusicListener {
                             AudioTimestamp currentTime = player.getCurrentTimestamp();
                             AudioInfo info = player.getCurrentAudioSource().getInfo();
                             if (info.getError() == null) {
-                                BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NOW PLAYING** :notes:\n`" + currentTime.getTimestamp() + "/" + info.getDuration().getTimestamp() + "` __" + info.getTitle() + "__");
+                                BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NOW PLAYING** :notes:\n`" + currentTime.getTimestamp() + "/" + info.getDuration().getTimestamp() + "` __" + info.getTitle() + "__ \n`" + info.getOrigin() + "`");
                             } else {
                                 BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NOW PLAYING** :notes:\n`" + currentTime.getTimestamp() + "/(N/A)" + "` __" + player.getCurrentAudioSource().getSource() + "__");
                             }
@@ -160,6 +159,10 @@ public class MusicListener {
                                     AudioSource source = sources.get(0);
                                     AudioInfo info = source.getInfo();
                                     if (info.getError() == null) {
+                                        if (info.getDuration().getHours() >= 1) {
+                                            BufferedMessage.sendMessage(MusicModule.client, event, "That song is too long to queue.");
+                                            return;
+                                        }
                                         player.getAudioQueue().add(source);
                                         BufferedMessage.sendMessage(MusicModule.client, event, "Queued: " + info.getTitle());
                                         if (player.isStopped()) {
@@ -187,9 +190,15 @@ public class MusicListener {
                                     }
                                     String part = e.toString();
                                     String youtubeurl = "https://www.youtube.com" + part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
-                                    System.out.println(youtubeurl);
 
                                     AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
+                                    AudioInfo info = source.getInfo();
+                                    if (info.getError() == null) {
+                                        if (info.getDuration().getHours() >= 1) {
+                                            BufferedMessage.sendMessage(MusicModule.client, event, "The found song is too long to queue.");
+                                            return;
+                                        }
+                                    }
                                     player.getAudioQueue().add(source);
                                     BufferedMessage.sendMessage(MusicModule.client, event, "Queued: " + source.getInfo().getTitle());
                                     if (player.isStopped()) {
@@ -258,6 +267,13 @@ public class MusicListener {
                                 System.out.println(youtubeurl);
 
                                 AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
+                                AudioInfo info = source.getInfo();
+                                if (info.getError() == null) {
+                                    if (info.getDuration().getHours() >= 1) {
+                                        BufferedMessage.sendMessage(MusicModule.client, event, "The related song is too long to queue.");
+                                        return;
+                                    }
+                                }
                                 player.getAudioQueue().add(source);
                                 BufferedMessage.sendMessage(MusicModule.client, event, "Queued related: " + source.getInfo().getTitle());
                                 if (player.isStopped()) {

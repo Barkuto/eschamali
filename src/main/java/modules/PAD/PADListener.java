@@ -1,7 +1,6 @@
 package modules.PAD;
 
 import modules.BufferedMessage.BufferedMessage;
-import modules.Channels.ChannelsListener;
 import modules.Permissions.PermissionsListener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
