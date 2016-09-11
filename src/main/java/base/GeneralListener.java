@@ -83,7 +83,6 @@ public class GeneralListener {
                     BufferedMessage.sendMessage(Eschamali.client, event, Eschamali.client.getUserByID(Eschamali.ownerID).mention() + " is on his way! Eventually...");
                 } else if (msg.startsWith("!say")) {
                     if (event.getMessage().getAuthor().getID().equals(Eschamali.ownerID)) {
-                        BufferedMessage.sendMessage(Eschamali.client, event, msg.substring(msg.indexOf(" ")));
                         try {
                             event.getMessage().delete();
                         } catch (MissingPermissionsException e) {
@@ -92,6 +91,7 @@ public class GeneralListener {
                         } catch (DiscordException e) {
                             e.printStackTrace();
                         }
+                        BufferedMessage.sendMessage(Eschamali.client, event, msg.substring(msg.indexOf(" ")));
                     }
                 } else if (msg.equalsIgnoreCase("!serverinfo")) {
                     IGuild guild = event.getMessage().getGuild();
@@ -113,6 +113,70 @@ public class GeneralListener {
                     output += String.format("%-12s %s\n", "Owner:", owner.getName() + "#" + owner.getDiscriminator());
                     output += String.format("%-12s %s\n", "Users:", users);
                     output += String.format("%-12s %s\n", "Roles:", roles);
+                    output += "```";
+                    BufferedMessage.sendMessage(Eschamali.client, event, output);
+                } else if (msg.startsWith("!userinfo")) {
+                    IGuild guild = event.getMessage().getGuild();
+                    IUser user = null;
+                    if (msg.contains(" ")) {
+                        String arg = msg.substring(msg.indexOf(" ") + 1).trim();
+                        if (arg.startsWith("<@")) {
+                            String id = "";
+                            int startIndex = 2;
+                            if (arg.startsWith("<@!")) {
+                                startIndex++;
+                            }
+                            id += arg.substring(startIndex, arg.length() - 1);
+                            user = guild.getUserByID(id);
+                        } else {
+                            List<IUser> users = guild.getUsers();
+                            for (IUser u : users) {
+                                System.out.println(u.getName());
+                                if (u.getName().toLowerCase().contains(arg.toLowerCase())) {
+                                    user = u;
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        user = event.getMessage().getAuthor();
+                    }
+                    if (user == null) {
+                        BufferedMessage.sendMessage(Eschamali.client, event, "Could not find that user.");
+                        return;
+                    }
+                    String name = user.getName();
+                    String disc = user.getDiscriminator();
+                    String nick = user.getNicknameForGuild(guild).isPresent() ? user.getNicknameForGuild(guild).get() : "";
+                    String id = user.getID();
+                    String avatar = user.getAvatarURL();
+                    LocalDateTime accCreated = user.getCreationDate();
+                    LocalDateTime guildJoinDate = null;
+                    try {
+                        guildJoinDate = guild.getJoinTimeForUser(user);
+                    } catch (DiscordException e) {
+                        e.printStackTrace();
+                    }
+                    List<IRole> roles = user.getRolesForGuild(guild);
+                    String allRoles = "";
+                    for (int i = 0; i < roles.size(); i++) {
+                        allRoles += roles.get(i).getName() + ", ";
+                    }
+                    if (allRoles.length() > 0) {
+                        allRoles = allRoles.substring(0, allRoles.lastIndexOf(", "));
+                    }
+                    String status = user.getStatus().getStatusMessage();
+                    String output = "```xl\n";
+                    output += String.format("%-16s %s\n", "Username:", name);
+                    output += String.format("%-16s #%s\n", "Discriminator:", disc);
+                    output += String.format("%-16s %s\n", "Nickname:", nick);
+                    output += String.format("%-16s %s\n", "User ID:", id);
+                    output += String.format("%-16s %s\n", "Avatar URL:", avatar);
+                    output += String.format("%-16s %s\n", "Account Created:", accCreated.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
+                    output += String.format("%-16s %s\n", "\nInfo For Guild: ", guild.getName());
+                    output += String.format("%-16s %s\n", "Join Date:", guildJoinDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
+                    output += String.format("%-16s %s\n", "Roles:", allRoles);
+                    output += String.format("%-16s %s\n", "Status:", status);
                     output += "```";
                     BufferedMessage.sendMessage(Eschamali.client, event, output);
                 }
@@ -139,6 +203,7 @@ public class GeneralListener {
                         commands.add("`ping`: Visually check your ping with a pong.");
                         commands.add("`alert`: Alerts Barkuto that something went wrong!");
                         commands.add("`serverinfo`: Shows some information about the current server.");
+                        commands.add("`userinfo`: Shows some information about yourself, or the given user.");
                         Collections.sort(commands);
                         for (int i = 0; i < commands.size(); i++) {
                             output += commands.get(i) + "\n";

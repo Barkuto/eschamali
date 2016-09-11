@@ -87,6 +87,15 @@ public class PADListener {
                         } else if (split.length == 3) {
                             BufferedMessage.sendMessage(PADModule.client, event, guerillaGroup(split[1].trim(), split[2].trim()));
                         }
+                    } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
+                        String est = guerilla("est");
+                        String pst = guerilla("pst");
+                        String cst = guerilla("cst");
+                        String mst = guerilla("mst");
+                        BufferedMessage.sendMessage(PADModule.client, event, est);
+                        BufferedMessage.sendMessage(PADModule.client, event, pst);
+                        BufferedMessage.sendMessage(PADModule.client, event, cst);
+                        BufferedMessage.sendMessage(PADModule.client, event, mst);
                     } else if (cmd.equalsIgnoreCase("pic")) {
                         if (split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);

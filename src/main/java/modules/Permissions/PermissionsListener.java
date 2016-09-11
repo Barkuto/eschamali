@@ -63,6 +63,15 @@ public class PermissionsListener {
                     //////////////
                     else if (cmd.equalsIgnoreCase("atc") || cmd.equalsIgnoreCase("addtalkchannel")) {
                         if (args.length >= 2) {
+                            if (argsconcat.trim().equalsIgnoreCase("all")) {
+                                perms.setPerms("channels", "module", "General", "channels", "all");
+                                BufferedMessage.sendMessage(Eschamali.client, event, "I can now talk in all channels.");
+                                return;
+                            }
+                            if (perms.getPerms("channels", "module", "General", "channels").equalsIgnoreCase("all")) {
+                                BufferedMessage.sendMessage(Eschamali.client, event, "I can already talk in all channels.");
+                                return;
+                            }
                             String channels = message.substring(message.indexOf(cmd) + cmd.length() + 1);
                             String[] split = channels.split(" ");
                             ArrayList<IChannel> channelsAdded = new ArrayList<IChannel>();
@@ -95,6 +104,10 @@ public class PermissionsListener {
 
                             ArrayList<IChannel> currentChannels = new ArrayList<IChannel>();
                             String[] currChans = perms.getPerms("channels", "module", "General", "channels").split(";");
+                            if (currChans[0].equalsIgnoreCase("all")) {
+                                BufferedMessage.sendMessage(Eschamali.client, event, "I can currently talk in all channels.");
+                                return;
+                            }
                             for (int i = 0; i < currChans.length; i++) {
                                 IChannel c = guild.getChannelByID(currChans[i]);
                                 if (c != null) {
@@ -145,6 +158,10 @@ public class PermissionsListener {
                         BufferedMessage.sendMessage(Eschamali.client, event, "General talk channels have been reset.");
                     } else if (cmd.equalsIgnoreCase("tc") || cmd.equalsIgnoreCase("talkchannels")) {
                         List<String> channels = Arrays.asList(perms.getPerms("channels", "module", "General", "channels").split(";"));
+                        if (channels.get(0).equalsIgnoreCase("all")) {
+                            BufferedMessage.sendMessage(Eschamali.client, event, "I can talk in all channels.");
+                            return;
+                        }
                         String output = "General talk channels are: ";
                         for (String s : channels) {
                             IChannel chan = guild.getChannelByID(s);
@@ -236,6 +253,15 @@ public class PermissionsListener {
                             }
 
                             if (module != null) {
+                                if (argsconcat.substring(moduleName.length() + 1, argsconcat.length()).equalsIgnoreCase("all")) {
+                                    perms.setPerms("channels", "module", module.getName(), "channels", "all");
+                                    BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can now be used in all channels.");
+                                    return;
+                                }
+                                if (perms.getPerms("channels", "module", module.getName(), "channels").equalsIgnoreCase("all")) {
+                                    BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " can already be used in all channels.");
+                                    return;
+                                }
                                 ArrayList<IChannel> channelsAdded = new ArrayList<IChannel>();
                                 for (int i = 2; i < args.length; i++) {
                                     IChannel channel = null;
@@ -275,6 +301,10 @@ public class PermissionsListener {
 
                                 ArrayList<IChannel> currentChannels = new ArrayList<IChannel>();
                                 String[] currChans = perms.getPerms("channels", "module", module.getName(), "channels").split(";");
+                                if (currChans[0].equalsIgnoreCase("all")) {
+                                    BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can currently be used in all channels.");
+                                    return;
+                                }
                                 for (int i = 0; i < currChans.length; i++) {
                                     IChannel c = guild.getChannelByID(currChans[i]);
                                     if (c != null) {
@@ -355,6 +385,10 @@ public class PermissionsListener {
                         if (module != null) {
                             String output = "The " + module.getName() + " module can be used in the following channels: ";
                             String chans = perms.getPerms("channels", "module", module.getName(), "channels");
+                            if (chans.equalsIgnoreCase("all")) {
+                                BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can used in all channels.");
+                                return;
+                            }
                             String[] channels = chans.split(";");
                             for (int i = 0; i < channels.length; i++) {
                                 IChannel channel = guild.getChannelByID(channels[i]);

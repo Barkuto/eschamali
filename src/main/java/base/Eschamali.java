@@ -1,6 +1,7 @@
 package base;
 
 import modules.Games.GamesModule;
+import modules.JoinLeave.JoinLeaveModule;
 import modules.Music.MusicModule;
 import modules.PAD.PADModule;
 import modules.Parrot.ParrotModule;
@@ -39,12 +40,14 @@ public class Eschamali {
         ParrotModule parrot = new ParrotModule();
         MusicModule music = new MusicModule();
         PADModule pad = new PADModule();
+        JoinLeaveModule jl = new JoinLeaveModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
         defaultmodules.put(parrot, false);
         defaultmodules.put(music, true);
         defaultmodules.put(pad, true);
+        defaultmodules.put(jl, false);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
@@ -52,6 +55,7 @@ public class Eschamali {
         modules.add(parrot);
         modules.add(music);
         modules.add(pad);
+        modules.add(jl);
         modules.sort(new Comparator<IModule>() {
             @Override
             public int compare(IModule o1, IModule o2) {

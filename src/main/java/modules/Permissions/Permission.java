@@ -33,7 +33,17 @@ public class Permission {
     }
 
     public void setPerms(String table, String col1, String col1Val, String col2, String newVal) {
-        db.execute("UPDATE " + table + " SET " + col2 + "='" + newVal + "' WHERE " + col1 + "='" + col1Val + "'");
+        ResultSet rs = db.executeQuery("SELECT " + "*" + " FROM " + table + " WHERE " + col1 + "='" + col1Val + "'");
+        try {
+            if (rs.next()) {
+                db.execute("UPDATE " + table + " SET " + col2 + "='" + newVal + "' WHERE " + col1 + "='" + col1Val + "'");
+            } else {
+                db.execute("INSERT INTO " + table + " (" + col1 + "," + col2 + ") VALUES ('" + col1Val + "','" + newVal + "')");
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void addPerms(String table, String col1, String col1Val, String col2, String addVal) {
