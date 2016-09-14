@@ -5,6 +5,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
+import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.handle.obj.Status;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -84,6 +85,10 @@ public class OwnerListener {
                     BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + time + "`");
                 } else if (cmd.equalsIgnoreCase("shutdown")) {
                     BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Shutting down...");
+                    List<IVoiceChannel> connectedVoice = Eschamali.client.getConnectedVoiceChannels();
+                    for (IVoiceChannel v : connectedVoice) {
+                        v.leave();
+                    }
                     System.exit(0);
                 }
             }
