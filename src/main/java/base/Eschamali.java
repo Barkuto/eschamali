@@ -47,7 +47,7 @@ public class Eschamali {
         defaultmodules.put(parrot, false);
         defaultmodules.put(music, true);
         defaultmodules.put(pad, true);
-        defaultmodules.put(jl, false);
+        defaultmodules.put(jl, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);

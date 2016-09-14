@@ -14,6 +14,7 @@ import sx.blah.discord.util.RateLimitException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -151,6 +152,7 @@ public class GeneralListener {
                     String id = user.getID();
                     String avatar = user.getAvatarURL();
                     LocalDateTime accCreated = user.getCreationDate();
+                    String accAge = timeBetween(accCreated, LocalDateTime.now());
                     LocalDateTime guildJoinDate = null;
                     try {
                         guildJoinDate = guild.getJoinTimeForUser(user);
@@ -173,6 +175,7 @@ public class GeneralListener {
                     output += String.format("%-16s %s\n", "User ID:", id);
                     output += String.format("%-16s %s\n", "Avatar URL:", avatar);
                     output += String.format("%-16s %s\n", "Account Created:", accCreated.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
+                    output += String.format("%-16s %s\n", "Account Age:", accAge);
                     output += String.format("%-16s %s\n", "\nInfo For Guild: ", guild.getName());
                     output += String.format("%-16s %s\n", "Join Date:", guildJoinDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
                     output += String.format("%-16s %s\n", "Roles:", allRoles);
@@ -239,5 +242,35 @@ public class GeneralListener {
                 }
             }
         }
+    }
+
+    public String timeBetween(LocalDateTime from, LocalDateTime to) {
+        LocalDateTime fromDateTime = from;
+        LocalDateTime toDateTime = to;
+
+        LocalDateTime tempDateTime = LocalDateTime.from(fromDateTime);
+
+        long years = tempDateTime.until(toDateTime, ChronoUnit.YEARS);
+        tempDateTime = tempDateTime.plusYears(years);
+
+        long months = tempDateTime.until(toDateTime, ChronoUnit.MONTHS);
+        tempDateTime = tempDateTime.plusMonths(months);
+
+        long days = tempDateTime.until(toDateTime, ChronoUnit.DAYS);
+        tempDateTime = tempDateTime.plusDays(days);
+
+
+        long hours = tempDateTime.until(toDateTime, ChronoUnit.HOURS);
+        tempDateTime = tempDateTime.plusHours(hours);
+
+        long minutes = tempDateTime.until(toDateTime, ChronoUnit.MINUTES);
+        tempDateTime = tempDateTime.plusMinutes(minutes);
+
+        long seconds = tempDateTime.until(toDateTime, ChronoUnit.SECONDS);
+        return (years > 0 ? (years > 1 ? years + " years, " : years + " year, ") : "") +
+                (months > 0 ? (months > 1 ? months + " months, " : months + " month, ") : "") +
+                (days > 0 ? (days > 1 ? days + " days, " : days + " day, ") : "") +
+                (hours > 0 ? (hours > 1 ? hours + " hours, " : hours + " hour, ") : "") +
+                (minutes > 0 ? (minutes > 1 ? minutes + " minutes" : minutes + " minute") : "");
     }
 }

@@ -12,10 +12,16 @@ import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RateLimitException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -80,22 +86,36 @@ public class PADListener {
                     } else if (cmd.equalsIgnoreCase("addabbr") || cmd.equalsIgnoreCase("aa")) {
 
                     } else if (cmd.equalsIgnoreCase("guerilla") || cmd.equalsIgnoreCase("g")) {
+                        LocalDate ld = LocalDate.now();
+                        Guerilla g = getTodayGuerilla();
                         if (split.length == 1) {
-                            BufferedMessage.sendMessage(PADModule.client, event, guerilla("pst"));
+                            BufferedMessage.sendMessage(PADModule.client, event, g.allGroups("pst"));
                         } else if (split.length == 2) {
-                            BufferedMessage.sendMessage(PADModule.client, event, guerilla(split[1].trim()));
+                            BufferedMessage.sendMessage(PADModule.client, event, g.allGroups(split[1].trim()));
                         } else if (split.length == 3) {
-                            BufferedMessage.sendMessage(PADModule.client, event, guerillaGroup(split[1].trim(), split[2].trim()));
+                            BufferedMessage.sendMessage(PADModule.client, event, g.forGroup(split[2].trim(), split[1].trim()));
                         }
                     } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
-                        String est = guerilla("est");
-                        String pst = guerilla("pst");
-                        String cst = guerilla("cst");
-                        String mst = guerilla("mst");
+                        Guerilla g = getTodayGuerilla();
+                        String est = g.allGroups("est");
+                        String pst = g.allGroups("pst");
+                        String cst = g.allGroups("cst");
+                        String mst = g.allGroups("mst");
                         BufferedMessage.sendMessage(PADModule.client, event, est);
                         BufferedMessage.sendMessage(PADModule.client, event, pst);
                         BufferedMessage.sendMessage(PADModule.client, event, cst);
                         BufferedMessage.sendMessage(PADModule.client, event, mst);
+                    } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
+                        if (updateGuerilla()) {
+                            BufferedMessage.sendMessage(PADModule.client, event, "Guerillas have been updated for today.");
+                        }
+                    } else if (cmd.equalsIgnoreCase("guerillatomorrow") || cmd.equalsIgnoreCase("gt")) {
+                        Guerilla g = getTomorrowGuerilla();
+                        if (g != null) {
+                            BufferedMessage.sendMessage(PADModule.client, event, g.allGroups("pst"));
+                        } else {
+                            BufferedMessage.sendMessage(PADModule.client, event, "Hours are not out yet.");
+                        }
                     } else if (cmd.equalsIgnoreCase("pic")) {
                         if (split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);
@@ -156,7 +176,6 @@ public class PADListener {
         if (abbrDun.containsKey(keyword)) {
             keyword = abbrDun.get(keyword);
         }
-        System.out.println(keyword);
         try {
             keyword = keyword.replace(" ", "+").trim();
             URL url = new URL("http://puzzledragonx.com/en/search.asp?q=" + keyword);
@@ -406,16 +425,16 @@ public class PADListener {
         return "Nothing found.";
     }
 
-    public String guerilla(String timezone) {
+    public boolean updateGuerilla() {
         try {
             URL home = new URL("http://puzzledragonx.com/");
             Document document = Jsoup.parse(home, 15000);
             Elements sched = document.select("div#metal1a").select("table").get(0).select("tr");
-            ArrayList<String> a = new ArrayList<String>();
-            ArrayList<String> b = new ArrayList<String>();
-            ArrayList<String> c = new ArrayList<String>();
-            ArrayList<String> d = new ArrayList<String>();
-            ArrayList<String> e = new ArrayList<String>();
+            ArrayList<LocalTime> a = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> b = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> c = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> d = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> e = new ArrayList<LocalTime>();
             for (int i = 2; i < sched.size(); i += 2) {
                 Elements times = sched.get(i).select("td");
                 int group = 0;
@@ -423,19 +442,19 @@ public class PADListener {
                     if (times.get(j).text().length() > 1) {
                         switch (group) {
                             case 0:
-                                a.add(parseTime(times.get(j).text(), timezone));
+                                a.add(parseTime(times.get(j).text()));
                                 break;
                             case 1:
-                                b.add(parseTime(times.get(j).text(), timezone));
+                                b.add(parseTime(times.get(j).text()));
                                 break;
                             case 2:
-                                c.add(parseTime(times.get(j).text(), timezone));
+                                c.add(parseTime(times.get(j).text()));
                                 break;
                             case 3:
-                                d.add(parseTime(times.get(j).text(), timezone));
+                                d.add(parseTime(times.get(j).text()));
                                 break;
                             case 4:
-                                e.add(parseTime(times.get(j).text(), timezone));
+                                e.add(parseTime(times.get(j).text()));
                                 break;
                         }
                         group++;
@@ -449,69 +468,52 @@ public class PADListener {
                 String dungeon = doc.select("table#tablestat").get(1).select("tr").get(1).text();
                 dungeons.add(dungeon);
             }
-            String output = "```\nGuerilla for today in " + timezone.toUpperCase() + "\n   ";
-            ArrayList<Integer> colWidths = new ArrayList<Integer>();
-            for (int i = 0; i < dungeons.size(); i++) {
-                output += dungeons.get(i) + "|";
-                colWidths.add(dungeons.get(i).length());
-            }
-            output += "\nA: ";
-            for (int i = 0; i < a.size(); i++) {
-                output += centerString(a.get(i), colWidths.get(i)) + "|";
-            }
-            output += "\nB: ";
-            for (int i = 0; i < a.size(); i++) {
-                output += centerString(b.get(i), colWidths.get(i)) + "|";
-            }
-            output += "\nC: ";
-            for (int i = 0; i < a.size(); i++) {
-                output += centerString(c.get(i), colWidths.get(i)) + "|";
-            }
-            output += "\nD: ";
-            for (int i = 0; i < a.size(); i++) {
-                output += centerString(d.get(i), colWidths.get(i)) + "|";
-            }
-            output += "\nE: ";
-            for (int i = 0; i < a.size(); i++) {
-                output += centerString(e.get(i), colWidths.get(i)) + "|";
-            }
-            output += "\n```";
-            return output;
+            Guerilla g = new Guerilla(dungeons, a, b, c, d, e);
+            g.writeOut("modules/PAD/");
+            return true;
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return false;
     }
 
-    public String guerillaGroup(String timezone, String group) {
+    public Guerilla getTomorrowGuerilla() {
         try {
             URL home = new URL("http://puzzledragonx.com/");
             Document document = Jsoup.parse(home, 15000);
-            Elements sched = document.select("div#metal1a").select("table").get(0).select("tr");
-            ArrayList<String> groupTimes = new ArrayList<String>();
-            int groupIndex = 0;
-            switch (group.toLowerCase()) {
-                case "a":
-                    groupIndex = 0;
-                    break;
-                case "b":
-                    groupIndex = 2;
-                    break;
-                case "c":
-                    groupIndex = 4;
-                    break;
-                case "d":
-                    groupIndex = 6;
-                    break;
-                case "e":
-                    groupIndex = 8;
-                    break;
-            }
+            Elements sched = document.select("div#metal1b").select("table").get(0).select("tr");
+            ArrayList<LocalTime> a = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> b = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> c = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> d = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> e = new ArrayList<LocalTime>();
             for (int i = 2; i < sched.size(); i += 2) {
                 Elements times = sched.get(i).select("td");
-                groupTimes.add(parseTime(times.get(groupIndex).text(), timezone));
+                int group = 0;
+                for (int j = 0; j < times.size(); j++) {
+                    if (times.get(j).text().length() > 1) {
+                        switch (group) {
+                            case 0:
+                                a.add(parseTime(times.get(j).text()));
+                                break;
+                            case 1:
+                                b.add(parseTime(times.get(j).text()));
+                                break;
+                            case 2:
+                                c.add(parseTime(times.get(j).text()));
+                                break;
+                            case 3:
+                                d.add(parseTime(times.get(j).text()));
+                                break;
+                            case 4:
+                                e.add(parseTime(times.get(j).text()));
+                                break;
+                        }
+                        group++;
+                    }
+                }
             }
             ArrayList<String> dungeons = new ArrayList<String>();
             for (int i = 1; i < sched.size(); i += 2) {
@@ -520,58 +522,44 @@ public class PADListener {
                 String dungeon = doc.select("table#tablestat").get(1).select("tr").get(1).text();
                 dungeons.add(dungeon);
             }
-            String output = "```\nGuerilla for today in " + timezone.toUpperCase() + " for Group " + group.toUpperCase() + "\n   ";
-            ArrayList<Integer> colWidths = new ArrayList<Integer>();
-            for (int i = 0; i < dungeons.size(); i++) {
-                output += dungeons.get(i) + "|";
-                colWidths.add(dungeons.get(i).length());
-            }
-            output += "\n" + group.toUpperCase() + ": ";
-            for (int i = 0; i < groupTimes.size(); i++) {
-                output += centerString(groupTimes.get(i), colWidths.get(i)) + "|";
-            }
-            output += "\n```";
-            return output;
+            Guerilla g = new Guerilla(dungeons, a, b, c, d, e);
+            return g;
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return null;
     }
 
-    public String parseTime(String time, String timezone) {
+    public Guerilla getGuerilla(int year, int month, int day) {
+        Guerilla g = null;
+        try {
+            g = Guerilla.readIn("modules/PAD/guerilla-" + year + "-" + month + "-" + day + ".ser");
+        } catch (ClassNotFoundException e) {
+        } catch (IOException e) {
+        }
+        return g;
+    }
+
+    public Guerilla getTodayGuerilla() {
+        Guerilla g = null;
+        LocalDate ld = LocalDate.now();
+        g = getGuerilla(ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
+        if (g == null) {
+            updateGuerilla();
+        } else {
+            return g;
+        }
+        return getGuerilla(ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
+    }
+
+    public LocalTime parseTime(String time) {
         String timeformat = time.toUpperCase();
         if (!timeformat.contains(":")) {
             timeformat = timeformat.replace(" ", ":00 ");
         }
         String DATE_FORMAT = "h:mm a";
-        LocalTime lt = LocalTime.parse(timeformat, DateTimeFormatter.ofPattern(DATE_FORMAT));
-        switch (timezone.toLowerCase()) {
-            case "mst":
-                return lt.plusHours(1).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
-            case "cst":
-                return lt.plusHours(2).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
-            case "est":
-                return lt.plusHours(3).format(DateTimeFormatter.ofPattern(DATE_FORMAT));
-            default:
-                return lt.format(DateTimeFormatter.ofPattern(DATE_FORMAT));
-        }
-    }
-
-    public String centerString(String str, int width) {
-        if (str.length() >= width)
-            return str;
-        String formatted = str;
-        double toAdd = width - str.length();
-        double addFr = Math.floor(toAdd / 2);
-        double addBa = Math.ceil(toAdd / 2);
-        for (int i = 0; i < addFr; i++) {
-            formatted = " " + formatted;
-        }
-        for (int i = 0; i < addBa; i++) {
-            formatted += " ";
-        }
-        return formatted;
+        return LocalTime.parse(timeformat, DateTimeFormatter.ofPattern(DATE_FORMAT));
     }
 }
