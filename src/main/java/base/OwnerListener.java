@@ -2,12 +2,14 @@ package base;
 
 import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.handle.obj.Status;
 import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.Image;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
@@ -16,6 +18,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
@@ -38,7 +42,7 @@ public class OwnerListener {
                     argsconcat += args[i] + " ";
                 }
                 argsconcat = argsconcat.trim();
-                if (cmd.equalsIgnoreCase("changestatus")) {
+                if (cmd.equalsIgnoreCase("changestatus") || cmd.equalsIgnoreCase("status") || cmd.equalsIgnoreCase("cs")) {
                     if (args.length > 1) {
                         Eschamali.client.changeStatus(Status.game(argsconcat));
                     } else {
@@ -51,38 +55,38 @@ public class OwnerListener {
                     output += String.format("%-50s | %-20s | %-10s", centerString("Server Name", 50), centerString("Server ID", 20), centerString("Users", 10)) + "\n";
                     output += String.format("%-50s-|-%-20s-|-%-10s", repeatString("-", 50), repeatString("-", 20), repeatString("-", 10)) + "\n";
                     for (IGuild g : guilds) {
-//                        String invite = null;
-//                        try {
-//                            invite = "https://discord.gg/" + g.getInvites().get(0).getInviteCode();
-//                        } catch (DiscordException e) {
-//                            e.printStackTrace();
-//                        } catch (RateLimitException e) {
-//                            e.printStackTrace();
-//                        } catch (IndexOutOfBoundsException e) {
-////                            e.printStackTrace();
-//                        } catch (NullPointerException e) {
-//
-//                        }
-//                        output += g.getName() + ": " + g.getUsers().size() + " users | " + (invite == null ? "No invite link." : invite) + "\n";
                         output += String.format("%50s | %s | %s", g.getName(), centerString(g.getID(), 20), centerString(g.getUsers().size() + "", 10)) + "\n";
                     }
                     output += "```";
                     BufferedMessage.sendMessage(Eschamali.client, event, output);
                 } else if (cmd.equalsIgnoreCase("leave")) {
-
+                    if (args.length > 1) {
+                        String id = message.substring(message.indexOf(" "));
+                        IGuild g = Eschamali.client.getGuildByID(id);
+                        if (g != null) {
+                            try {
+                                g.leaveGuild();
+                                BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Left server `" + g.getName() + "`");
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                 } else if (cmd.equalsIgnoreCase("setavatar")) {
-
-                } else if (cmd.equalsIgnoreCase("uptime")) {
-                    long uptime = System.currentTimeMillis() - Eschamali.startTime;
-//                    RuntimeMXBean rb = ManagementFactory.getRuntimeMXBean();
-//                    long uptime = rb.getUptime();
-
-                    long second = (uptime / 1000) % 60;
-                    long minute = (uptime / (1000 * 60)) % 60;
-                    long hour = (uptime / (1000 * 60 * 60)) % 24;
-
-                    String time = String.format("%02dhrs:%02dmins:%02ds:%dms", hour, minute, second, uptime);
-                    BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + time + "`");
+                    String url = message.substring(message.indexOf(" "));
+                    String imgtype = url.substring(message.lastIndexOf("."));
+                    try {
+                        Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
+                        BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Avatar changed.");
+                    } catch (DiscordException e) {
+                        e.printStackTrace();
+                    } catch (RateLimitException e) {
+                        e.printStackTrace();
+                    }
+                } else if (cmd.equalsIgnoreCase("uptime") || cmd.equalsIgnoreCase("up")) {
+                    BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
                 } else if (cmd.equalsIgnoreCase("shutdown")) {
                     BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Shutting down...");
                     List<IVoiceChannel> connectedVoice = Eschamali.client.getConnectedVoiceChannels();
@@ -118,5 +122,38 @@ public class OwnerListener {
             s += str;
         }
         return s;
+    }
+
+    public String timeBetween(LocalDateTime from, LocalDateTime to) {
+        LocalDateTime fromDateTime = from;
+        LocalDateTime toDateTime = to;
+
+        LocalDateTime tempDateTime = LocalDateTime.from(fromDateTime);
+
+        long years = tempDateTime.until(toDateTime, ChronoUnit.YEARS);
+        tempDateTime = tempDateTime.plusYears(years);
+
+        long months = tempDateTime.until(toDateTime, ChronoUnit.MONTHS);
+        tempDateTime = tempDateTime.plusMonths(months);
+
+        long days = tempDateTime.until(toDateTime, ChronoUnit.DAYS);
+        tempDateTime = tempDateTime.plusDays(days);
+
+
+        long hours = tempDateTime.until(toDateTime, ChronoUnit.HOURS);
+        tempDateTime = tempDateTime.plusHours(hours);
+
+        long minutes = tempDateTime.until(toDateTime, ChronoUnit.MINUTES);
+        tempDateTime = tempDateTime.plusMinutes(minutes);
+
+        long seconds = tempDateTime.until(toDateTime, ChronoUnit.SECONDS);
+        tempDateTime = tempDateTime.plusSeconds(seconds);
+
+        return (years > 0 ? (years > 1 ? years + " years, " : years + " year, ") : "") +
+                (months > 0 ? (months > 1 ? months + " months, " : months + " month, ") : "") +
+                (days > 0 ? (days > 1 ? days + " days, " : days + " day, ") : "") +
+                (hours > 0 ? (hours > 1 ? hours + " hours, " : hours + " hour, ") : "") +
+                (minutes > 0 ? (minutes > 1 ? minutes + " minutes" : minutes + " minute") : "") +
+                (seconds > 0 ? (seconds > 1 ? seconds + " seconds" : seconds + " second") : "");
     }
 }

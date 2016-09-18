@@ -68,6 +68,11 @@ public class GeneralListener {
                         for (IRole r : roles) {
                             if (r.getPermissions().contains(Permissions.ADMINISTRATOR) || r.getPermissions().contains(Permissions.MANAGE_SERVER)) {
                                 ayy = !ayy;
+                                if (ayy) {
+                                    BufferedMessage.sendMessage(Eschamali.client, event, "lmao!");
+                                } else {
+                                    BufferedMessage.sendMessage(Eschamali.client, event, "lmao...");
+                                }
                                 break;
                             }
                         }
@@ -94,7 +99,7 @@ public class GeneralListener {
                         }
                         BufferedMessage.sendMessage(Eschamali.client, event, msg.substring(msg.indexOf(" ")));
                     }
-                } else if (msg.equalsIgnoreCase("!serverinfo")) {
+                } else if (msg.equalsIgnoreCase("!serverinfo") || msg.startsWith("!sinfo")) {
                     IGuild guild = event.getMessage().getGuild();
                     String name = guild.getName();
                     String serverID = guild.getID();
@@ -116,7 +121,7 @@ public class GeneralListener {
                     output += String.format("%-12s %s\n", "Roles:", roles);
                     output += "```";
                     BufferedMessage.sendMessage(Eschamali.client, event, output);
-                } else if (msg.startsWith("!userinfo")) {
+                } else if (msg.startsWith("!userinfo") || msg.startsWith("!uinfo")) {
                     IGuild guild = event.getMessage().getGuild();
                     IUser user = null;
                     if (msg.contains(" ")) {

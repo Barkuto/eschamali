@@ -1,5 +1,6 @@
 package base;
 
+import modules.Admin.AdminModule;
 import modules.Games.GamesModule;
 import modules.JoinLeave.JoinLeaveModule;
 import modules.Music.MusicModule;
@@ -12,6 +13,7 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.TreeMap;
@@ -25,7 +27,7 @@ public class Eschamali {
     public static TreeMap<IModule, Boolean> defaultmodules;
     public static IDiscordClient client;
     public static String ownerID = "85844964633747456";
-    public static final long startTime = System.currentTimeMillis();
+    public static final LocalDateTime startTime = LocalDateTime.now();
 
     public Eschamali() {
         Comparator<IModule> cmpr = new Comparator<IModule>() {
@@ -41,6 +43,7 @@ public class Eschamali {
         MusicModule music = new MusicModule();
         PADModule pad = new PADModule();
         JoinLeaveModule jl = new JoinLeaveModule();
+        AdminModule admin = new AdminModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
@@ -48,6 +51,7 @@ public class Eschamali {
         defaultmodules.put(music, true);
         defaultmodules.put(pad, true);
         defaultmodules.put(jl, true);
+        defaultmodules.put(admin, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
@@ -56,6 +60,7 @@ public class Eschamali {
         modules.add(music);
         modules.add(pad);
         modules.add(jl);
+        modules.add(admin);
         modules.sort(new Comparator<IModule>() {
             @Override
             public int compare(IModule o1, IModule o2) {
