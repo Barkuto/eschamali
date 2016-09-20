@@ -153,7 +153,7 @@ public class OwnerListener {
                 (months > 0 ? (months > 1 ? months + " months, " : months + " month, ") : "") +
                 (days > 0 ? (days > 1 ? days + " days, " : days + " day, ") : "") +
                 (hours > 0 ? (hours > 1 ? hours + " hours, " : hours + " hour, ") : "") +
-                (minutes > 0 ? (minutes > 1 ? minutes + " minutes" : minutes + " minute") : "") +
+                (minutes > 0 ? (minutes > 1 ? minutes + " minutes, " : minutes + " minute, ") : "") +
                 (seconds > 0 ? (seconds > 1 ? seconds + " seconds" : seconds + " second") : "");
     }
 }

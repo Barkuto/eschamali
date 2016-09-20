@@ -105,50 +105,52 @@ public class AdminListener {
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("prune")) {
-                        if (args.length >= 2) {
-                            IUser user = guild.getUserByID(parseUserID(args[1]));
-                            int msgCount;
-                            try {
-                                msgCount = Integer.parseInt(args[2].trim());
-                            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-                                msgCount = 10;
-                            }
-                            ArrayList<IMessage> msgsToDelete = new ArrayList<>();
-                            if (user != null && msgCount > 0) {
-                                MessageList messages = channel.getMessages();
-                                for (int i = 0; i < messages.size(); i++) {
-                                    if (messages.get(i).getAuthor().equals(user)) {
-                                        if (msgsToDelete.size() < msgCount) {
-                                            msgsToDelete.add(messages.get(i));
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            if (args.length >= 2) {
+                                IUser user = guild.getUserByID(parseUserID(args[1]));
+                                int msgCount;
+                                try {
+                                    msgCount = Integer.parseInt(args[2].trim());
+                                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                                    msgCount = 10;
+                                }
+                                ArrayList<IMessage> msgsToDelete = new ArrayList<>();
+                                if (user != null && msgCount > 0) {
+                                    MessageList messages = channel.getMessages();
+                                    for (int i = 0; i < messages.size(); i++) {
+                                        if (messages.get(i).getAuthor().equals(user)) {
+                                            if (msgsToDelete.size() < msgCount) {
+                                                msgsToDelete.add(messages.get(i));
+                                            }
                                         }
                                     }
-                                }
-                                for (int i = 0; i < msgsToDelete.size(); i++) {
-                                    IMessage mesg = msgsToDelete.get(i);
-                                    RequestBuffer.request(() -> {
-                                        try {
-                                            mesg.delete();
-                                        } catch (RateLimitException e) {
+                                    for (int i = 0; i < msgsToDelete.size(); i++) {
+                                        IMessage mesg = msgsToDelete.get(i);
+                                        RequestBuffer.request(() -> {
                                             try {
-                                                Thread.sleep(e.getRetryDelay());
+                                                mesg.delete();
+                                            } catch (RateLimitException e) {
                                                 try {
-                                                    mesg.delete();
-                                                } catch (MissingPermissionsException e1) {
-                                                    e1.printStackTrace();
-                                                } catch (DiscordException e1) {
+                                                    Thread.sleep(e.getRetryDelay());
+                                                    try {
+                                                        mesg.delete();
+                                                    } catch (MissingPermissionsException e1) {
+                                                        e1.printStackTrace();
+                                                    } catch (DiscordException e1) {
+                                                        e1.printStackTrace();
+                                                    }
+                                                } catch (InterruptedException e1) {
                                                     e1.printStackTrace();
                                                 }
-                                            } catch (InterruptedException e1) {
-                                                e1.printStackTrace();
+                                            } catch (MissingPermissionsException e) {
+                                                e.printStackTrace();
+                                            } catch (DiscordException e) {
+                                                e.printStackTrace();
                                             }
-                                        } catch (MissingPermissionsException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
+                                        });
+                                    }
+                                    BufferedMessage.sendMessage(AdminModule.client, event, "Deleted `" + msgsToDelete.size() + "` messages of user " + user.mention());
                                 }
-                                BufferedMessage.sendMessage(AdminModule.client, event, "Deleted `" + msgsToDelete.size() + "` messages of user " + user.mention());
                             }
                         }
                     }
