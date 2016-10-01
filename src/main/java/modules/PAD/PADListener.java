@@ -96,11 +96,20 @@ public class PADListener {
                             BufferedMessage.sendMessage(PADModule.client, event, g.forGroup(split[2].trim(), split[1].trim()));
                         }
                     } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
+                        try {
+                            event.getMessage().delete();
+                        } catch (MissingPermissionsException e) {
+                        } catch (RateLimitException e) {
+                        } catch (DiscordException e) {
+                        }
                         Guerilla g = getTodayGuerilla();
                         String est = g.allGroups("est");
                         String pst = g.allGroups("pst");
                         String cst = g.allGroups("cst");
                         String mst = g.allGroups("mst");
+                        LocalDate today = LocalDate.now();
+                        String date = today.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+                        BufferedMessage.sendMessage(PADModule.client, event, "__**" + date + "**__");
                         BufferedMessage.sendMessage(PADModule.client, event, est);
                         BufferedMessage.sendMessage(PADModule.client, event, pst);
                         BufferedMessage.sendMessage(PADModule.client, event, cst);
@@ -276,135 +285,7 @@ public class PADListener {
                 for (int i = 0; i < awakenings.size(); i++) {
                     String awakeningDesc = awakenings.get(i).attr("title");
                     String awakening = awakeningDesc.substring(0, awakeningDesc.indexOf('\n') - 1);
-                    String smallAwakening = "";
-                    switch (awakening) {
-                        case "Enhanced HP":
-                            smallAwakening = "+HP";
-                            break;
-                        case "Enhanced Attack":
-                            smallAwakening = "+ATK";
-                            break;
-                        case "Enhanced Heal":
-                            smallAwakening = "+RCV";
-                            break;
-
-                        case "Auto-Recover":
-                            smallAwakening = "AutoRCV";
-                            break;
-                        case "Extend Time":
-                            smallAwakening = "TE";
-                            break;
-                        case "Recover Bind":
-                            smallAwakening = "BindRCV";
-                            break;
-                        case "Skill Boost":
-                            smallAwakening = "SB";
-                            break;
-                        case "Two-Pronged Attack":
-                            smallAwakening = "TPA";
-                            break;
-                        case "Resistance-Skill Bind":
-                            smallAwakening = "SBR";
-                            break;
-
-                        case "Reduce Fire Damage":
-                            smallAwakening = "FireRes";
-                            break;
-                        case "Reduce Water Damage":
-                            smallAwakening = "WaterRes";
-                            break;
-                        case "Reduce Wood Damage":
-                            smallAwakening = "WoodRes";
-                            break;
-                        case "Reduce Light Damage":
-                            smallAwakening = "LightRes";
-                            break;
-                        case "Reduce Dark Damage":
-                            smallAwakening = "DarkRes";
-                            break;
-
-                        case "Resistance-Bind":
-                            smallAwakening = "BindRes";
-                            break;
-                        case "Resistance-Dark":
-                            smallAwakening = "BlindRes";
-                            break;
-                        case "Resistance-Jammers":
-                            smallAwakening = "JamRes";
-                            break;
-                        case "Resistance-Poison":
-                            smallAwakening = "PoiRes";
-                            break;
-
-                        case "Enhanced Fire Orbs":
-                            smallAwakening = "FireOE";
-                            break;
-                        case "Enhanced Water Orbs":
-                            smallAwakening = "WaterOE";
-                            break;
-                        case "Enhanced Wood Orbs":
-                            smallAwakening = "WoodOE";
-                            break;
-                        case "Enhanced Light Orbs":
-                            smallAwakening = "LightOE";
-                            break;
-                        case "Enhanced Dark Orbs":
-                            smallAwakening = "DarkOE";
-                            break;
-
-                        case "Enhanced Fire Attribute":
-                            smallAwakening = "FireRow";
-                            break;
-                        case "Enhanced Water Attribute":
-                            smallAwakening = "WaterRow";
-                            break;
-                        case "Enhanced Wood Attribute":
-                            smallAwakening = "WoodRow";
-                            break;
-                        case "Enhanced Light Attribute":
-                            smallAwakening = "LightRow";
-                            break;
-                        case "Enhanced Dark Attribute":
-                            smallAwakening = "DarkRow";
-                            break;
-
-                        case "Dragon Killer":
-                            smallAwakening = "DragonKill";
-                            break;
-                        case "God Killer":
-                            smallAwakening = "GodKill";
-                            break;
-                        case "Devil Killer":
-                            smallAwakening = "DevilKill";
-                            break;
-                        case "Machine Killer":
-                            smallAwakening = "MachineKill";
-                            break;
-                        case "Attacker Killer":
-                            smallAwakening = "AttackerKill";
-                            break;
-                        case "Physical Killer":
-                            smallAwakening = "PhysicalKill";
-                            break;
-                        case "Healer Killer":
-                            smallAwakening = "HealerKill";
-                            break;
-                        case "Balanced Killer":
-                            smallAwakening = "BalancedKill";
-                            break;
-                        case "Awaken Material Killer":
-                            smallAwakening = "AwakenKill";
-                            break;
-                        case "Enhance Material Killer":
-                            smallAwakening = "EnhanceKill";
-                            break;
-                        case "Vendor Material Killer":
-                            smallAwakening = "VendorKill";
-                            break;
-                        case "Evolve Killer":
-                            smallAwakening = "EvoKill";
-                            break;
-                    }
+                    String smallAwakening = Awakening.getAwakening(awakening).getShortName();
                     output += "[" + smallAwakening + "]";
                 }
             } else {
