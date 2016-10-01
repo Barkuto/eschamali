@@ -98,7 +98,9 @@ public class CustomCommandsListener {
                                 } else {
                                     BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
                                 }
-                            } else if (cmd.equalsIgnoreCase("customcommands") || cmd.equalsIgnoreCase("cc")) {
+                            }
+                        } else {
+                            if (cmd.equalsIgnoreCase("customcommands") || cmd.equalsIgnoreCase("cc")) {
                                 ResultSet rs = perms.selectAllFrom(tableName);
                                 String output = "`Custom commands " + prefix + ":` ";
                                 try {
