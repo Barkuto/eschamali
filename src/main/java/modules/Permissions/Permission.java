@@ -64,6 +64,18 @@ public class Permission {
         }
     }
 
+    public void deletePerms(String table, String col1, String col1Val) {
+        ResultSet rs = db.executeQuery("SELECT " + "*" + " FROM " + table + " WHERE " + col1 + "='" + col1Val + "'");
+        try {
+            if (rs.next()) {
+                db.execute("DELETE FROM " + table + " WHERE " + col1 + "='" + col1Val + "'");
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void resetPerms(String table, String col1, String col1Val, String col2) {
         db.execute("UPDATE " + table + " SET " + col2 + "='' WHERE " + col1 + "='" + col1Val + "'");
     }

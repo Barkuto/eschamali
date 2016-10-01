@@ -1,18 +1,17 @@
 package modules.CustomCommands;
 
+import base.Eschamali;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPrivateChannel;
-import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -23,6 +22,7 @@ public class CustomCommandsListener {
     private String tableName = "customcommands";
     private String col1 = "command";
     private String col2 = "message";
+    private String ownerID = "85844964633747456";
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
@@ -67,10 +67,53 @@ public class CustomCommandsListener {
                     }
                     if (commands.containsKey(cmd)) {
                         BufferedMessage.sendMessage(CustomCommandsModule.client, event, commands.get(cmd));
+                    } else {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID)) {
+                            String commandName = "";
+                            String commandText = "";
+                            if (args.length > 1) {
+                                commandName = args[1].trim().toLowerCase();
+                            }
+                            if (args.length > 2) {
+                                commandText = argsconcat.substring(argsconcat.indexOf(" ")).trim();
+                            }
+                            if (cmd.equals("addcustomcommand") || cmd.equalsIgnoreCase("acc")) {
+                                if (perms.getPerms(tableName, col1, commandName, col2).equals("")) {
+                                    perms.setPerms(tableName, col1, commandName, col2, commandText);
+                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Added custom command \"" + commandName + "\"");
+                                } else {
+                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is already a custom command!");
+                                }
+                            } else if (cmd.equals("deletecustomcommand") || cmd.equals("dcc")) {
+                                if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
+                                    perms.deletePerms(tableName, col1, commandName);
+                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Deleted custom command \"" + commandName + "\"");
+                                } else {
+                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                                }
+                            } else if (cmd.equals("editcustomcommand") || cmd.equals("ecc")) {
+                                if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
+                                    perms.setPerms(tableName, col1, commandName, col2, commandText);
+                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Edited custom command \"" + commandName + "\"");
+                                } else {
+                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                                }
+                            }
+                        }
                     }
                     perms.close();
                 }
             }
         }
+    }
+
+    public boolean userHasPerm(IUser user, IGuild guild, Permissions perm) {
+        List<IRole> roles = user.getRolesForGuild(guild);
+        for (IRole r : roles) {
+            if (r.getPermissions().contains(perm)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -51,7 +51,10 @@ public class CustomCommandsModule implements IModule, ICommands {
     public ArrayList<String> commands() {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(CustomCommandsListener.prefix);
-        cmds.add("``: Cmd **Usage**");
+        cmds.add("Commands require MANAGE SERVER permission.");
+        cmds.add("`addcustomcommand`: Add a custom command. **Usage** addcustomcommand <command name> <text>");
+        cmds.add("`editcustomcommand`: Edit an existing custom command. **Usage** editcustomcommand <command name> <text>");
+        cmds.add("`deletecustomcommand`: Delete an existing custom command. **Usage** deletecustomcommand <command name>");
         return cmds;
     }
 }

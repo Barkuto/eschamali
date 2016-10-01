@@ -1,6 +1,7 @@
 package base;
 
 import modules.Admin.AdminModule;
+import modules.CustomCommands.CustomCommandsModule;
 import modules.Games.GamesModule;
 import modules.JoinLeave.JoinLeaveModule;
 import modules.Music.MusicModule;
@@ -44,6 +45,7 @@ public class Eschamali {
         PADModule pad = new PADModule();
         JoinLeaveModule jl = new JoinLeaveModule();
         AdminModule admin = new AdminModule();
+        CustomCommandsModule custom = new CustomCommandsModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
@@ -52,6 +54,7 @@ public class Eschamali {
         defaultmodules.put(pad, true);
         defaultmodules.put(jl, true);
         defaultmodules.put(admin, true);
+        defaultmodules.put(custom, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
@@ -61,6 +64,7 @@ public class Eschamali {
         modules.add(pad);
         modules.add(jl);
         modules.add(admin);
+        modules.add(custom);
         modules.sort(new Comparator<IModule>() {
             @Override
             public int compare(IModule o1, IModule o2) {
