@@ -98,6 +98,21 @@ public class CustomCommandsListener {
                                 } else {
                                     BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
                                 }
+                            } else if (cmd.equalsIgnoreCase("customcommands") || cmd.equalsIgnoreCase("cc")) {
+                                ResultSet rs = perms.selectAllFrom(tableName);
+                                String output = "`Custom commands " + prefix + ":` ";
+                                try {
+                                    while (rs.next()) {
+                                        output += rs.getString(col1) + ", ";
+                                    }
+                                    if (output.trim().endsWith(",")) {
+                                        output = output.trim().substring(0, output.length() - 2);
+                                    }
+                                    rs.close();
+                                } catch (SQLException e) {
+                                    e.printStackTrace();
+                                }
+                                BufferedMessage.sendMessage(CustomCommandsModule.client, event, output);
                             }
                         }
                     }
