@@ -68,7 +68,7 @@ public class GamesListener {
                                 question += args[i] + " ";
                             }
                             question.trim();
-                            BufferedMessage.sendMessage(GamesModule.client, event, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers`" + answers.get(num));
+                            BufferedMessage.sendMessage(GamesModule.client, event, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers` " + answers.get(num));
                         }
                     } else if (cmd.equalsIgnoreCase("choose")) {
                         if (args.length > 1) {
