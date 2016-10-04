@@ -294,7 +294,9 @@ public class RolesListener {
                                         }
                                     }
                                 }
-                                output = output.substring(0, output.length() - 2);
+                                if (output.trim().charAt(output.length() - 1) == ',') {
+                                    output = output.substring(0, output.length() - 2);
+                                }
                                 BufferedMessage.sendMessage(RolesModule.client, event, output);
                             }
                         }
