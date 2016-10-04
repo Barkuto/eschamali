@@ -52,9 +52,10 @@ public class AdminModule implements IModule, ICommands {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(AdminListener.prefix);
         cmds.add("__**DESC**__: Administration commands");
-        cmds.add("`kick`: Kicks the specified user(s). **USAGE**: kick @user1 @user2");
-        cmds.add("`ban`: Bans the specified user(s) **USAGE**: ban @user1 @user2");
-        cmds.add("`prune`: Prunes the specified users last X messages **USAGE**: prune @user <# msgs to delete>");
+        cmds.add("`kick`: Kicks the specified user(s), requires KICK permission. **USAGE**: kick @user1 @user2");
+        cmds.add("`ban`: Bans the specified user(s), requires BAN permission. **USAGE**: ban @user1 @user2");
+        cmds.add("`prune`: Prunes the specified users last X messages, requires MANAGE MESSAGES permission. **USAGE**: prune @user <# msgs to delete>");
+        cmds.add("`mute`: Mutes the person from chatting in the server, requires MANAGE MESSAGES permission. **USAGE**: mute @user");
         return cmds;
     }
 }

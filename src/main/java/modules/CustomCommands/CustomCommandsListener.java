@@ -28,7 +28,7 @@ public class CustomCommandsListener {
     public void onJoin(GuildCreateEvent event) {
         IGuild guild = event.getGuild();
         Permission perms = PermissionsListener.getPermissionDB(guild);
-        if (!perms.tableExists("customcommands")) {
+        if (!perms.tableExists(tableName)) {
             perms.createTable(tableName, col1, "string", col2, "string");
         }
         perms.close();

@@ -7,10 +7,12 @@ import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.DiscordUtils;
+import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
+import java.awt.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -21,6 +23,19 @@ import java.util.List;
  */
 public class AdminListener {
     public static String prefix = "/";
+    private String tableName = "admin";
+    private String col1 = "field";
+    private String col2 = "role";
+
+    @EventSubscriber
+    public void onJoin(GuildCreateEvent event) {
+        IGuild guild = event.getGuild();
+        Permission perms = PermissionsListener.getPermissionDB(guild);
+        if (!perms.tableExists(tableName)) {
+            perms.createTable(tableName, col1, "string", col2, "string");
+        }
+        perms.close();
+    }
 
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
@@ -150,6 +165,109 @@ public class AdminListener {
                                         });
                                     }
                                     BufferedMessage.sendMessage(AdminModule.client, event, "Deleted `" + msgsToDelete.size() + "` messages of user " + user.mention());
+                                }
+                            }
+                        }
+                    } else if (cmd.equals("mute")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            if (args.length >= 2) {
+                                IUser user = guild.getUserByID(parseUserID(args[1]));
+                                if (user != null) {
+                                    IRole muteRole = guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2));
+                                    if (muteRole == null) {
+                                        try {
+                                            muteRole = new RoleBuilder(guild).withName("Muted").withColor(new Color(12, 0, 0)).build();
+                                            perms.setPerms(tableName, col1, "muterole", col2, muteRole.getID());
+                                        } catch (MissingPermissionsException e) {
+                                            e.printStackTrace();
+                                        } catch (RateLimitException e) {
+                                            e.printStackTrace();
+                                        } catch (DiscordException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    if (muteRole != null) {
+                                        try {
+                                            user.addRole(muteRole);
+                                            List<IChannel> serverChannels = guild.getChannels();
+                                            for (IChannel c : serverChannels) {
+                                                c.overrideRolePermissions(muteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
+                                            }
+                                        } catch (MissingPermissionsException e) {
+                                            e.printStackTrace();
+                                        } catch (RateLimitException e) {
+                                            e.printStackTrace();
+                                        } catch (DiscordException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                } else {
+                                    BufferedMessage.sendMessage(AdminModule.client, event, "Invalid user");
+                                }
+                            }
+                        }
+                    } else if (cmd.equals("unmute")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            if (args.length >= 2) {
+                                IUser user = guild.getUserByID(parseUserID(args[1]));
+                                if (user != null) {
+                                    IRole muteRole = guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2));
+                                    if (muteRole != null) {
+                                        try {
+                                            user.removeRole(muteRole);
+                                        } catch (MissingPermissionsException e) {
+                                            e.printStackTrace();
+                                        } catch (RateLimitException e) {
+                                            e.printStackTrace();
+                                        } catch (DiscordException e) {
+                                            e.printStackTrace();
+                                        }
+                                    } else {
+                                        BufferedMessage.sendMessage(AdminModule.client, event, "There is no mute role.");
+                                    }
+                                } else {
+                                    BufferedMessage.sendMessage(AdminModule.client, event, "Invalid user");
+                                }
+                            }
+                        }
+                    } else if (cmd.equals("muterole")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            if (args.length == 1) {
+                                BufferedMessage.sendMessage(AdminModule.client, event, "The current mute role is: " + guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2)));
+                            } else if (args.length >= 2) {
+                                try {
+                                    IRole newMuteRole = guild.getRolesByName(argsconcat.trim()).get(0);
+                                    IRole oldMuteRole = guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2));
+                                    if (oldMuteRole != null) {
+                                        List<IChannel> serverChannels = guild.getChannels();
+                                        for (IChannel c : serverChannels) {
+                                            c.removePermissionsOverride(oldMuteRole);
+                                            c.overrideRolePermissions(newMuteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
+                                        }
+                                    }
+                                    perms.setPerms(tableName, col1, "muterole", col2, newMuteRole.getID());
+
+                                    //Not working for some reason, not removing roles, sometimes adds role.
+//                                    for (IUser u : guild.getUsers()) {
+//                                        List<IRole> userRoles = u.getRolesForGuild(guild);
+//                                        for (IRole r : userRoles) {
+//                                            if (r.getID().equals(oldMuteRole.getID())) {
+//                                                u.removeRole(oldMuteRole);
+//                                                u.addRole(newMuteRole);
+//                                                break;
+//                                            }
+//                                        }
+//                                    }
+
+                                    BufferedMessage.sendMessage(AdminModule.client, event, "The mute role has been set to the role: " + newMuteRole.getName());
+                                } catch (IndexOutOfBoundsException e) {
+                                    e.printStackTrace();
+                                } catch (DiscordException e) {
+                                    e.printStackTrace();
+                                } catch (RateLimitException e) {
+                                    e.printStackTrace();
+                                } catch (MissingPermissionsException e) {
+                                    e.printStackTrace();
                                 }
                             }
                         }
