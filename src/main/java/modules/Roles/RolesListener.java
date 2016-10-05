@@ -294,7 +294,7 @@ public class RolesListener {
                                         }
                                     }
                                 }
-                                if (output.trim().charAt(output.length() - 1) == ',') {
+                                if (output.charAt(output.length() - 2) == ',') {
                                     output = output.substring(0, output.length() - 2);
                                 }
                                 BufferedMessage.sendMessage(RolesModule.client, event, output);
@@ -305,14 +305,22 @@ public class RolesListener {
                         List<IRole> userRoles = user.getRolesForGuild(guild);
                         String output = "`A list of your roles, " + user.getName() + "#" + user.getDiscriminator() + ":`";
                         for (IRole r : userRoles) {
-                            output += "\n•" + r.getName();
+                            if (userHasPerm(RolesModule.client.getOurUser(), guild, Permissions.MENTION_EVERYONE)) {
+                                output += "\n•" + r.getName().replace("@", "");
+                            } else {
+                                output += "\n•" + r.getName();
+                            }
                         }
                         BufferedMessage.sendMessage(RolesModule.client, event, output);
                     } else if (cmd.equalsIgnoreCase("roles")) {
                         String output = "`List of roles:`";
                         List<IRole> roles = guild.getRoles();
                         for (IRole r : roles) {
-                            output += "\n•" + r.getName().replace("@", "");
+                            if (userHasPerm(RolesModule.client.getOurUser(), guild, Permissions.MENTION_EVERYONE)) {
+                                output += "\n•" + r.getName().replace("@", "");
+                            } else {
+                                output += "\n•" + r.getName();
+                            }
                         }
                         BufferedMessage.sendMessage(RolesModule.client, event, output);
                     } else if (cmd.equalsIgnoreCase("rolesof") && args.length > 1) {
@@ -321,7 +329,11 @@ public class RolesListener {
                             List<IRole> theirRoles = user.getRolesForGuild(guild);
                             String msg = "`List of roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
                             for (IRole r : theirRoles) {
-                                msg += "\n•" + r.getName().replace("@", "") + "";
+                                if (userHasPerm(RolesModule.client.getOurUser(), guild, Permissions.MENTION_EVERYONE)) {
+                                    msg += "\n•" + r.getName().replace("@", "") + "";
+                                } else {
+                                    msg += "\n•" + r.getName() + "";
+                                }
                             }
                             BufferedMessage.sendMessage(RolesModule.client, event, msg);
                         } else {
