@@ -1,10 +1,10 @@
 package modules.PAD;
 
 import modules.BufferedMessage.BufferedMessage;
+import modules.PAD.PADHerderAPI.*;
 import modules.Permissions.PermissionsListener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
@@ -16,8 +16,6 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,6 +33,7 @@ public class PADListener {
     public static String prefix = "&";
     private TreeMap<String, String> abbrMon = new TreeMap<String, String>();
     private TreeMap<String, String> abbrDun = new TreeMap<String, String>();
+    private int maxMonNum = 3252;
 
     public PADListener() {
         super();
@@ -72,9 +71,14 @@ public class PADListener {
                         BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         if (split.length == 1) {
-                            BufferedMessage.sendMessage(PADModule.client, event, getInfo((new Random().nextInt(3164) + 1) + ""));
+                            BufferedMessage.sendMessage(PADModule.client, event, getInfo(PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "")));
                         } else {
-                            BufferedMessage.sendMessage(PADModule.client, event, getInfo(searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1))));
+                            Monster m = PADHerderAPI.getMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
+                            if (m != null) {
+                                BufferedMessage.sendMessage(PADModule.client, event, getInfo(m));
+                            } else {
+                                BufferedMessage.sendMessage(PADModule.client, event, "Monster not found.");
+                            }
                         }
                     } else if (cmd.equalsIgnoreCase("dungeon") || cmd.equalsIgnoreCase("dun") || cmd.equalsIgnoreCase("d")) {
                         BufferedMessage.sendMessage(PADModule.client, event, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
@@ -136,7 +140,7 @@ public class PADListener {
                         }
                         String found = "";
                         if (split.length == 1) {
-                            found = searchMonster((new Random().nextInt(3164) + 1) + "");
+                            found = searchMonster((new Random().nextInt(maxMonNum) + 1) + "");
                         } else {
                             found = searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
                         }
@@ -146,6 +150,9 @@ public class PADListener {
                         } else {
                             BufferedMessage.sendMessage(PADModule.client, event, found);
                         }
+                    } else if (cmd.equalsIgnoreCase("updatejson")) {
+                        PADHerderAPI.updateJSON();
+                        BufferedMessage.sendMessage(PADModule.client, event, "JSON updated.");
                     }
                 }
             }
@@ -157,28 +164,12 @@ public class PADListener {
     }
 
     public String searchMonster(String keyword) {
-        if (abbrMon.containsKey(keyword)) {
-            keyword = abbrMon.get(keyword);
+        Monster m = PADHerderAPI.getMonster(keyword);
+        if (m != null) {
+            return "http://puzzledragonx.com/en/monster.asp?n=" + m.getId();
+        } else {
+            return "Nothing was found.";
         }
-        try {
-            keyword = keyword.trim().replace(" ", "+");
-            URL url = new URL("http://puzzledragonx.com/en/search.asp?q=" + keyword);
-            Document doc = Jsoup.parse(url, 15000);
-            if (url.toString().equals(doc.location())) {
-                Elements search = doc.select("div#searchresult1").select("tbody").select("tr");
-                String linkID = search.get(0).getElementsByClass("sname").select("a[href]").attr("href");
-                return "http://puzzledragonx.com/en/" + linkID;
-            } else {
-                return doc.location();
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IndexOutOfBoundsException e) {
-            return "Keyword did not find a monster, try different or more keywords.";
-        }
-        return "Nothing could be found.";
     }
 
     public String searchDungeon(String keyword) {
@@ -212,98 +203,33 @@ public class PADListener {
         return "Nothing could be found.";
     }
 
-    public String getInfo(String page) {
-        try {
-            URL url = new URL(page);
-            Document doc = Jsoup.parse(url, 15000);
-            Elements tables = doc.select("table");
-            String avatar = "http://puzzledragonx.com/en/" + doc.select("div.avatar").select("img").attr("src");
-            //PROFILE
-            Elements profile = doc.select("div#compareprofile");
-            Elements tableprofile = profile.select("table#tableprofile").get(0).select("tr");
-            String name = tableprofile.get(0).child(1).text();
-            String jpName = tableprofile.get(1).child(1).text();
+    public String getInfo(Monster m) {
+        String output = "```\n";
+        output += "http://puzzledragonx.com/en/monster.asp?n=" + m.getId() + "\n";
+        output += "NAME: " + m.getName() + "\n";
+        output += "JP NAME: " + m.getName_jp() + "\n";
 
-            Elements tableprofileprofile = profile.select("table#tableprofile.tableprofile").select("tr");
-            String typing = tableprofileprofile.get(0).child(1).text();
-            String element = tableprofileprofile.select("tr").get(1).child(1).text();
-            String rarity = tableprofileprofile.select("tr").get(6).child(1).text();
-            String cost = tableprofileprofile.select("tr").get(7).child(1).text();
-            String mp = tableprofileprofile.select("tr").get(8).child(1).text();
-            //ABILITIES
-            //Account for jp ver ;-;
-            Elements abilities = tables.get(17).child(0).select("tr");
-            String activeName = "";
-            String active = "";
-            String cooldown = "";
-            String leaderName = "";
-            String leader = "";
-            Elements pantheons = tables.get(20).select("h2");
+        Type type = m.getType().equals("null") ? null : Type.getType(Integer.parseInt(m.getType()));
+        Type type2 = m.getType2().equals("null") ? null : Type.getType(Integer.parseInt(m.getType2()));
+        Type type3 = m.getType3().equals("null") ? null : Type.getType(Integer.parseInt(m.getType3()));
+        output += "TYPING: " + type.getName() + (type2 == null ? "" : "/" + type2.getName()) + (type3 == null ? "" : "/" + type3.getName()) + "\n";
 
-            int spaces = 0;
-            ArrayList<Integer> spaceIndexes = new ArrayList<Integer>();
-            for (int i = 1; i < abilities.size(); i++) {
-                if (abilities.get(i).toString().contains("colspan")) {
-                    spaces++;
-                    spaceIndexes.add(i);
-                }
-            }
-            spaceIndexes.add(abilities.size() - 1);
+        Attribute element = m.getElement().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement())];
+        Attribute element2 = m.getElement2().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement2())];
+        output += "ATTR: " + element.getName() + (element2 == null ? "" : "/" + element2.getName()) + "\n";
 
-            for (int i = 1; i < spaceIndexes.get(0); i++) {
-                Element current = abilities.get(i);
-                if (current.child(0).text().equals("Active Skill:")) {
-                    activeName = current.child(1).text();
-                } else if (current.child(0).text().equals("Effects:")) {
-                    active = current.child(1).text();
-                } else if (current.child(0).text().equals("Cool Down:")) {
-                    cooldown = current.child(1).text();
-                }
-            }
-
-            for (int i = spaceIndexes.get(0); i <= spaceIndexes.get(1); i++) {
-                Element current = abilities.get(i);
-                if (current.child(0).text().equals("Leader Skill:")) {
-                    leaderName = current.child(1).text();
-                } else if (current.child(0).text().equals("Effects:") && leader.equals("")) {
-                    leader = current.child(1).text();
-                }
-            }
-
-            String output = "```\n";
-            output += doc.location() + "\n";
-            output += "NAME: " + name + "\n";
-            output += "JP NAME: " + jpName + "\n";
-            output += "TYPING: " + typing.replace(" ", "") + "\n";
-            output += "ATTR: " + element + "\n";
-            output += String.format("RARITY: %-8s COST: %-3s MP: %-6s", rarity, cost, mp) + "\n";
-            output += "ACTIVE: " + (cooldown.equals("") ? "" : cooldown + ", ") + (activeName.equals("None") ? "None." : activeName + ": ") + active + "\n";
-            output += "LEADER: " + (leaderName.equals("None") ? "None." : leaderName + ": ") + leader + "\n";
-            output += "AWAKENINGS: ";
-            if (spaces == 2) {
-                Elements awakenings = abilities.get(spaceIndexes.get(2)).select("img[src]");
-                for (int i = 0; i < awakenings.size(); i++) {
-                    String awakeningDesc = awakenings.get(i).attr("title");
-                    String awakening = awakeningDesc.substring(0, awakeningDesc.indexOf('\n') - 1);
-                    String smallAwakening = Awakening.getAwakening(awakening).getShortName();
-                    output += "[" + smallAwakening + "]";
-                }
-            } else {
-                output += "None.";
-            }
-            output += "\nPANTHEONS: ";
-            for (int i = 0; i < pantheons.size() - 1; i++) {
-                output += pantheons.get(i).text() + ", ";
-            }
-            output = output.trim().substring(0, output.lastIndexOf(',')) + "\n";
-            output += "```";
-            return output;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        output += String.format("RARITY: %-8s COST: %-3s MP: %-6s", m.getRarity() + " stars", m.getTeam_cost(), m.getMonster_points()) + "\n";
+        ActiveSkill active = m.getActive_skill();
+        LeaderSkill leader = m.getLeader_skill();
+        output += "ACTIVE: (" + active.getMaxCD() + "->" + active.getMinCD() + "), " + active.getName() + ": " + active.getEffect() + "\n";
+        output += "LEADER: " + leader.getName() + ": " + leader.getEffect() + "\n";
+        output += "AWAKENINGS: ";
+        AwokenSkill[] awakenings = m.getAwoken_skills();
+        for (int i = 0; i < awakenings.length; i++) {
+            output += "[" + Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName() + "]";
         }
-        return "Nothing found.";
+        output += "\n```";
+        return output;
     }
 
     public boolean updateGuerilla() {
