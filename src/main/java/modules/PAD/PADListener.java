@@ -221,8 +221,8 @@ public class PADListener {
         output += String.format("RARITY: %-8s COST: %-3s MP: %-6s", m.getRarity() + " stars", m.getTeam_cost(), m.getMonster_points()) + "\n";
         ActiveSkill active = m.getActive_skill();
         LeaderSkill leader = m.getLeader_skill();
-        output += "ACTIVE: " + (active == null ? "None." : "(" + active.getMaxCD() + "->" + active.getMinCD() + "), " + active.getName() + ": " + active.getEffect() + "\n");
-        output += "LEADER: " + (leader == null ? "None." : leader.getName() + ": " + leader.getEffect() + "\n");
+        output += "ACTIVE: " + (active == null ? "None.\n" : "(" + active.getMaxCD() + "->" + active.getMinCD() + "), " + active.getName() + ": " + active.getEffect() + "\n");
+        output += "LEADER: " + (leader == null ? "None.\n" : leader.getName() + ": " + leader.getEffect() + "\n");
         output += "AWAKENINGS: ";
         AwokenSkill[] awakenings = m.getAwoken_skills();
         for (int i = 0; i < awakenings.length; i++) {
