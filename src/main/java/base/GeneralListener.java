@@ -137,7 +137,6 @@ public class GeneralListener {
                         } else {
                             List<IUser> users = guild.getUsers();
                             for (IUser u : users) {
-                                System.out.println(u.getName());
                                 if (u.getName().toLowerCase().contains(arg.toLowerCase())) {
                                     user = u;
                                     break;
@@ -159,8 +158,10 @@ public class GeneralListener {
                     LocalDateTime accCreated = user.getCreationDate();
                     String accAge = timeBetween(accCreated, LocalDateTime.now());
                     LocalDateTime guildJoinDate = null;
+                    String memberFor = null;
                     try {
                         guildJoinDate = guild.getJoinTimeForUser(user);
+                        memberFor = timeBetween(guildJoinDate, LocalDateTime.now());
                     } catch (DiscordException e) {
                         e.printStackTrace();
                     }
@@ -183,6 +184,7 @@ public class GeneralListener {
                     output += String.format("%-16s %s\n", "Account Age:", accAge);
                     output += String.format("%-16s %s\n", "\nInfo For Guild: ", guild.getName());
                     output += String.format("%-16s %s\n", "Join Date:", guildJoinDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
+                    output += String.format("%-16s %s\n", "Member For:", memberFor);
                     output += String.format("%-16s %s\n", "Roles:", allRoles);
                     output += String.format("%-16s %s\n", "Status:", status);
                     output += "```";

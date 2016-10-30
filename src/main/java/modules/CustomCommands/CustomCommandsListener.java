@@ -77,26 +77,28 @@ public class CustomCommandsListener {
                             if (args.length > 2) {
                                 commandText = argsconcat.substring(argsconcat.indexOf(" ")).trim();
                             }
-                            if (cmd.equals("addcustomcommand") || cmd.equalsIgnoreCase("acc")) {
-                                if (perms.getPerms(tableName, col1, commandName, col2).equals("")) {
-                                    perms.setPerms(tableName, col1, commandName, col2, commandText);
-                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Added custom command \"" + commandName + "\"");
-                                } else {
-                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is already a custom command!");
-                                }
-                            } else if (cmd.equals("deletecustomcommand") || cmd.equals("dcc")) {
-                                if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
-                                    perms.deletePerms(tableName, col1, commandName);
-                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Deleted custom command \"" + commandName + "\"");
-                                } else {
-                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
-                                }
-                            } else if (cmd.equals("editcustomcommand") || cmd.equals("ecc")) {
-                                if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
-                                    perms.setPerms(tableName, col1, commandName, col2, commandText);
-                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Edited custom command \"" + commandName + "\"");
-                                } else {
-                                    BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                            if (commandName.length() > 0) {
+                                if (cmd.equals("addcustomcommand") || cmd.equalsIgnoreCase("acc")) {
+                                    if (perms.getPerms(tableName, col1, commandName, col2).equals("")) {
+                                        perms.setPerms(tableName, col1, commandName, col2, commandText);
+                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Added custom command \"" + commandName + "\"");
+                                    } else {
+                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is already a custom command!");
+                                    }
+                                } else if (cmd.equals("deletecustomcommand") || cmd.equals("dcc")) {
+                                    if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
+                                        perms.deletePerms(tableName, col1, commandName);
+                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Deleted custom command \"" + commandName + "\"");
+                                    } else {
+                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                                    }
+                                } else if (cmd.equals("editcustomcommand") || cmd.equals("ecc")) {
+                                    if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
+                                        perms.setPerms(tableName, col1, commandName, col2, commandText);
+                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Edited custom command \"" + commandName + "\"");
+                                    } else {
+                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                                    }
                                 }
                             }
                         }
