@@ -281,8 +281,8 @@ public class AdminListener {
                     } else if (cmd.equals("lock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             try {
-                                channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
                                 BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
+                                channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
                             } catch (MissingPermissionsException e) {
                                 e.printStackTrace();
                             } catch (RateLimitException e) {
@@ -294,8 +294,8 @@ public class AdminListener {
                     } else if (cmd.equals("unlock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             try {
-                                channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
                                 BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
+                                channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
                             } catch (MissingPermissionsException e) {
                                 e.printStackTrace();
                             } catch (RateLimitException e) {
