@@ -56,6 +56,11 @@ public class AdminModule implements IModule, ICommands {
         cmds.add("`ban`: Bans the specified user(s), requires BAN permission. **USAGE**: ban @user1 @user2");
         cmds.add("`prune`: Prunes the specified users last X messages, requires MANAGE MESSAGES permission. **USAGE**: prune @user <# msgs to delete>");
         cmds.add("`mute`: Mutes the person from chatting in the server, requires MANAGE MESSAGES permission. **USAGE**: mute @user");
+        cmds.add("`lock`: Locks current channel from chatting, requires MANAGE MESSAGES permission. **USAGE**: lock");
+        cmds.add("`unlock`: Unlocks current channel from chatting, requires MANAGE MESSAGES permission. **USAGE**: unlock");
+        cmds.add("`warn`: Warns user, requires BAN or KICK permission. **USAGE**: warn @user");
+        cmds.add("`warnings`: Shows how many warnings you have. **USAGE**: warnings");
+        cmds.add("`warnings`: Shows how many warnings another use has, requires BAN or KICK permission. **USAGE**: warnings @user");
         return cmds;
     }
 }

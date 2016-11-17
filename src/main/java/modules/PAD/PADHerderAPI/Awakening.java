@@ -16,7 +16,7 @@ public enum Awakening {
     POIRES("Resistance-Poison", "PoiRes", null),
 
     FIREOE("Enhanced Fire Orbs", "FireOE", null), WATEROE("Enhanced Water Orbs", "WaterOE", null), WOODOE("Enhanced Wood Orbs", "WoodOE", null),
-    LIGHTOE("Enhanced Light Orbs", "LightOE", null), DARKOE("Enhanced Dark Orbs", "DarkOE", null),
+    LIGHTOE("Enhanced Light Orbs", "LightOE", null), DARKOE("Enhanced Dark Orbs", "DarkOE", null), HEARTOE("Enhanced Heart Orbs", "HeartOE", null),
 
     FIREROW("Enhanced Fire Att.", "FireRow", null), WATERROW("Enhanced Water Att.", "WaterRow", null), WOODROW("Enhanced Wood Att.", "WoodRow", null),
     LIGHTROW("Enhanced Light Att.", "LightRow", null), DARKROW("Enhanced Dark Att.", "DarkRow", null),

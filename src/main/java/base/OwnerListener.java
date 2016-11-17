@@ -76,10 +76,19 @@ public class OwnerListener {
                     }
                 } else if (cmd.equalsIgnoreCase("setavatar")) {
                     String url = message.substring(message.indexOf(" "));
-                    String imgtype = url.substring(message.lastIndexOf("."));
+                    String imgtype = url.substring(url.lastIndexOf(".") + 1);
                     try {
                         Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
                         BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Avatar changed.");
+                    } catch (DiscordException e) {
+                        e.printStackTrace();
+                    } catch (RateLimitException e) {
+                        e.printStackTrace();
+                    }
+                } else if (cmd.equalsIgnoreCase("changename")) {
+                    try {
+                        Eschamali.client.changeUsername(message.substring(message.indexOf(" ") + 1));
+                        BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Username changed.");
                     } catch (DiscordException e) {
                         e.printStackTrace();
                     } catch (RateLimitException e) {

@@ -27,12 +27,19 @@ public class AdminListener {
     private String col1 = "field";
     private String col2 = "role";
 
+    private String table2Name = "strikes";
+    private String table2col1 = "user";
+    private String table2col2 = "strikes";
+
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
         IGuild guild = event.getGuild();
         Permission perms = PermissionsListener.getPermissionDB(guild);
         if (!perms.tableExists(tableName)) {
             perms.createTable(tableName, col1, "string", col2, "string");
+        }
+        if (!perms.tableExists(table2Name)) {
+            perms.createTable(table2Name, table2col1, "string", table2col2, "string");
         }
         perms.close();
     }
@@ -269,6 +276,94 @@ public class AdminListener {
                                 } catch (MissingPermissionsException e) {
                                     e.printStackTrace();
                                 }
+                            }
+                        }
+                    } else if (cmd.equals("lock")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            try {
+                                channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
+                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } else if (cmd.equals("unlock")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            try {
+                                channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
+                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } else if (cmd.equals("warn") || cmd.equals("strike")) {
+                        if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
+                            if (args.length > 1) {
+                                int strikesToAdd = 1;
+                                try {
+                                    strikesToAdd = Integer.parseInt(args[2]);
+                                } catch (Exception e) {
+                                }
+                                IUser user = guild.getUserByID(parseUserID(args[1]));
+                                String userID = user.getID();
+                                String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
+                                int numStrikes = 0;
+                                if (strikes.length() > 0) {
+                                    numStrikes = Integer.parseInt(strikes);
+                                }
+                                numStrikes += strikesToAdd;
+                                perms.setPerms(table2Name, table2col1, userID, table2col2, numStrikes + "");
+                                BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been warned, and now has `" + numStrikes + "` strike(s).");
+                                if (numStrikes >= 3) {
+                                    try {
+                                        guild.kickUser(user);
+                                    } catch (MissingPermissionsException e) {
+                                        e.printStackTrace();
+                                    } catch (RateLimitException e) {
+                                        e.printStackTrace();
+                                    } catch (DiscordException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else if (numStrikes >= 5) {
+                                    try {
+                                        guild.banUser(user);
+                                    } catch (MissingPermissionsException e) {
+                                        e.printStackTrace();
+                                    } catch (RateLimitException e) {
+                                        e.printStackTrace();
+                                    } catch (DiscordException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }
+                    } else if (cmd.equals("warnings")) {
+                        if (args.length == 1) {
+                            String userID = author.getID();
+                            String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
+                            int numStrikes = 0;
+                            if (strikes.length() > 0) {
+                                numStrikes = Integer.parseInt(strikes);
+                            }
+                            BufferedMessage.sendMessage(AdminModule.client, event, "You have `" + numStrikes + "` strike(s).");
+                        } else if (args.length == 2) {
+                            if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
+                                IUser user = guild.getUserByID(parseUserID(args[1]));
+                                String userID = user.getID();
+                                String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
+                                int numStrikes = 0;
+                                if (strikes.length() > 0) {
+                                    numStrikes = Integer.parseInt(strikes);
+                                }
+                                BufferedMessage.sendMessage(AdminModule.client, event, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
                             }
                         }
                     }
