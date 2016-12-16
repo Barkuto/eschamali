@@ -34,15 +34,12 @@
         <dependency>
             <groupId>com.github.austinv11</groupId>
             <artifactId>Discord4J</artifactId>
-            <version>2.6.1</version>
+            <version>websocket-rewrite-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>d4j-player</artifactId>
             <version>0.2.3_24</version>
-            <!--
-            0.2.2_17
-            -->
             <exclusions>
                 <exclusion>
                     <groupId>com.github.austinv11</groupId>

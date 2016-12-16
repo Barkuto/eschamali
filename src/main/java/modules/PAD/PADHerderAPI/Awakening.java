@@ -4,7 +4,7 @@ package modules.PAD.PADHerderAPI;
  * Created by Iggie on 9/30/2016.
  */
 public enum Awakening {
-    UNKNOWN("??", "??", "??"), HP("Enhanced HP", "+HP", null), ATK("Enhanced ATK", "+ATK", null), RCV("Enhanced RCV", "+RCV", null),
+    UNKNOWN("??", "??", "??"), HP("Enhanced HP", "+HP", null), ATK("Enhanced Attack", "+ATK", null), RCV("Enhanced Heal", "+RCV", null),
 
     AUTORCV("Auto-Recover", "Auto-RCV", null), TIMEEXTEND("Extend Time", "TE", null), BINDRCV("Recover Bind", "BindRCV", null),
     SKILLBOOST("Skill Boost", "SB", null), TPA("Two-Pronged Attack", "TPA", null), SBR("Resistance-Skill Lock", "SBR", null),
