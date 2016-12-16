@@ -13,6 +13,7 @@ import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
 import java.awt.*;
+import java.nio.Buffer;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -365,6 +366,20 @@ public class AdminListener {
                                 }
                                 BufferedMessage.sendMessage(AdminModule.client, event, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
                             }
+                        }
+                    } else if (cmd.equals("fixmyroles") || cmd.equals("fmr")) {
+                        try {
+                            IRole tmpRole = new RoleBuilder(guild).withName("tmp").build();
+                            author.addRole(tmpRole);
+                            author.removeRole(tmpRole);
+                            tmpRole.delete();
+                            BufferedMessage.sendMessage(AdminModule.client, event, "Your roles should be fixed.");
+                        } catch (MissingPermissionsException e) {
+                            e.printStackTrace();
+                        } catch (RateLimitException e) {
+                            e.printStackTrace();
+                        } catch (DiscordException e) {
+                            e.printStackTrace();
                         }
                     }
                     perms.close();
