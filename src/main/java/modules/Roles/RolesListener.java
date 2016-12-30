@@ -26,6 +26,7 @@ public class RolesListener {
     private String miscTableName = "rolesmisc";
     private String miscCol1 = "field";
     private String miscCol2 = "roles";
+    private String[] miscCols = new String[]{miscCol1, miscCol2};
 
     private String rolesTableName = "roles";
     private String rolesCol1 = "role";
@@ -35,7 +36,7 @@ public class RolesListener {
     public void onJoin(GuildCreateEvent event) {
         Permission perms = PermissionsListener.getPermissionDB(event.getGuild());
         if (!perms.tableExists(miscTableName)) {
-            perms.createTable(miscTableName, miscCol1, "string", miscCol2, "string");
+            perms.createTable(miscTableName, miscCols, new String[]{"string", "string"}, false);
             perms.addPerms(miscTableName, miscCol1, "autorole", miscCol2, "");
             perms.addPerms(miscTableName, miscCol1, "selfroles", miscCol2, "");
         }
@@ -192,8 +193,8 @@ public class RolesListener {
                                         } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
-                                        m.delete();
-                                        event.getMessage().delete();
+//                                        m.delete();
+//                                        event.getMessage().delete();
                                         return;
                                     } catch (MissingPermissionsException e) {
                                         if (e.getErrorMessage().contains("Missing permissions")) {
@@ -244,8 +245,8 @@ public class RolesListener {
                                             } catch (InterruptedException e) {
                                                 e.printStackTrace();
                                             }
-                                            m.delete();
-                                            event.getMessage().delete();
+//                                            m.delete();
+//                                            event.getMessage().delete();
                                             return;
                                         } catch (MissingPermissionsException e) {
                                             if (e.getErrorMessage().contains("Missing permissions")) {

@@ -27,20 +27,22 @@ public class AdminListener {
     private String tableName = "admin";
     private String col1 = "field";
     private String col2 = "role";
+    private String[] table1Cols = {col1, col2};
 
     private String table2Name = "strikes";
     private String table2col1 = "user";
     private String table2col2 = "strikes";
+    private String[] table2Cols = {table2col1, table2col2};
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
         IGuild guild = event.getGuild();
         Permission perms = PermissionsListener.getPermissionDB(guild);
         if (!perms.tableExists(tableName)) {
-            perms.createTable(tableName, col1, "string", col2, "string");
+            perms.createTable(table2Name, table1Cols, new String[]{"string", "string"}, false);
         }
         if (!perms.tableExists(table2Name)) {
-            perms.createTable(table2Name, table2col1, "string", table2col2, "string");
+            perms.createTable(table2Name, table2Cols, new String[]{"string", "string"}, false);
         }
         perms.close();
     }
@@ -201,6 +203,7 @@ public class AdminListener {
                                             for (IChannel c : serverChannels) {
                                                 c.overrideRolePermissions(muteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
                                             }
+                                            BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been muted.");
                                         } catch (MissingPermissionsException e) {
                                             e.printStackTrace();
                                         } catch (RateLimitException e) {
@@ -223,6 +226,7 @@ public class AdminListener {
                                     if (muteRole != null) {
                                         try {
                                             user.removeRole(muteRole);
+                                            BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been unmuted.");
                                         } catch (MissingPermissionsException e) {
                                             e.printStackTrace();
                                         } catch (RateLimitException e) {

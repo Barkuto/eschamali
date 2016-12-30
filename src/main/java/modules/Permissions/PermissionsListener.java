@@ -19,15 +19,24 @@ import java.util.*;
 public class PermissionsListener {
     public static String prefix = ";";
     private String ownerID = "85844964633747456";
+    private String channelsTableName = "channels";
+    private String channelsCol1 = "module";
+    private String channelsCol2 = "channels";
+    private String[] channelsCols = new String[]{channelsCol1, channelsCol2};
+
+    private String modulesTableName = "modules";
+    private String modulesCol1 = "module";
+    private String modulesCol2 = "enabled";
+    private String[] modulesCols = new String[]{modulesCol1, modulesCol2};
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
         Permission perms = getPermissionDB(event.getGuild());
         if (!perms.tableExists("channels")) {
-            perms.createTable("channels", "module", "string", "channels", "string");
+            perms.createTable("channels", channelsCols, new String[]{"string", "string"}, false);
         }
         if (!perms.tableExists("modules")) {
-            perms.createTable("modules", "module", "string", "enabled", "string");
+            perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
             for (Map.Entry<IModule, Boolean> e : Eschamali.defaultmodules.entrySet()) {
                 perms.addPerms("modules", "module", e.getKey().getName(), "enabled", e.getValue() + "");
             }
@@ -186,21 +195,21 @@ public class PermissionsListener {
                         BufferedMessage.sendMessage(Eschamali.client, event, output);
                     } else if (cmd.equalsIgnoreCase("dam") || cmd.equalsIgnoreCase("disableallmodules")) {
                         perms.deleteTable("modules");
-                        perms.createTable("modules", "module", "string", "enabled", "string");
+                        perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (IModule m : Eschamali.modules) {
                             perms.addPerms("modules", "module", m.getName(), "enabled", "false");
                         }
                         BufferedMessage.sendMessage(Eschamali.client, event, "All Modules have been __disabled__.");
                     } else if (cmd.equalsIgnoreCase("edm") || cmd.equalsIgnoreCase("enabledefaultmodules")) {
                         perms.deleteTable("modules");
-                        perms.createTable("modules", "module", "string", "enabled", "string");
+                        perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (Map.Entry<IModule, Boolean> entry : Eschamali.defaultmodules.entrySet()) {
                             perms.addPerms("modules", "module", entry.getKey().getName(), "enabled", entry.getValue().toString());
                         }
                         BufferedMessage.sendMessage(Eschamali.client, event, "Default Modules have been __enabled__.");
                     } else if (cmd.equalsIgnoreCase("eam") || cmd.equalsIgnoreCase("enableallmodules")) {
                         perms.deleteTable("modules");
-                        perms.createTable("modules", "module", "string", "enabled", "string");
+                        perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (IModule m : Eschamali.modules) {
                             perms.addPerms("modules", "module", m.getName(), "enabled", "true");
                         }
@@ -366,7 +375,8 @@ public class PermissionsListener {
                                     }
                                 }
                                 if (module != null) {
-                                    perms.resetPerms("channels", "module", module.getName(), "channels");
+//                                    perms.resetPerms("channels", "module", module.getName(), "channels");
+                                    perms.resetPerms("channels", channelsCols, module.getName());
                                     output += "**" + module.getName() + "**" + ", ";
                                 }
                             }

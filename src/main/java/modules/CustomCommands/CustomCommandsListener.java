@@ -22,6 +22,7 @@ public class CustomCommandsListener {
     private String tableName = "customcommands";
     private String col1 = "command";
     private String col2 = "message";
+    private String[] tableCols = new String[]{col1, col2};
     private String ownerID = "85844964633747456";
 
     @EventSubscriber
@@ -29,7 +30,7 @@ public class CustomCommandsListener {
         IGuild guild = event.getGuild();
         Permission perms = PermissionsListener.getPermissionDB(guild);
         if (!perms.tableExists(tableName)) {
-            perms.createTable(tableName, col1, "string", col2, "string");
+            perms.createTable(tableName, tableCols, new String[]{"string,string"}, false);
         }
         perms.close();
     }
