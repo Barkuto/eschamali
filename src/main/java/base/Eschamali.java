@@ -107,6 +107,7 @@ public class Eschamali {
         } catch (IOException e) {
             props.setProperty("ownerid", "");
             props.setProperty("token", "");
+            props.setProperty("status", "");
             try {
                 props.store(new FileWriter(configFileName), "Separate owner IDs using semi-colons(;). Make a Bot user and get a bot token at https://discordapp.com/developers/applications/me");
             } catch (IOException e1) {
