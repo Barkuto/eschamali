@@ -99,7 +99,7 @@ public class Eschamali {
             } else {
                 this.token = token;
             }
-            ownerIDs.add("85844964633747456");//Barkuto's ID ;)
+            ownerIDs.add("85844964633747456");//Barkuto's ID
             for (int i = 0; i < ownerIDS.length; i++) {
                 ownerIDs.add(ownerIDS[i]);
             }

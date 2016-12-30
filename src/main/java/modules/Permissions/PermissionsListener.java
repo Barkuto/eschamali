@@ -479,6 +479,8 @@ public class PermissionsListener {
     }
 
     public static Permission getPermissionDB(IGuild guild) {
-        return new Permission(new Db("servers/" + guild.getID() + ".db"));
+        String path = "servers/";
+        new File(path).mkdirs();
+        return new Permission(new Db(path + guild.getID() + ".db"));
     }
 }
