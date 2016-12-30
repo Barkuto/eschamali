@@ -32,7 +32,7 @@ public class OwnerListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (event.getMessage().getChannel() instanceof IPrivateChannel) {
-            if (event.getMessage().getAuthor().getID().equals(Eschamali.ownerID) && event.getMessage().getContent().startsWith(prefix)) {
+            if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID()) && event.getMessage().getContent().startsWith(prefix)) {
                 String message = event.getMessage().getContent();
                 String[] args = message.split(" ");
                 String argsconcat = "";

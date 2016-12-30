@@ -215,7 +215,7 @@ public class RolesListener {
                             }
                             BufferedMessage.sendMessage(RolesModule.client, event, "That is not a role!");
                         }
-                    } else if (cmd.equalsIgnoreCase("iamn")) {//Remove role from self, if self assignable
+                    } else if (cmd.equalsIgnoreCase("iamn") || cmd.equalsIgnoreCase("iamnot")) {//Remove role from self, if self assignable
                         if (args.length > 1) {
                             //check if role is a role
                             //check if user has role

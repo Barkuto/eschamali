@@ -26,27 +26,6 @@ public class GeneralListener {
     private boolean ayy = false;
 
     @EventSubscriber
-    public void onReady(ReadyEvent event) {
-        Eschamali.client.changeStatus(Status.game("with REM rates"));
-    }
-
-    @EventSubscriber
-    public void onJoin(GuildCreateEvent event) {
-//        BufferedMessage.sendMessage(base.Eschamali.client, event, "Online.");
-//        IGuild guild = event.getGuild();
-//        try {
-//            IPrivateChannel channel = Eschamali.client.getOrCreatePMChannel(Eschamali.client.getUserByID(Eschamali.ownerID));
-//            channel.sendMessage(guild.getName());
-//        } catch (DiscordException e) {
-//            e.printStackTrace();
-//        } catch (RateLimitException e) {
-//            e.printStackTrace();
-//        } catch (MissingPermissionsException e) {
-//            e.printStackTrace();
-//        }
-    }
-
-    @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
@@ -57,7 +36,7 @@ public class GeneralListener {
                     BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers.");
                 } else if (msg.equalsIgnoreCase("!ayy")) {
                     List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
-                    if (event.getMessage().getAuthor().getID().equals(Eschamali.ownerID)) {
+                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID())) {
                         ayy = !ayy;
                         if (ayy) {
                             BufferedMessage.sendMessage(Eschamali.client, event, "lmao!");
@@ -86,9 +65,9 @@ public class GeneralListener {
                 } else if (msg.equalsIgnoreCase("!ping")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "pong!");
                 } else if (msg.equalsIgnoreCase("!alert")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, Eschamali.client.getUserByID(Eschamali.ownerID).mention() + " is on his way! Eventually...");
+                    BufferedMessage.sendMessage(Eschamali.client, event, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
                 } else if (msg.startsWith("!say")) {
-                    if (event.getMessage().getAuthor().getID().equals(Eschamali.ownerID)) {
+                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID())) {
                         try {
                             event.getMessage().delete();
                         } catch (MissingPermissionsException e) {
