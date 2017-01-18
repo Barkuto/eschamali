@@ -1,6 +1,7 @@
 package modules.PAD.PADHerderAPI;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.io.FileUtils;
@@ -93,6 +94,29 @@ public class PADHerderAPI {
         }
     }
 
+    public static ArrayList<Monster> getAllMonsters(String keywords) {
+        ArrayList<Monster> monsters = new ArrayList<>();
+        try {
+            int id = Integer.parseInt(keywords.trim());
+            monsters.add(getMonster(id));
+            return monsters;
+        } catch (NumberFormatException e) {
+            JsonParser parser = new JsonParser();
+            try {
+                JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "monsters.json"));
+                for (Object o : jsonArray) {
+                    JsonObject obj = (JsonObject) o;
+                    if (stringContainsKeywords(obj.get("name").toString(), keywords) || stringContainsKeywords(obj.get("name_jp").toString(), keywords)) {
+                        monsters.add(new Monster(obj));
+                    }
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+            return monsters;
+        }
+    }
+
     public static ActiveSkill getActive(String keywords) {
         JsonParser parser = new JsonParser();
         try {
@@ -157,6 +181,35 @@ public class PADHerderAPI {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static ArrayList<Integer> getEvos(int id) {
+        ArrayList<Integer> evos = getEvos_sub(id, new ArrayList<>());
+        evos.remove(new Integer(id));
+        evos.sort(Integer::compareTo);
+        return evos;
+    }
+
+    private static ArrayList<Integer> getEvos_sub(int id, ArrayList<Integer> checked) {
+        JsonParser parser = new JsonParser();
+        try {
+            JsonObject jsonObject = (JsonObject) parser.parse(new FileReader(path + "evolutions.json"));
+            JsonElement jsonElement = jsonObject.get("" + id);
+            if (jsonElement != null) {
+                JsonArray jsonArray = jsonElement.getAsJsonArray();
+                for (Object o : jsonArray) {
+                    JsonObject obj = (JsonObject) o;
+                    int evoNum = obj.get("evolves_to").getAsInt();
+                    if (!checked.contains(evoNum)) {
+                        checked.add(evoNum);
+                        getEvos_sub(evoNum, checked);
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return checked;
     }
 
     private static boolean stringContainsKeywords(String string, String keywords) {
