@@ -1,6 +1,21 @@
 package modules.PAD;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.WritableRaster;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.Buffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,14 +27,16 @@ import java.util.ArrayList;
  */
 public class Guerilla implements Serializable {
     private ArrayList<String> dungeons;
+    private ArrayList<String> dungeonImgLinks;
     private ArrayList<LocalTime> a;
     private ArrayList<LocalTime> b;
     private ArrayList<LocalTime> c;
     private ArrayList<LocalTime> d;
     private ArrayList<LocalTime> e;
 
-    public Guerilla(ArrayList<String> dungeons, ArrayList<LocalTime> a, ArrayList<LocalTime> b, ArrayList<LocalTime> c, ArrayList<LocalTime> d, ArrayList<LocalTime> e) {
+    public Guerilla(ArrayList<String> dungeons, ArrayList<String> dungeonImgLinks, ArrayList<LocalTime> a, ArrayList<LocalTime> b, ArrayList<LocalTime> c, ArrayList<LocalTime> d, ArrayList<LocalTime> e) {
         this.dungeons = dungeons;
+        this.dungeonImgLinks = dungeonImgLinks;
         this.a = a;
         this.b = b;
         this.c = c;
@@ -164,7 +181,235 @@ public class Guerilla implements Serializable {
         return formatted;
     }
 
+    public BufferedImage getTodayGuerillaImage(String timezone) {
+        int plusHours = 0;
+        switch (timezone) {
+            case "est":
+                plusHours = 3;
+                break;
+            case "cst":
+                plusHours = 2;
+                break;
+            case "mst":
+                plusHours = 1;
+                break;
+            default:
+                timezone = "pst";
+                break;
+        }
+
+        ArrayList<BufferedImage> dungeonImgs = new ArrayList<>();
+        for (int i = 0; i < dungeonImgLinks.size(); i++) {
+            try {
+                dungeonImgs.add(ImageIO.read(new URL(dungeonImgLinks.get(i))));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
+        int blankWidth = 40;
+        int cellHeight = 20;
+
+        int width = blankWidth;
+        int height = 0;
+        int imgType = 5;
+        for (BufferedImage img : dungeonImgs) {
+            width += img.getWidth();
+            height = img.getHeight() > height ? height = img.getHeight() : height;
+            imgType = img.getType() > imgType ? img.getType() : imgType;
+        }
+        int biggestHeight = height;
+        height += cellHeight * 5;
+        BufferedImage concatImg = new BufferedImage(width, height, imgType);
+        Graphics2D g = concatImg.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, width, height);
+
+        int xPos = blankWidth;
+        int yPos = 0;
+        g.setColor(Color.BLACK);
+        for (int i = 0; i < dungeonImgs.size(); i++) {
+            g.drawImage(dungeonImgs.get(i), xPos, yPos, null);
+            g.drawLine(xPos, 0, xPos, height);//Vertical Lines
+            try {
+                xPos += dungeonImgs.get(i + 1).getWidth();
+            } catch (IndexOutOfBoundsException e) {
+            }
+        }
+
+        //Horizontal Lines
+        int yLinePos = biggestHeight;
+        for (int i = 0; i < dungeonImgs.size(); i++) {
+            g.drawLine(0, yLinePos, width, yLinePos);
+            try {
+                yLinePos += cellHeight;
+            } catch (IndexOutOfBoundsException e) {
+            }
+        }
+
+        g.setFont(new Font(g.getFont().getFontName(), Font.BOLD, cellHeight));
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        centerString(g, new Rectangle(0, biggestHeight, blankWidth, cellHeight), "A", g.getFont());
+        centerString(g, new Rectangle(0, biggestHeight + cellHeight, blankWidth, cellHeight), "B", g.getFont());
+        centerString(g, new Rectangle(0, biggestHeight + (cellHeight * 2), blankWidth, cellHeight), "C", g.getFont());
+        centerString(g, new Rectangle(0, biggestHeight + (cellHeight * 3), blankWidth, cellHeight), "D", g.getFont());
+        centerString(g, new Rectangle(0, biggestHeight + (cellHeight * 4), blankWidth, cellHeight), "E", g.getFont());
+
+        //Date & Timezone
+        g.setFont(new Font(g.getFont().getFontName(), Font.PLAIN, 14));
+        LocalDate date = LocalDate.now();
+        String month = date.format(DateTimeFormatter.ofPattern("MMM"));
+        String day = date.format(DateTimeFormatter.ofPattern("d"));
+        String year = date.format(DateTimeFormatter.ofPattern("uuu"));
+        int padding = 10;
+        centerString(g, new Rectangle(0, 0, blankWidth, biggestHeight / 4), month, g.getFont());
+        centerString(g, new Rectangle(0, (cellHeight / 4) + padding, blankWidth, biggestHeight / 4), day, g.getFont());
+        centerString(g, new Rectangle(0, (cellHeight / 4 * 2) + padding * 2, blankWidth, biggestHeight / 4), year, g.getFont());
+        g.setFont(new Font(g.getFont().getFontName(), Font.BOLD, 16));
+        centerString(g, new Rectangle(0, (cellHeight / 4 * 3) + padding * 3, blankWidth, biggestHeight / 4), timezone.toUpperCase(), g.getFont());
+
+        g.setFont(new Font(g.getFont().getFontName(), Font.PLAIN, 12));
+        int xTimePos = blankWidth;
+        int yTimePos = biggestHeight;
+        ArrayList<ArrayList<LocalTime>> times = new ArrayList<>();
+        times.add(a);
+        times.add(b);
+        times.add(c);
+        times.add(d);
+        times.add(e);
+        for (ArrayList<LocalTime> array : times) {
+            for (int i = 0; i < array.size(); i++) {
+                LocalTime lt = array.get(i).plusHours(plusHours);
+                String time = lt.format(DateTimeFormatter.ofPattern("h:mm"));
+                String ampm = lt.format(DateTimeFormatter.ofPattern("a"));
+                int imgWidth = dungeonImgs.get(i).getWidth();
+                centerString(g, new Rectangle(xTimePos, yTimePos, imgWidth, cellHeight), time + " " + ampm, g.getFont());
+                xTimePos += imgWidth;
+            }
+            xTimePos = blankWidth;
+            yTimePos += cellHeight;
+        }
+
+        g.dispose();
+
+        return concatImg;
+    }
+
+    //////////////////////////
+    //Data Download Methods//
+    ////////////////////////
+    public static boolean updateGuerilla(String outputPath) {
+        try {
+            URL home = new URL("http://puzzledragonx.com/");
+            Document document = Jsoup.parse(home, 15000);
+            Elements sched = document.select("div#metal1a").select("table").get(0).select("tr");
+            ArrayList<LocalTime> a = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> b = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> c = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> d = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> e = new ArrayList<LocalTime>();
+            for (int i = 2; i < sched.size(); i += 2) {
+                Elements times = sched.get(i).select("td");
+                int group = 0;
+                for (int j = 0; j < times.size(); j++) {
+                    if (times.get(j).text().length() > 1) {
+                        switch (group) {
+                            case 0:
+                                a.add(parseTime(times.get(j).text()));
+                                break;
+                            case 1:
+                                b.add(parseTime(times.get(j).text()));
+                                break;
+                            case 2:
+                                c.add(parseTime(times.get(j).text()));
+                                break;
+                            case 3:
+                                d.add(parseTime(times.get(j).text()));
+                                break;
+                            case 4:
+                                e.add(parseTime(times.get(j).text()));
+                                break;
+                        }
+                        group++;
+                    }
+                }
+            }
+            ArrayList<String> dungeons = new ArrayList<String>();
+            for (int i = 1; i < sched.size(); i += 2) {
+                URL url = new URL("http://puzzledragonx.com/" + sched.get(i).select("td").select("a[href]").attr("href"));
+                Document doc = Jsoup.parse(url, 150000);
+                String dungeon = doc.select("table#tablestat").get(1).select("tr").get(1).text();
+                dungeons.add(dungeon);
+            }
+            ArrayList<BufferedImage> dungeonImgs = new ArrayList<>();
+            ArrayList<String> dungeonLinks = new ArrayList<>();
+            for (int i = 1; i < sched.size(); i += 2) {
+                String html = sched.get(i).select("td").select("a[href]").html();
+                html = html.substring(html.indexOf("data-original="));
+                html = html.substring(html.indexOf('"') + 1, html.indexOf('"', html.indexOf('"') + 1));
+                BufferedImage img = ImageIO.read(new URL("http://puzzledragonx.com/" + html));
+                dungeonImgs.add(img);
+                dungeonLinks.add("http://puzzledragonx.com/" + html);
+            }
+
+            Guerilla g = new Guerilla(dungeons, dungeonLinks, a, b, c, d, e);
+            g.writeOut(outputPath);
+            return true;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static Guerilla getGuerilla(String path, int year, int month, int day) {
+        Guerilla g = null;
+        try {
+            g = Guerilla.readIn(path + "guerilla-" + year + "-" + month + "-" + day + ".ser");
+        } catch (ClassNotFoundException e) {
+        } catch (IOException e) {
+        }
+        return g;
+    }
+
+    public static Guerilla getTodayGuerilla(String outputPath) {
+        Guerilla g = null;
+        LocalDate ld = LocalDate.now();
+        g = getGuerilla(outputPath, ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
+        if (g == null) {
+            updateGuerilla(outputPath);
+        } else {
+            return g;
+        }
+        return getGuerilla(outputPath, ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
+    }
+
+    private static LocalTime parseTime(String time) {
+        String timeformat = time.toUpperCase();
+        if (!timeformat.contains(":")) {
+            timeformat = timeformat.replace(" ", ":00 ");
+        }
+        String DATE_FORMAT = "h:mm a";
+        return LocalTime.parse(timeformat, DateTimeFormatter.ofPattern(DATE_FORMAT));
+    }
+
+    public static void centerString(Graphics g, Rectangle r, String s, Font font) {
+        FontRenderContext frc = new FontRenderContext(null, true, true);
+        Rectangle2D r2D = font.getStringBounds(s, frc);
+        int rWidth = (int) Math.round(r2D.getWidth());
+        int rHeight = (int) Math.round(r2D.getHeight());
+        int rX = (int) Math.round(r2D.getX());
+        int rY = (int) Math.round(r2D.getY());
+
+        int a = (r.width / 2) - (rWidth / 2) - rX;
+        int b = (r.height / 2) - (rHeight / 2) - rY;
+
+        g.setFont(font);
+        g.drawString(s, r.x + a, r.y + b);
+    }
+
     public String toString() {
-        return dungeons + "\n" + a + "\n" + b + "\n" + c + "\n" + d + "\n" + e;
+        return "<" + dungeons + "\n" + dungeonImgLinks + "\n" + a + "\n" + b + "\n" + c + "\n" + d + "\n" + e + ">";
     }
 }

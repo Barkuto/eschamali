@@ -193,8 +193,8 @@ public class RolesListener {
                                         } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
-//                                        m.delete();
-//                                        event.getMessage().delete();
+                                        m.delete();
+                                        event.getMessage().delete();
                                         return;
                                     } catch (MissingPermissionsException e) {
                                         if (e.getErrorMessage().contains("Missing permissions")) {
@@ -245,8 +245,8 @@ public class RolesListener {
                                             } catch (InterruptedException e) {
                                                 e.printStackTrace();
                                             }
-//                                            m.delete();
-//                                            event.getMessage().delete();
+                                            m.delete();
+                                            event.getMessage().delete();
                                             return;
                                         } catch (MissingPermissionsException e) {
                                             if (e.getErrorMessage().contains("Missing permissions")) {

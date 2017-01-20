@@ -75,4 +75,20 @@ public class BufferedMessage {
         });
         return m[0];
     }
+
+    public static IMessage sendEmbed(IDiscordClient client, IChannel channel, EmbedObject embed) {
+        final IMessage[] m = new IMessage[1];
+        RequestBuffer.request(() -> {
+            try {
+                m[0] = new MessageBuilder(client).withChannel(channel).withEmbed(embed).build();
+            } catch (RateLimitException e) {
+                e.printStackTrace();
+            } catch (DiscordException e) {
+                e.printStackTrace();
+            } catch (MissingPermissionsException e) {
+                e.printStackTrace();
+            }
+        });
+        return m[0];
+    }
 }

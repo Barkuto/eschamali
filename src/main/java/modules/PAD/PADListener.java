@@ -18,8 +18,13 @@ import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDate;
@@ -37,6 +42,7 @@ public class PADListener {
     private TreeMap<String, String> abbrMon = new TreeMap<String, String>();
     private TreeMap<String, String> abbrDun = new TreeMap<String, String>();
     private int maxMonNum = 3252;
+    private String guerillaOutput = "modules/PAD/";
 
     public PADListener() {
         super();
@@ -96,13 +102,37 @@ public class PADListener {
 
                     } else if (cmd.equalsIgnoreCase("guerilla") || cmd.equalsIgnoreCase("g")) {
                         LocalDate ld = LocalDate.now();
-                        Guerilla g = getTodayGuerilla();
+                        Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
                         if (split.length == 1) {
-                            BufferedMessage.sendMessage(PADModule.client, event, g.allGroups("pst"));
+                            try {
+                                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                                ImageIO.write(g.getTodayGuerillaImage("pst"), "png", os);
+                                InputStream is = new ByteArrayInputStream(os.toByteArray());
+                                channel.sendFile("", false, is, "img.png");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            }
                         } else if (split.length == 2) {
-                            BufferedMessage.sendMessage(PADModule.client, event, g.allGroups(split[1].trim()));
-                        } else if (split.length == 3) {
-                            BufferedMessage.sendMessage(PADModule.client, event, g.forGroup(split[2].trim(), split[1].trim()));
+                            try {
+                                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                                ImageIO.write(g.getTodayGuerillaImage(split[1].trim()), "png", os);
+                                InputStream is = new ByteArrayInputStream(os.toByteArray());
+                                channel.sendFile("", false, is, "img.png");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            }
                         }
                     } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
                         try {
@@ -111,28 +141,36 @@ public class PADListener {
                         } catch (RateLimitException e) {
                         } catch (DiscordException e) {
                         }
-                        Guerilla g = getTodayGuerilla();
-                        String est = g.allGroups("est");
-                        String pst = g.allGroups("pst");
-                        String cst = g.allGroups("cst");
-                        String mst = g.allGroups("mst");
-                        LocalDate today = LocalDate.now();
-                        String date = today.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
-                        BufferedMessage.sendMessage(PADModule.client, event, "__**" + date + "**__");
-                        BufferedMessage.sendMessage(PADModule.client, event, est);
-                        BufferedMessage.sendMessage(PADModule.client, event, pst);
-                        BufferedMessage.sendMessage(PADModule.client, event, cst);
-                        BufferedMessage.sendMessage(PADModule.client, event, mst);
-                    } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
-                        if (updateGuerilla()) {
-                            BufferedMessage.sendMessage(PADModule.client, event, "Guerillas have been updated for today.");
+                        Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
+                        BufferedImage estImg = g.getTodayGuerillaImage("est");
+                        BufferedImage pstImg = g.getTodayGuerillaImage("pst");
+                        BufferedImage cstImg = g.getTodayGuerillaImage("cst");
+                        BufferedImage mstImg = g.getTodayGuerillaImage("mst");
+                        ArrayList<BufferedImage> images = new ArrayList<>();
+                        images.add(estImg);
+                        images.add(pstImg);
+                        images.add(cstImg);
+                        images.add(mstImg);
+
+                        for (BufferedImage bi : images) {
+                            try {
+                                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                                ImageIO.write(bi, "png", os);
+                                InputStream is = new ByteArrayInputStream(os.toByteArray());
+                                channel.sendFile("", false, is, "img.png");
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    } else if (cmd.equalsIgnoreCase("guerillatomorrow") || cmd.equalsIgnoreCase("gt")) {
-                        Guerilla g = getTomorrowGuerilla();
-                        if (g != null) {
-                            BufferedMessage.sendMessage(PADModule.client, event, g.allGroups("pst"));
-                        } else {
-                            BufferedMessage.sendMessage(PADModule.client, event, "Hours are not out yet.");
+                    } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
+                        if (Guerilla.updateGuerilla(guerillaOutput)) {
+                            BufferedMessage.sendMessage(PADModule.client, event, "Guerillas have been updated for today.");
                         }
                     } else if (cmd.equalsIgnoreCase("pic")) {
                         if (split[1].contains("sheen")) {
@@ -324,143 +362,5 @@ public class PADListener {
         eb.withUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getId());
         eb.withColor(c);
         return eb.build();
-    }
-
-    public boolean updateGuerilla() {
-        try {
-            URL home = new URL("http://puzzledragonx.com/");
-            Document document = Jsoup.parse(home, 15000);
-            Elements sched = document.select("div#metal1a").select("table").get(0).select("tr");
-            ArrayList<LocalTime> a = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> b = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> c = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> d = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> e = new ArrayList<LocalTime>();
-            for (int i = 2; i < sched.size(); i += 2) {
-                Elements times = sched.get(i).select("td");
-                int group = 0;
-                for (int j = 0; j < times.size(); j++) {
-                    if (times.get(j).text().length() > 1) {
-                        switch (group) {
-                            case 0:
-                                a.add(parseTime(times.get(j).text()));
-                                break;
-                            case 1:
-                                b.add(parseTime(times.get(j).text()));
-                                break;
-                            case 2:
-                                c.add(parseTime(times.get(j).text()));
-                                break;
-                            case 3:
-                                d.add(parseTime(times.get(j).text()));
-                                break;
-                            case 4:
-                                e.add(parseTime(times.get(j).text()));
-                                break;
-                        }
-                        group++;
-                    }
-                }
-            }
-            ArrayList<String> dungeons = new ArrayList<String>();
-            for (int i = 1; i < sched.size(); i += 2) {
-                URL url = new URL("http://puzzledragonx.com/" + sched.get(i).select("td").select("a[href]").attr("href"));
-                Document doc = Jsoup.parse(url, 150000);
-                String dungeon = doc.select("table#tablestat").get(1).select("tr").get(1).text();
-                dungeons.add(dungeon);
-            }
-            Guerilla g = new Guerilla(dungeons, a, b, c, d, e);
-            g.writeOut("modules/PAD/");
-            return true;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public Guerilla getTomorrowGuerilla() {
-        try {
-            URL home = new URL("http://puzzledragonx.com/");
-            Document document = Jsoup.parse(home, 15000);
-            Elements sched = document.select("div#metal1b").select("table").get(0).select("tr");
-            ArrayList<LocalTime> a = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> b = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> c = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> d = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> e = new ArrayList<LocalTime>();
-            for (int i = 2; i < sched.size(); i += 2) {
-                Elements times = sched.get(i).select("td");
-                int group = 0;
-                for (int j = 0; j < times.size(); j++) {
-                    if (times.get(j).text().length() > 1) {
-                        switch (group) {
-                            case 0:
-                                a.add(parseTime(times.get(j).text()));
-                                break;
-                            case 1:
-                                b.add(parseTime(times.get(j).text()));
-                                break;
-                            case 2:
-                                c.add(parseTime(times.get(j).text()));
-                                break;
-                            case 3:
-                                d.add(parseTime(times.get(j).text()));
-                                break;
-                            case 4:
-                                e.add(parseTime(times.get(j).text()));
-                                break;
-                        }
-                        group++;
-                    }
-                }
-            }
-            ArrayList<String> dungeons = new ArrayList<String>();
-            for (int i = 1; i < sched.size(); i += 2) {
-                URL url = new URL("http://puzzledragonx.com/" + sched.get(i).select("td").select("a[href]").attr("href"));
-                Document doc = Jsoup.parse(url, 150000);
-                String dungeon = doc.select("table#tablestat").get(1).select("tr").get(1).text();
-                dungeons.add(dungeon);
-            }
-            Guerilla g = new Guerilla(dungeons, a, b, c, d, e);
-            return g;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public Guerilla getGuerilla(int year, int month, int day) {
-        Guerilla g = null;
-        try {
-            g = Guerilla.readIn("modules/PAD/guerilla-" + year + "-" + month + "-" + day + ".ser");
-        } catch (ClassNotFoundException e) {
-        } catch (IOException e) {
-        }
-        return g;
-    }
-
-    public Guerilla getTodayGuerilla() {
-        Guerilla g = null;
-        LocalDate ld = LocalDate.now();
-        g = getGuerilla(ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
-        if (g == null) {
-            updateGuerilla();
-        } else {
-            return g;
-        }
-        return getGuerilla(ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
-    }
-
-    public LocalTime parseTime(String time) {
-        String timeformat = time.toUpperCase();
-        if (!timeformat.contains(":")) {
-            timeformat = timeformat.replace(" ", ":00 ");
-        }
-        String DATE_FORMAT = "h:mm a";
-        return LocalTime.parse(timeformat, DateTimeFormatter.ofPattern(DATE_FORMAT));
     }
 }
