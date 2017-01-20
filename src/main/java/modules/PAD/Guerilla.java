@@ -247,7 +247,7 @@ public class Guerilla implements Serializable {
             }
         }
 
-        String fontName = "Dialog";
+        String fontName = "Arial";
 
         g.setFont(new Font(fontName, Font.BOLD, cellHeight));
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
