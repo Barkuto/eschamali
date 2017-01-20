@@ -41,7 +41,7 @@ public class PADListener {
     public static String prefix = "&";
     private TreeMap<String, String> abbrMon = new TreeMap<String, String>();
     private TreeMap<String, String> abbrDun = new TreeMap<String, String>();
-    private int maxMonNum = 3252;
+    private int maxMonNum = 3446;
     private String guerillaOutput = "modules/PAD/";
 
     public PADListener() {
@@ -80,7 +80,12 @@ public class PADListener {
                         BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         if (split.length == 1) {
-                            BufferedMessage.sendMessage(PADModule.client, event, getInfo(PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "")));
+//                            BufferedMessage.sendMessage(PADModule.client, event, getInfo(PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "")));
+                            Monster m = PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
+                            if (m != null)
+                                BufferedMessage.sendEmbed(PADModule.client, event, getInfoEmbed(m, m.getId() + ""));
+                            else
+                                BufferedMessage.sendMessage(PADModule.client, event, "Bad Number rolled.");
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
                             Monster m = PADHerderAPI.getMonster(query);
