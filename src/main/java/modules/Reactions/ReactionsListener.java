@@ -23,9 +23,7 @@ public class ReactionsListener {
             IGuild guild = event.getMessage().getGuild();
             IChannel channel = event.getMessage().getChannel();
             if (PermissionsListener.isModuleOn(guild, ReactionsModule.name) && PermissionsListener.canModuleInChannel(guild, ReactionsModule.name, channel)) {
-                System.out.println("Derp");
                 if (message.replace("\'", "").toLowerCase().contains("dont quote me")) {
-                    System.out.println(message.replace("\'", "").toLowerCase());
                     BufferedMessage.sendMessage(ReactionsModule.client, event, "\"" + message + "\" -" + author.getName());
                 }
             }

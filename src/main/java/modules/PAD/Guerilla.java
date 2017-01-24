@@ -355,6 +355,7 @@ public class Guerilla implements Serializable {
             }
 
             Guerilla g = new Guerilla(dungeons, dungeonLinks, a, b, c, d, e);
+            g.sortByDungeonChrono();
             g.writeOut(outputPath);
             return true;
         } catch (MalformedURLException e) {
@@ -386,6 +387,112 @@ public class Guerilla implements Serializable {
         }
         return getGuerilla(outputPath, ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
     }
+
+    /////////////////////////////
+    //End Data Download Methods//
+    ////////////////////////////
+
+    private void sortByDungeonChrono() {
+        ArrayList<LocalTime> dungeonEarliestTimes = new ArrayList<>();
+        for (int i = 0; i < dungeons.size(); i++) {
+            LocalTime aTime = a.get(i);
+            LocalTime bTime = b.get(i);
+            LocalTime cTime = c.get(i);
+            LocalTime dTime = d.get(i);
+            LocalTime eTime = e.get(i);
+
+
+        }
+        for (int i = 0; i < dungeons.size(); i++) {
+            LocalTime aTime = a.get(i);
+            LocalTime bTime = b.get(i);
+            LocalTime cTime = c.get(i);
+            LocalTime dTime = d.get(i);
+            LocalTime eTime = e.get(i);
+            LocalTime earliestTime = aTime;
+
+            if (bTime.compareTo(earliestTime) == -1) {
+                earliestTime = bTime;
+            }
+            if (cTime.compareTo(earliestTime) == -1) {
+                earliestTime = cTime;
+            }
+            if (dTime.compareTo(earliestTime) == -1) {
+                earliestTime = dTime;
+            }
+            if (eTime.compareTo(earliestTime) == -1) {
+                earliestTime = eTime;
+            }
+            dungeonEarliestTimes.add(earliestTime);
+        }
+
+        ArrayList<Integer> dungeonChrono = new ArrayList<>();
+
+        for (int i = 0; i < dungeonEarliestTimes.size(); i++) {
+            int smallestIndex = 0;
+            for (int j = 0; j < dungeonEarliestTimes.size(); j++) {
+                if (dungeonEarliestTimes.get(j).compareTo(dungeonEarliestTimes.get(smallestIndex)) == 1) {
+                    if (!dungeonChrono.contains(j)) {
+                        smallestIndex = j;
+                    }
+                }
+            }
+            dungeonChrono.add(smallestIndex);
+        }
+
+
+        ArrayList<String> newDungeons = new ArrayList<>();
+        ArrayList<String> newDungeonImgLinks = new ArrayList<>();
+        ArrayList<LocalTime> newA = new ArrayList<>();
+        ArrayList<LocalTime> newB = new ArrayList<>();
+        ArrayList<LocalTime> newC = new ArrayList<>();
+        ArrayList<LocalTime> newD = new ArrayList<>();
+        ArrayList<LocalTime> newE = new ArrayList<>();
+        for (int i = dungeonChrono.size() - 1; i >= 0; i--) {
+            newDungeons.add(dungeons.get(dungeonChrono.get(i)));
+            newDungeonImgLinks.add(dungeonImgLinks.get(dungeonChrono.get(i)));
+            newA.add(a.get(dungeonChrono.get(i)));
+            newB.add(b.get(dungeonChrono.get(i)));
+            newC.add(c.get(dungeonChrono.get(i)));
+            newD.add(d.get(dungeonChrono.get(i)));
+            newE.add(e.get(dungeonChrono.get(i)));
+        }
+        this.dungeons = newDungeons;
+        this.dungeonImgLinks = newDungeonImgLinks;
+        this.a = newA;
+        this.b = newB;
+        this.c = newC;
+        this.d = newD;
+        this.e = newE;
+    }
+
+//    public ArrayList<String> getDungeons() {
+//        return dungeons;
+//    }
+//
+//    public ArrayList<String> getDungeonLinks() {
+//        return dungeonImgLinks;
+//    }
+//
+//    public ArrayList<LocalTime> getA() {
+//        return a;
+//    }
+//
+//    public ArrayList<LocalTime> getB() {
+//        return b;
+//    }
+//
+//    public ArrayList<LocalTime> getC() {
+//        return c;
+//    }
+//
+//    public ArrayList<LocalTime> getD() {
+//        return d;
+//    }
+//
+//    public ArrayList<LocalTime> getE() {
+//        return e;
+//    }
 
     private static LocalTime parseTime(String time) {
         String timeformat = time.toUpperCase();
