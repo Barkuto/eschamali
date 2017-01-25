@@ -80,7 +80,6 @@ public class PADListener {
                         BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         if (split.length == 1) {
-//                            BufferedMessage.sendMessage(PADModule.client, event, getInfo(PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "")));
                             Monster m = PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
                             if (m != null)
                                 BufferedMessage.sendEmbed(PADModule.client, event, getInfoEmbed(m, m.getId() + ""));
@@ -90,7 +89,6 @@ public class PADListener {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
                             Monster m = PADHerderAPI.getMonster(query);
                             if (m != null) {
-//                                BufferedMessage.sendMessage(PADModule.client, event, getInfo(m));
                                 BufferedMessage.sendEmbed(PADModule.client, event, getInfoEmbed(m, query));
                             } else {
                                 BufferedMessage.sendMessage(PADModule.client, event, "Monster not found.");

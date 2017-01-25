@@ -239,7 +239,7 @@ public class Guerilla implements Serializable {
 
         //Horizontal Lines
         int yLinePos = biggestHeight;
-        for (int i = 0; i < dungeonImgs.size(); i++) {
+        for (int i = 0; i < 5; i++) {
             g.drawLine(0, yLinePos, width, yLinePos);
             try {
                 yLinePos += cellHeight;
