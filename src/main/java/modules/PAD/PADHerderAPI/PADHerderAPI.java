@@ -309,6 +309,8 @@ public class PADHerderAPI {
     }
 
     private static boolean stringContainsKeywords(String string, String keywords) {
+        string = string.replaceAll("-", " ");
+        keywords = keywords.replaceAll("-", " ");
         String basicString = string.toLowerCase().replaceAll("[^\\w\\s]", "");
         String basicKeywords = keywords.toLowerCase().replaceAll("[^\\w\\s]", "");
         if (basicString.toLowerCase().equalsIgnoreCase(basicKeywords.toLowerCase())) {
