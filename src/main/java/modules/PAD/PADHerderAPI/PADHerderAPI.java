@@ -130,9 +130,9 @@ public class PADHerderAPI {
                 ArrayList<Monster> majorityMonstersWithMajorityAttr = new ArrayList<>();
                 for (int i = 0; i < allSimilar.size(); i++) {
                     Monster m = allSimilar.get(i);
-                    if (m.getName().equalsIgnoreCase(keywords)) {
-                        return m;
-                    }
+//                    if (m.getName().equalsIgnoreCase(keywords)) {
+//                        return m;
+//                    }
                     Attribute element = m.getElement().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement())];
                     if (element == majorityAttr)
                         majorityMonstersWithMajorityAttr.add(m);
@@ -153,7 +153,9 @@ public class PADHerderAPI {
                 Monster biggestNumMon = majorityMonstersWithMajorityAttr.get(majorityMonstersWithMajorityAttr.size() - 1);
                 ArrayList<Integer> evos = getEvos(biggestNumMon.getId());
                 for (int i = 0; i < evos.size(); i++) {
-                    if (evos.get(i) > biggestNumMon.getId()) {
+                    Monster m = getMonster(evos.get(i));
+                    Attribute a = Attribute.values()[Integer.parseInt(m.getElement())];
+                    if (evos.get(i) > biggestNumMon.getId() && a.equals(majorityAttr)) {
                         biggestNumMon = getMonster(evos.get(i));
                     }
                 }
@@ -182,8 +184,8 @@ public class PADHerderAPI {
                     }
                 }
                 //Find monsters with an exact word match.
-                String[] keywordSplit = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
                 for (int i = 0; i < monsters.size(); i++) {
+                    String[] keywordSplit = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
                     String[] nameSplit = monsters.get(i).getName().toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
                     boolean[] found = new boolean[keywordSplit.length];
                     for (int j = 0; j < nameSplit.length; j++) {
