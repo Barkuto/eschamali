@@ -313,10 +313,13 @@ public class PADHerderAPI {
     private static boolean stringContainsKeywords(String string, String keywords) {
         string = string.replaceAll("-", " ");
         keywords = keywords.replaceAll("-", " ");
-        String basicString = string.toLowerCase().replaceAll("[^\\w\\s]", "");
-        String basicKeywords = keywords.toLowerCase().replaceAll("[^\\w\\s]", "");
+        String basicString = string.toLowerCase().replaceAll("[^\\w\\s]", "").trim();
+        String basicKeywords = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").trim();
         if (basicString.toLowerCase().equalsIgnoreCase(basicKeywords.toLowerCase())) {
             return true;
+        }
+        if (basicString.length() == 0) {
+            return false;
         }
         String[] split = basicString.split(" ");
         String[] words = basicKeywords.split(" ");
@@ -343,7 +346,9 @@ public class PADHerderAPI {
         boolean[] found = new boolean[words.length];
         for (int i = 0; i < split.length; i++) {
             for (int j = 0; j < words.length; j++) {
-                if (stringWords.get(i).contains(keywordWords.get(j))) {
+                if (stringWords.get(i).contains(keywordWords.get(j))
+                        && stringWords.get(i).length() > 0
+                        && keywordWords.get(j).length() > 0) {
                     found[j] = true;
                     stringWords.set(i, "");
                     keywordWords.set(j, "");
