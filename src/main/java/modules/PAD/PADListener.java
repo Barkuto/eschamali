@@ -347,11 +347,11 @@ public class PADListener {
             for (int i = 0; i < similarNames.size(); i++) {
                 int currentID = similarNames.get(i).getId();
                 if (currentID != m.getId() && !evos.contains(currentID)) {
-                    if (i != similarNames.size() - 1)
-                        similar += similarNames.get(i).getId() + ", ";
-                    else
-                        similar += similarNames.get(i).getId();
+                    similar += similarNames.get(i).getId() + ", ";
                 }
+            }
+            if (similar.contains(",")) {
+                similar = similar.substring(0, similar.lastIndexOf(","));
             }
         } else if (similarNames.size() > 10) {
             similar += "Too many to show.";
