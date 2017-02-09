@@ -57,6 +57,15 @@ public class Db {
         }
     }
 
+    public PreparedStatement getPreparedStatement(String sql) {
+        try {
+            return con.prepareStatement(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public String getDatabasePath() {
         return database;
     }

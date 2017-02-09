@@ -69,7 +69,7 @@ public class CustomCommandsListener {
                     if (commands.containsKey(cmd)) {
                         BufferedMessage.sendMessage(CustomCommandsModule.client, event, commands.get(cmd));
                     } else {
-                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID)) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)) {
                             String commandName = "";
                             String commandText = "";
                             if (args.length > 1) {
@@ -86,7 +86,7 @@ public class CustomCommandsListener {
                                     } else {
                                         BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is already a custom command!");
                                     }
-                                } else if (cmd.equals("deletecustomcommand") || cmd.equals("dcc")) {
+                                } else if (cmd.equals("deletecustomcommand") || cmd.equals("dcc") || cmd.equals("rcc")) {
                                     if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
                                         perms.deletePerms(tableName, col1, commandName);
                                         BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Deleted custom command \"" + commandName + "\"");

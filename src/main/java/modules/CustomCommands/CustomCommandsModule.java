@@ -55,6 +55,7 @@ public class CustomCommandsModule implements IModule, ICommands {
         cmds.add("`addcustomcommand`: Add a custom command. **Usage** addcustomcommand <command name> <text>");
         cmds.add("`editcustomcommand`: Edit an existing custom command. **Usage** editcustomcommand <command name> <text>");
         cmds.add("`deletecustomcommand`: Delete an existing custom command. **Usage** deletecustomcommand <command name>");
+        cmds.add("`customcommands`: Shows all custom commands. **Usage** customcommands");
         return cmds;
     }
 }
