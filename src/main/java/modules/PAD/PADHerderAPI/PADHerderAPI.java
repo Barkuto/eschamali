@@ -175,58 +175,62 @@ public class PADHerderAPI {
         String[] split = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
         for (int i = 0; i < split.length; i++) {
             String s = split[i];
-            char e1;
-            char e2 = 'z';
-            e1 = s.charAt(0);
-            if (s.length() == 2) {
-                e2 = s.charAt(1);
+            if (s.length() <= 2) {
+                char e1;
+                char e2 = 'z';
+                e1 = s.charAt(0);
+                if (s.length() == 2) {
+                    e2 = s.charAt(1);
+                }
+                switch (e1) {
+                    case 'r':
+                        element1 = 0;
+                        break;
+                    case 'b':
+                        element1 = 1;
+                        break;
+                    case 'g':
+                        element1 = 2;
+                        break;
+                    case 'l':
+                        element1 = 3;
+                        break;
+                    case 'd':
+                        element1 = 4;
+                        break;
+                }
+                switch (e2) {
+                    case 'r':
+                        element2 = 0;
+                        break;
+                    case 'b':
+                        element2 = 1;
+                        break;
+                    case 'g':
+                        element2 = 2;
+                        break;
+                    case 'l':
+                        element2 = 3;
+                        break;
+                    case 'd':
+                        element2 = 4;
+                        break;
+                }
+                attIndex = i;
+                break;
             }
-            switch (e1) {
-                case 'r':
-                    element1 = 0;
-                    break;
-                case 'b':
-                    element1 = 1;
-                    break;
-                case 'g':
-                    element1 = 2;
-                    break;
-                case 'l':
-                    element1 = 3;
-                    break;
-                case 'd':
-                    element1 = 4;
-                    break;
-            }
-            switch (e2) {
-                case 'r':
-                    element2 = 0;
-                    break;
-                case 'b':
-                    element2 = 1;
-                    break;
-                case 'g':
-                    element2 = 2;
-                    break;
-                case 'l':
-                    element2 = 3;
-                    break;
-                case 'd':
-                    element2 = 4;
-                    break;
-            }
-            attIndex = i;
-            break;
         }
         if (element1 != -1)
             matchEle1 = true;
         if (element2 != -1)
             matchEle2 = true;
 
-        keywords = "";
-        for (int i = 0; i < split.length; i++) {
-            if (i != attIndex) {
-                keywords += split[i] + " ";
+        if (matchEle1 || matchEle2) {
+            keywords = "";
+            for (int i = 0; i < split.length; i++) {
+                if (i != attIndex) {
+                    keywords += split[i] + " ";
+                }
             }
         }
 
