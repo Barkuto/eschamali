@@ -167,6 +167,69 @@ public class PADHerderAPI {
     }
 
     public static ArrayList<Monster> getAllMonsters(String keywords) {
+        int element1 = -1;
+        int element2 = -1;
+        boolean matchEle1 = false;
+        boolean matchEle2 = false;
+        int attIndex = 0;
+        String[] split = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
+        for (int i = 0; i < split.length; i++) {
+            String s = split[i];
+            char e1;
+            char e2 = 'z';
+            e1 = s.charAt(0);
+            if (s.length() == 2) {
+                e2 = s.charAt(1);
+            }
+            switch (e1) {
+                case 'r':
+                    element1 = 0;
+                    break;
+                case 'b':
+                    element1 = 1;
+                    break;
+                case 'g':
+                    element1 = 2;
+                    break;
+                case 'l':
+                    element1 = 3;
+                    break;
+                case 'd':
+                    element1 = 4;
+                    break;
+            }
+            switch (e2) {
+                case 'r':
+                    element2 = 0;
+                    break;
+                case 'b':
+                    element2 = 1;
+                    break;
+                case 'g':
+                    element2 = 2;
+                    break;
+                case 'l':
+                    element2 = 3;
+                    break;
+                case 'd':
+                    element2 = 4;
+                    break;
+            }
+            attIndex = i;
+            break;
+        }
+        if (element1 != -1)
+            matchEle1 = true;
+        if (element2 != -1)
+            matchEle2 = true;
+
+        keywords = "";
+        for (int i = 0; i < split.length; i++) {
+            if (i != attIndex) {
+                keywords += split[i] + " ";
+            }
+        }
+
         ArrayList<Monster> monsters = new ArrayList<>();
         ArrayList<Monster> exactMonsters = new ArrayList<>();
         try {
@@ -180,7 +243,24 @@ public class PADHerderAPI {
                 for (Object o : jsonArray) {
                     JsonObject obj = (JsonObject) o;
                     if (stringContainsKeywords(obj.get("name").toString(), keywords) || stringContainsKeywords(obj.get("name_jp").toString(), keywords)) {
-                        monsters.add(new Monster(obj));
+                        if (!matchEle1) {
+                            monsters.add(new Monster(obj));
+                        } else if (matchEle1) {
+                            if (obj.get("element").getAsInt() == element1) {
+                                if (matchEle2) {
+                                    int tmpE2 = -1;
+                                    try {
+                                        tmpE2 = obj.get("element2").getAsInt();
+                                    } catch (UnsupportedOperationException ex) {
+                                    }
+                                    if (tmpE2 >= 0 && tmpE2 == element2) {
+                                        monsters.add(new Monster(obj));
+                                    }
+                                } else {
+                                    monsters.add(new Monster(obj));
+                                }
+                            }
+                        }
                     }
                 }
                 //Find monsters with an exact word match.
