@@ -8,6 +8,8 @@ import com.google.gson.JsonObject;
  */
 public class Monster {
     private int id;
+    private int pdx_id;
+    private int us_id;
     private String name;
     private String name_jp;//escaped unicode
     private int rarity;
@@ -45,7 +47,11 @@ public class Monster {
     private double feed_xp;
 
     public Monster(JsonObject json) {
-        id = json.get("id").getAsInt();
+        try {
+            id = json.get("pdx_id").getAsInt();
+        } catch (NullPointerException e) {
+            id = json.get("id").getAsInt();
+        }
         name = json.get("name").toString().replace("\"", "");
         name_jp = json.get("name_jp").toString().replace("\"", "");
         rarity = json.get("rarity").getAsInt();
