@@ -278,7 +278,7 @@ public class PADListener {
         return output;
     }
 
-    public EmbedObject getInfoEmbed(Monster m, String query) {
+    public static EmbedObject getInfoEmbed(Monster m, String query) {
         EmbedBuilder eb = new EmbedBuilder().ignoreNullEmptyFields();
 
         Color c = Color.GRAY;
@@ -302,7 +302,11 @@ public class PADListener {
         String desc = "";
         AwokenSkill[] awakenings = m.getAwoken_skills();
         for (int i = 0; i < awakenings.length; i++) {
-            desc += Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName();
+            if (awakenings[i] != null) {
+                desc += Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName();
+            } else {
+                desc += "??";
+            }
             if (i != awakenings.length - 1) {
                 desc += "║";
             }
