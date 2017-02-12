@@ -24,6 +24,21 @@ public class GeneralListener {
     private boolean ayy = false;
 
     @EventSubscriber
+    public void onMessageToGoogle(MessageReceivedEvent event) {
+        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
+                String msg = event.getMessage().getContent();
+                if (msg.startsWith("?g ") || msg.startsWith("?google ")) {
+                    String query = msg.substring(msg.indexOf(" ") + 1, msg.length());
+                    query = query.replaceAll(" ", "+");
+                    String url = "https://www.google.com/#q=";
+                    BufferedMessage.sendMessage(Eschamali.client, event, url + query);
+                }
+            }
+        }
+    }
+
+    @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
@@ -31,7 +46,7 @@ public class GeneralListener {
                 if (msg.equalsIgnoreCase("!donate")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
                 } else if (msg.equalsIgnoreCase("!maker")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers.");
+                    BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
                 } else if (msg.equalsIgnoreCase("!ayy")) {
                     List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
                     if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID())) {
@@ -191,6 +206,7 @@ public class GeneralListener {
                         commands.add("`alert`: Alerts Barkuto that something went wrong!");
                         commands.add("`serverinfo`: Shows some information about the current server.");
                         commands.add("`userinfo`: Shows some information about yourself, or the given user.");
+                        commands.add("`?google`: Give a link to google based on your query. Not !?google **UASGE** ?google <query>");
                         Collections.sort(commands);
                         for (int i = 0; i < commands.size(); i++) {
                             output += commands.get(i) + "\n";

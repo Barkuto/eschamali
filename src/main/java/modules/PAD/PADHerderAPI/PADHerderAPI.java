@@ -80,6 +80,16 @@ public class PADHerderAPI {
             return getMonster(id);
         } catch (NumberFormatException e) {
             ArrayList<Monster> allSimilar = getAllMonsters(keywords);
+            int[] elements = parseAttribute(keywords);
+            int e1 = elements[0];
+            int e2 = elements[1];
+            boolean match1 = false;
+            boolean match2 = false;
+            if (e1 != -1)
+                match1 = true;
+            if (e2 != -1)
+                match2 = true;
+
             if (allSimilar.size() > 0) {
                 int fireCount = 0;
                 int waterCount = 0;
@@ -156,7 +166,13 @@ public class PADHerderAPI {
                     Monster m = getMonster(evos.get(i));
                     Attribute a = Attribute.values()[Integer.parseInt(m.getElement())];
                     if (evos.get(i) > biggestNumMon.getId() && a.equals(majorityAttr)) {
-                        biggestNumMon = getMonster(evos.get(i));
+                        if (match1 && Integer.parseInt(m.getElement()) == e1) {
+                            if (match2 && Integer.parseInt(m.getElement2()) == e2) {
+                                biggestNumMon = m;
+                            } else if (!match2) {
+                                biggestNumMon = m;
+                            }
+                        }
                     }
                 }
                 return biggestNumMon;
@@ -171,67 +187,16 @@ public class PADHerderAPI {
         int element2 = -1;
         boolean matchEle1 = false;
         boolean matchEle2 = false;
-        int attIndex = 0;
-        String[] split = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
-        for (int i = 0; i < split.length; i++) {
-            String s = split[i];
-            if (s.length() <= 2) {
-                char e1;
-                char e2 = 'z';
-                e1 = s.charAt(0);
-                if (s.length() == 2) {
-                    e2 = s.charAt(1);
-                }
-                switch (e1) {
-                    case 'r':
-                        element1 = 0;
-                        break;
-                    case 'b':
-                        element1 = 1;
-                        break;
-                    case 'g':
-                        element1 = 2;
-                        break;
-                    case 'l':
-                        element1 = 3;
-                        break;
-                    case 'd':
-                        element1 = 4;
-                        break;
-                }
-                switch (e2) {
-                    case 'r':
-                        element2 = 0;
-                        break;
-                    case 'b':
-                        element2 = 1;
-                        break;
-                    case 'g':
-                        element2 = 2;
-                        break;
-                    case 'l':
-                        element2 = 3;
-                        break;
-                    case 'd':
-                        element2 = 4;
-                        break;
-                }
-                attIndex = i;
-                break;
-            }
-        }
+        int[] elements = parseAttribute(keywords);
+        element1 = elements[0];
+        element2 = elements[1];
         if (element1 != -1)
             matchEle1 = true;
         if (element2 != -1)
             matchEle2 = true;
 
         if (matchEle1 || matchEle2) {
-            keywords = "";
-            for (int i = 0; i < split.length; i++) {
-                if (i != attIndex) {
-                    keywords += split[i] + " ";
-                }
-            }
+            keywords = removeAttFromKeyword(keywords);
         }
 
         ArrayList<Monster> monsters = new ArrayList<>();
@@ -269,8 +234,8 @@ public class PADHerderAPI {
                 }
                 //Find monsters with an exact word match.
                 for (int i = 0; i < monsters.size(); i++) {
-                    String[] keywordSplit = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
-                    String[] nameSplit = monsters.get(i).getName().toLowerCase().replaceAll("[^\\w\\s]", "").split(" ");
+                    String[] keywordSplit = normalizeString(keywords).split(" ");
+                    String[] nameSplit = normalizeString(monsters.get(i).getName()).split(" ");
                     boolean[] found = new boolean[keywordSplit.length];
                     for (int j = 0; j < nameSplit.length; j++) {
                         for (int k = 0; k < keywordSplit.length; k++) {
@@ -394,11 +359,13 @@ public class PADHerderAPI {
         return checked;
     }
 
+    private static String normalizeString(String str) {
+        return str.replace("-", " ").toLowerCase().replaceAll("[^\\w\\s]", "").trim();
+    }
+
     private static boolean stringContainsKeywords(String string, String keywords) {
-        string = string.replaceAll("-", " ");
-        keywords = keywords.replaceAll("-", " ");
-        String basicString = string.toLowerCase().replaceAll("[^\\w\\s]", "").trim();
-        String basicKeywords = keywords.toLowerCase().replaceAll("[^\\w\\s]", "").trim();
+        String basicString = normalizeString(string);
+        String basicKeywords = normalizeString(keywords);
         if (basicString.toLowerCase().equalsIgnoreCase(basicKeywords.toLowerCase())) {
             return true;
         }
@@ -444,5 +411,118 @@ public class PADHerderAPI {
                 return false;
         }
         return true;
+    }
+
+    public static int[] parseAttribute(String keywords) {
+        int[] atts = new int[]{-1, -1};
+        int attIndex = 0;
+        String[] split = normalizeString(keywords).split(" ");
+        for (int i = 0; i < split.length; i++) {
+            String s = split[i];
+            if (s.length() <= 2) {
+                char e1;
+                char e2 = 'z';
+                e1 = s.charAt(0);
+                if (s.length() == 2) {
+                    e2 = s.charAt(1);
+                }
+                switch (e1) {
+                    case 'r':
+                        atts[0] = 0;
+                        break;
+                    case 'b':
+                        atts[0] = 1;
+                        break;
+                    case 'g':
+                        atts[0] = 2;
+                        break;
+                    case 'l':
+                        atts[0] = 3;
+                        break;
+                    case 'd':
+                        atts[0] = 4;
+                        break;
+                    default:
+                        return atts;
+                }
+                switch (e2) {
+                    case 'r':
+                        atts[1] = 0;
+                        break;
+                    case 'b':
+                        atts[1] = 1;
+                        break;
+                    case 'g':
+                        atts[1] = 2;
+                        break;
+                    case 'l':
+                        atts[1] = 3;
+                        break;
+                    case 'd':
+                        atts[1] = 4;
+                        break;
+                    default:
+                        atts[0] = -1;
+                        break;
+                }
+                attIndex = i;
+                break;
+            }
+        }
+        return atts;
+    }
+
+    public static String removeAttFromKeyword(String keywords) {
+        String strToLookFor = "";
+        int[] atts = parseAttribute(keywords);
+        switch (atts[0]) {
+            case 0:
+                strToLookFor += 'r';
+                break;
+            case 1:
+                strToLookFor += 'b';
+                break;
+            case 2:
+                strToLookFor += 'g';
+                break;
+            case 3:
+                strToLookFor += 'l';
+                break;
+            case 4:
+                strToLookFor += 'd';
+                break;
+        }
+        switch (atts[1]) {
+            case 0:
+                strToLookFor += 'r';
+                break;
+            case 1:
+                strToLookFor += 'b';
+                break;
+            case 2:
+                strToLookFor += 'g';
+                break;
+            case 3:
+                strToLookFor += 'l';
+                break;
+            case 4:
+                strToLookFor += 'd';
+                break;
+        }
+        String[] split = normalizeString(keywords).split(" ");
+        int attIndex = 0;
+        for (int i = 0; i < split.length; i++) {
+            if (split[i].equals(strToLookFor)) {
+                attIndex = i;
+                break;
+            }
+        }
+        String newKeyword = "";
+        for (int i = 0; i < split.length; i++) {
+            if (i != attIndex) {
+                newKeyword += split[i] + " ";
+            }
+        }
+        return newKeyword.trim();
     }
 }
