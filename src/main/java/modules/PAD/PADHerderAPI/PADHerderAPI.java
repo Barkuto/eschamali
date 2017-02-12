@@ -271,7 +271,7 @@ public class PADHerderAPI {
             for (Object o : jsonArray) {
                 JsonObject obj = (JsonObject) o;
                 String currentActiveName = StringEscapeUtils.unescapeJava(obj.get("name").toString()).replace("\"", "");
-                if (stringContainsKeywords(currentActiveName, keywords)) {
+                if (stringContainsKeywords(currentActiveName, keywords) || keywords.equalsIgnoreCase(currentActiveName)) {
                     return new ActiveSkill(obj);
                 }
             }
@@ -285,13 +285,16 @@ public class PADHerderAPI {
         JsonParser parser = new JsonParser();
         try {
             JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "leader_skills.json"));
+            int i = 0;
             for (Object o : jsonArray) {
                 JsonObject obj = (JsonObject) o;
                 String currentLeaderName = StringEscapeUtils.unescapeJava(obj.get("name").toString()).replace("\"", "");
-                if (stringContainsKeywords(currentLeaderName, keywords)) {
+                if (stringContainsKeywords(currentLeaderName, keywords) || keywords.equalsIgnoreCase(currentLeaderName)) {
                     return new LeaderSkill(obj);
                 }
+                i++;
             }
+            System.out.println(i);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -366,6 +369,9 @@ public class PADHerderAPI {
     private static boolean stringContainsKeywords(String string, String keywords) {
         String basicString = normalizeString(string);
         String basicKeywords = normalizeString(keywords);
+        if (basicString.length() == 0 || basicKeywords.length() == 0) {
+            return false;
+        }
         if (basicString.toLowerCase().equalsIgnoreCase(basicKeywords.toLowerCase())) {
             return true;
         }
