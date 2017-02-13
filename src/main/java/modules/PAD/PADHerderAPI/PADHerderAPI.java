@@ -367,6 +367,9 @@ public class PADHerderAPI {
     }
 
     private static boolean stringContainsKeywords(String string, String keywords) {
+        if(string.equals(string.toLowerCase())){
+            return false;
+        }
         String basicString = normalizeString(string);
         String basicKeywords = normalizeString(keywords);
         if (basicString.length() == 0 || basicKeywords.length() == 0) {
