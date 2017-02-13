@@ -294,7 +294,6 @@ public class PADHerderAPI {
                 }
                 i++;
             }
-            System.out.println(i);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -367,11 +366,14 @@ public class PADHerderAPI {
     }
 
     private static boolean stringContainsKeywords(String string, String keywords) {
-        if(string.equals(string.toLowerCase())){
+        if (string.equals(string.toLowerCase())) {
             return false;
         }
         String basicString = normalizeString(string);
         String basicKeywords = normalizeString(keywords);
+        if (basicString.contains("tamadra") && !(basicKeywords.contains("tamadra") || basicKeywords.contains("tama"))) {
+            return false;
+        }
         if (basicString.length() == 0 || basicKeywords.length() == 0) {
             return false;
         }
