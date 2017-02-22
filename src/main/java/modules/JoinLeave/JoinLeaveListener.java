@@ -32,7 +32,7 @@ public class JoinLeaveListener {
             String channel = perms.getPerms("channels", "module", JoinLeaveModule.name, "channels");
             if (channel != null && channel.length() > 0) {
                 IChannel chan = guild.getChannelByID(channel);
-                BufferedMessage.sendMessage(JoinLeaveModule.client, chan, "User `" + user.getName() + "#" + user.getDiscriminator() + "` has joined.");
+                BufferedMessage.sendMessage(JoinLeaveModule.client, chan, user.mention() +" has joined.");
             }
             perms.close();
         }
@@ -47,7 +47,7 @@ public class JoinLeaveListener {
             String channel = perms.getPerms("channels", "module", JoinLeaveModule.name, "channels");
             if (channel != null && channel.length() > 0) {
                 IChannel chan = guild.getChannelByID(channel);
-                BufferedMessage.sendMessage(JoinLeaveModule.client, chan, "User `" + user.getName() + "#" + user.getDiscriminator() + "` has left.");
+                BufferedMessage.sendMessage(JoinLeaveModule.client, chan, user.mention() +" has left.");
             }
             perms.close();
         }
