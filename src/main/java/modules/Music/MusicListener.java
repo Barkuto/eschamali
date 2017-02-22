@@ -60,7 +60,7 @@ public class MusicListener {
                             try {
                                 vChannels.get(0).join();
                             } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
+                                BufferedMessage.sendMessage(MusicModule.client, event, "I do not have permission to join your voice channel.");
                             }
                         } else {
                             BufferedMessage.sendMessage(MusicModule.client, event, "You must join a voice channel first.");
@@ -142,7 +142,7 @@ public class MusicListener {
                                 try {
                                     user.getConnectedVoiceChannels().get(0).join();
                                 } catch (MissingPermissionsException e) {
-                                    e.printStackTrace();
+                                    BufferedMessage.sendMessage(MusicModule.client, event, "I do not have permission to join your voice channel.");
                                 }
                             }
                             if (split[1].contains("youtu")) {//URL load
