@@ -145,10 +145,11 @@ public class PADListener {
                         } catch (DiscordException e) {
                         }
                         Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
-                        BufferedImage estImg = g.getTodayGuerillaImage("est");
+
                         BufferedImage pstImg = g.getTodayGuerillaImage("pst");
-                        BufferedImage cstImg = g.getTodayGuerillaImage("cst");
                         BufferedImage mstImg = g.getTodayGuerillaImage("mst");
+                        BufferedImage cstImg = g.getTodayGuerillaImage("cst");
+                        BufferedImage estImg = g.getTodayGuerillaImage("est");
                         ArrayList<BufferedImage> images = new ArrayList<>();
                         images.add(estImg);
                         images.add(pstImg);

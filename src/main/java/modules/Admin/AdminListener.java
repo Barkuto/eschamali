@@ -286,8 +286,8 @@ public class AdminListener {
                     } else if (cmd.equals("lock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             try {
-                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
                                 channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
+                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
                             } catch (MissingPermissionsException e) {
                                 e.printStackTrace();
                             } catch (RateLimitException e) {
@@ -299,8 +299,8 @@ public class AdminListener {
                     } else if (cmd.equals("unlock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             try {
-                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
                                 channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
+                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
                             } catch (MissingPermissionsException e) {
                                 e.printStackTrace();
                             } catch (RateLimitException e) {
@@ -370,20 +370,6 @@ public class AdminListener {
                                 }
                                 BufferedMessage.sendMessage(AdminModule.client, event, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
                             }
-                        }
-                    } else if (cmd.equals("fixmyroles") || cmd.equals("fmr")) {
-                        try {
-                            IRole tmpRole = new RoleBuilder(guild).withName("tmp").build();
-                            author.addRole(tmpRole);
-                            author.removeRole(tmpRole);
-                            tmpRole.delete();
-                            BufferedMessage.sendMessage(AdminModule.client, event, "Your roles should be fixed.");
-                        } catch (MissingPermissionsException e) {
-                            e.printStackTrace();
-                        } catch (RateLimitException e) {
-                            e.printStackTrace();
-                        } catch (DiscordException e) {
-                            e.printStackTrace();
                         }
                     }
                     perms.close();

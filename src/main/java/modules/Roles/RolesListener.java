@@ -11,6 +11,7 @@ import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
+import sx.blah.discord.util.RoleBuilder;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -130,6 +131,7 @@ public class RolesListener {
 
                                 if (theRole != null) {
                                     try {
+                                        fixRoles(author, guild, channel);
                                         theUser.addRole(theRole);
                                         BufferedMessage.sendMessage(RolesModule.client, event, theUser.mention() + " now has the " + '"' + theRole.getName() + '"' + " role.");
                                     } catch (MissingPermissionsException e) {
@@ -160,6 +162,7 @@ public class RolesListener {
 
                                 if (theRole != null) {
                                     try {
+                                        fixRoles(author, guild, channel);
                                         theUser.removeRole(theRole);
                                         BufferedMessage.sendMessage(RolesModule.client, event, theUser.mention() + " now longer has the " + '"' + theRole.getName() + '"' + " role.");
                                     } catch (MissingPermissionsException e) {
@@ -186,6 +189,7 @@ public class RolesListener {
                             if (role != null) {
                                 if (roleISA(guild, role)) {
                                     try {
+                                        fixRoles(author, guild, channel);
                                         author.addRole(role);
                                         IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "You now the have the " + role.getName() + " role.");
                                         try {
@@ -238,6 +242,7 @@ public class RolesListener {
                                 if (hasRole) {
                                     if (roleISA(guild, role)) {
                                         try {
+                                            fixRoles(author, guild, channel);
                                             author.removeRole(role);
                                             IMessage m = BufferedMessage.sendMessage(RolesModule.client, event, "Removed " + role.getName() + " role from you.");
                                             try {
@@ -302,6 +307,7 @@ public class RolesListener {
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("myroles")) {
+                        fixRoles(author, guild, channel);
                         IUser user = event.getMessage().getAuthor();
                         List<IRole> userRoles = user.getRolesForGuild(guild);
                         String output = "`A list of your roles, " + user.getName() + "#" + user.getDiscriminator() + ":`";
@@ -327,6 +333,7 @@ public class RolesListener {
                     } else if (cmd.equalsIgnoreCase("rolesof") && args.length > 1) {
                         IUser user = guild.getUserByID(parseUserID(args[1]));
                         if (user != null) {
+                            fixRoles(user, guild, channel);
                             List<IRole> theirRoles = user.getRolesForGuild(guild);
                             String msg = "`List of roles for " + user.getName() + "#" + user.getDiscriminator() + ":`";
                             for (IRole r : theirRoles) {
@@ -567,5 +574,25 @@ public class RolesListener {
         }
         id += arg.substring(startIndex, arg.length() - 1);
         return id;
+    }
+
+    private boolean fixRoles(IUser user, IGuild guild, IChannel channel) {
+        try {
+            IRole tmpRole = new RoleBuilder(guild).withName("tmp").build();
+            user.addRole(tmpRole);
+            user.removeRole(tmpRole);
+            tmpRole.delete();
+            BufferedMessage.sendMessage(RolesModule.client, channel, "Your roles should be fixed.");
+        } catch (MissingPermissionsException e) {
+            e.printStackTrace();
+            return false;
+        } catch (RateLimitException e) {
+            e.printStackTrace();
+            return false;
+        } catch (DiscordException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }
