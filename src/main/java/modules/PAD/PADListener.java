@@ -151,10 +151,10 @@ public class PADListener {
                         BufferedImage cstImg = g.getTodayGuerillaImage("cst");
                         BufferedImage estImg = g.getTodayGuerillaImage("est");
                         ArrayList<BufferedImage> images = new ArrayList<>();
-                        images.add(estImg);
                         images.add(pstImg);
-                        images.add(cstImg);
                         images.add(mstImg);
+                        images.add(cstImg);
+                        images.add(estImg);
 
                         for (BufferedImage bi : images) {
                             try {
