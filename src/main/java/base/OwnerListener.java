@@ -14,14 +14,17 @@ import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
 import javax.lang.model.util.ElementScanner6;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Iggie on 8/23/2016.
@@ -47,6 +50,28 @@ public class OwnerListener {
                         Eschamali.client.changeStatus(Status.game(argsconcat));
                     } else {
                         Eschamali.client.changeStatus(Status.empty());
+                    }
+                } else if (cmd.equalsIgnoreCase("changedefaultstatus") || cmd.equalsIgnoreCase("cds")) {
+                    Properties props = new Properties();
+                    try {
+                        props.load(new FileReader(Eschamali.configFileName));
+                        props.setProperty("status", argsconcat);
+
+                        String comments = "";
+                        Scanner s = new Scanner(new File(Eschamali.configFileName));
+                        String str = s.nextLine();
+                        if (str.startsWith("#"))
+                            comments += str.replaceFirst("#", "");
+                        props.store(new FileWriter(Eschamali.configFileName), comments);
+                        BufferedMessage.sendMessage(Eschamali.client, event, "Default status has been changed to `" + argsconcat + "`.");
+
+                        if (args.length > 1) {
+                            Eschamali.client.changeStatus(Status.game(argsconcat));
+                        } else {
+                            Eschamali.client.changeStatus(Status.empty());
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 } else if (cmd.equalsIgnoreCase("guilds") || cmd.equalsIgnoreCase("servers")) {
                     List<IGuild> guilds = Eschamali.client.getGuilds();
@@ -106,7 +131,6 @@ public class OwnerListener {
                 }
             }
         }
-
     }
 
     public String centerString(String str, int width) {

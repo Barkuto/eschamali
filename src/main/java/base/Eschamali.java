@@ -33,7 +33,7 @@ import java.util.TreeMap;
 public class Eschamali {
     //private String clientID = "214442111720751104";
     private String token = "";
-    private String configFileName = "config.properties";
+    public static String configFileName = "config.properties";
     private String status = "";
     public static ArrayList<IModule> modules;
     public static TreeMap<IModule, Boolean> defaultmodules;
