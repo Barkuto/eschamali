@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -175,7 +176,19 @@ public class GeneralListener {
                     eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
                     eb.withDesc("Status: " + (user.getStatus().getType() != Status.StatusType.NONE ? statusType + status : "None."));
                     eb.withThumbnail(avatar.replace(".jpg", ".gif"));
-                    eb.withFooterText("Member #" + (guild.getUsers().indexOf(user) + 1) + " | " + "ID: " + id);
+                    List<IUser> usersSortedByJoin = guild.getUsers();
+                    usersSortedByJoin.sort(new Comparator<IUser>() {
+                        @Override
+                        public int compare(IUser o1, IUser o2) {
+                            try {
+                                return guild.getJoinTimeForUser(o1).compareTo(guild.getJoinTimeForUser(o2));
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            }
+                            return -2;
+                        }
+                    });
+                    eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
                     eb.appendField("Account Created", accCreated.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(accCreated, LocalDateTime.now()) + " days ago", true);
                     eb.appendField("Guild Joined", guildJoinDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(guildJoinDate, LocalDateTime.now()) + " days ago", true);
                     eb.appendField("Roles", roles.toString().replace("[", "").replace("]", ""), false);
