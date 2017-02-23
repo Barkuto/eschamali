@@ -3,19 +3,24 @@ package base;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
+import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * Created by Iggie on 8/14/2016.
@@ -93,26 +98,22 @@ public class GeneralListener {
                     }
                 } else if (msg.equalsIgnoreCase("!serverinfo") || msg.startsWith("!sinfo")) {
                     IGuild guild = event.getMessage().getGuild();
-                    String name = guild.getName();
-                    String serverID = guild.getID();
                     LocalDateTime creationDate = guild.getCreationDate();
-                    IRegion region = guild.getRegion();
-                    IUser owner = guild.getOwner();
-                    long users = guild.getUsers().size();
-                    long roles = guild.getRoles().size();
-                    String iconURL = guild.getIconURL();
 
-                    String output = "```xl\n";
-                    output += String.format("%-12s %s\n", "Server Name:", name);
-                    output += String.format("%-12s %s\n", "Server ID:", serverID);
-                    output += String.format("%-12s %s\n", "Icon URL:", iconURL);
-                    output += String.format("%-12s %s\n", "Created:", creationDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
-                    output += String.format("%-12s %s\n", "Region:", region.getName());
-                    output += String.format("%-12s %s\n", "Owner:", owner.getName() + "#" + owner.getDiscriminator());
-                    output += String.format("%-12s %s\n", "Users:", users);
-                    output += String.format("%-12s %s\n", "Roles:", roles);
-                    output += "```";
-                    BufferedMessage.sendMessage(Eschamali.client, event, output);
+                    EmbedBuilder eb = new EmbedBuilder();
+                    eb.withTitle(guild.getName());
+                    eb.withThumbnail(guild.getIconURL());
+                    eb.withDesc("ID: " + guild.getID());
+                    eb.appendField("Created", creationDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")), true);
+                    eb.appendField("Server Age", DAYS.between(creationDate, LocalDateTime.now()) + " days", true);
+                    eb.appendField("Region", guild.getRegion().getName(), true);
+                    eb.appendField("Owner", guild.getOwner().mention(), true);
+                    eb.appendField("Users", guild.getUsers().size() + "", true);
+                    eb.appendField("Roles", guild.getRoles().size() + "", true);
+                    eb.withColor(Color.WHITE);
+                    EmbedObject embed = eb.build();
+
+                    BufferedMessage.sendEmbed(Eschamali.client, event, embed);
                 } else if (msg.startsWith("!userinfo") || msg.startsWith("!uinfo")) {
                     IGuild guild = event.getMessage().getGuild();
                     IUser user = null;
@@ -148,39 +149,39 @@ public class GeneralListener {
                     String id = user.getID();
                     String avatar = user.getAvatarURL();
                     LocalDateTime accCreated = user.getCreationDate();
-                    String accAge = timeBetween(accCreated, LocalDateTime.now());
                     LocalDateTime guildJoinDate = null;
-                    String memberFor = null;
+                    List<IRole> roles = user.getRolesForGuild(guild);
+                    String status = user.getStatus().getStatusMessage();
+                    EmbedBuilder eb = new EmbedBuilder();
+
                     try {
                         guildJoinDate = guild.getJoinTimeForUser(user);
-                        memberFor = timeBetween(guildJoinDate, LocalDateTime.now());
                     } catch (DiscordException e) {
                         e.printStackTrace();
                     }
-                    List<IRole> roles = user.getRolesForGuild(guild);
-                    String allRoles = "";
-                    for (int i = 0; i < roles.size(); i++) {
-                        allRoles += roles.get(i).getName() + ", ";
+
+                    String statusType = "";
+                    switch (user.getStatus().getType().ordinal()) {
+                        case 0://GAME
+                            statusType = "Playing ";
+                            break;
+                        case 1://STREAM
+                            statusType = "Streaming ";
+                            break;
+                        case 2://NONE
+                            break;
                     }
-                    if (allRoles.length() > 0) {
-                        allRoles = allRoles.substring(0, allRoles.lastIndexOf(", "));
-                    }
-                    String status = user.getStatus().getStatusMessage();
-                    String output = "```xl\n";
-                    output += String.format("%-16s %s\n", "Username:", name);
-                    output += String.format("%-16s #%s\n", "Discriminator:", disc);
-                    output += String.format("%-16s %s\n", "Nickname:", nick);
-                    output += String.format("%-16s %s\n", "User ID:", id);
-                    output += String.format("%-16s %s\n", "Avatar URL:", avatar);
-                    output += String.format("%-16s %s\n", "Account Created:", accCreated.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
-                    output += String.format("%-16s %s\n", "Account Age:", accAge);
-                    output += String.format("%-16s %s\n", "\nInfo For Guild: ", guild.getName());
-                    output += String.format("%-16s %s\n", "Join Date:", guildJoinDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")));
-                    output += String.format("%-16s %s\n", "Member For:", memberFor);
-                    output += String.format("%-16s %s\n", "Roles:", allRoles);
-                    output += String.format("%-16s %s\n", "Status:", status);
-                    output += "```";
-                    BufferedMessage.sendMessage(Eschamali.client, event, output);
+
+                    eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
+                    eb.withDesc("Status: " + (user.getStatus().getType() != Status.StatusType.NONE ? statusType + status : "None."));
+                    eb.withThumbnail(avatar.replace(".jpg", ".gif"));
+                    eb.withFooterText("Member #" + (guild.getUsers().indexOf(user) + 1) + " | " + "ID: " + id);
+                    eb.appendField("Account Created", accCreated.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(accCreated, LocalDateTime.now()) + " days ago", true);
+                    eb.appendField("Guild Joined", guildJoinDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(guildJoinDate, LocalDateTime.now()) + " days ago", true);
+                    eb.appendField("Roles", roles.toString().replace("[", "").replace("]", ""), false);
+                    eb.withColor(roles.get(0).getColor());
+                    EmbedObject embed = eb.build();
+                    BufferedMessage.sendEmbed(Eschamali.client, event, embed);
                 }
             }
         }
@@ -256,7 +257,7 @@ public class GeneralListener {
         long months = tempDateTime.until(toDateTime, ChronoUnit.MONTHS);
         tempDateTime = tempDateTime.plusMonths(months);
 
-        long days = tempDateTime.until(toDateTime, ChronoUnit.DAYS);
+        long days = tempDateTime.until(toDateTime, DAYS);
         tempDateTime = tempDateTime.plusDays(days);
 
 
