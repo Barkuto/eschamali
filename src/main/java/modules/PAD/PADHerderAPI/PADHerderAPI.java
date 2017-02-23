@@ -473,7 +473,7 @@ public class PADHerderAPI {
                         atts[1] = 4;
                         break;
                     default:
-                        atts[0] = -1;
+                        atts[1] = -1;
                         break;
                 }
                 attIndex = i;
