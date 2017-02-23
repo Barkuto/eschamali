@@ -582,7 +582,6 @@ public class RolesListener {
             user.addRole(tmpRole);
             user.removeRole(tmpRole);
             tmpRole.delete();
-            BufferedMessage.sendMessage(RolesModule.client, channel, "Your roles should be fixed.");
         } catch (MissingPermissionsException e) {
             e.printStackTrace();
             return false;
