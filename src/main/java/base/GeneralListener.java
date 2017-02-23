@@ -191,7 +191,17 @@ public class GeneralListener {
                     eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
                     eb.appendField("Account Created", accCreated.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(accCreated, LocalDateTime.now()) + " days ago", true);
                     eb.appendField("Guild Joined", guildJoinDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(guildJoinDate, LocalDateTime.now()) + " days ago", true);
-                    eb.appendField("Roles", roles.toString().replace("[", "").replace("]", ""), false);
+                    String rolesString = roles.toString().replace("[", "").replace("]", "");
+                    int count = 0;
+                    for (IRole r : roles) {
+                        if (r == guild.getEveryoneRole()) {
+                            count++;
+                        }
+                    }
+                    if (count > 1) {
+                        rolesString = rolesString.replaceFirst(", @everyone", "");
+                    }
+                    eb.appendField("Roles", rolesString, false);
                     eb.withColor(roles.get(0).getColor());
                     EmbedObject embed = eb.build();
                     BufferedMessage.sendEmbed(Eschamali.client, event, embed);
