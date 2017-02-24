@@ -23,6 +23,11 @@
             <name>jitpack-center</name>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>central</id>
+            <name>bintray</name>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -37,15 +42,9 @@
             <version>2.7.0</version>
         </dependency>
         <dependency>
-            <groupId>net.dv8tion</groupId>
-            <artifactId>d4j-player</artifactId>
-            <version>0.2.3_24</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.github.austinv11</groupId>
-                    <artifactId>Discord4J</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.sedmelluq</groupId>
+            <artifactId>lavaplayer</artifactId>
+            <version>1.2.13</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>

@@ -121,7 +121,7 @@ public class OwnerListener {
                     }
                 } else if (cmd.equalsIgnoreCase("uptime") || cmd.equalsIgnoreCase("up")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
-                } else if (cmd.equalsIgnoreCase("shutdown")) {
+                } else if (cmd.equalsIgnoreCase("shutdown") || cmd.equalsIgnoreCase("sd")) {
                     BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Shutting down...");
                     List<IVoiceChannel> connectedVoice = Eschamali.client.getConnectedVoiceChannels();
                     for (IVoiceChannel v : connectedVoice) {

@@ -1,19 +1,21 @@
 package modules.Music;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.PermissionsListener;
-import net.dv8tion.d4j.player.MusicPlayer;
-import net.dv8tion.jda.player.Playlist;
-import net.dv8tion.jda.player.source.AudioInfo;
-import net.dv8tion.jda.player.source.AudioSource;
-import net.dv8tion.jda.player.source.AudioTimestamp;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.audio.IAudioManager;
-import sx.blah.discord.handle.audio.impl.DefaultProvider;
+import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -21,273 +23,280 @@ import sx.blah.discord.util.MissingPermissionsException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
 
 /**
- * Created by Iggie on 8/21/2016.
+ * Created by Iggie on 2/23/2017.
  */
 public class MusicListener {
     public static String prefix = "!";
-    private final float DEFAULT_VOLUME = 0.5f;
+    private AudioPlayerManager playerManager;
+    private HashMap<String, GuildMusicManager> guildManagers;
+
+    @EventSubscriber
+    public void onJoin(GuildCreateEvent e) {
+        playerManager = new DefaultAudioPlayerManager();
+        guildManagers = new HashMap<>();
+        AudioSourceManagers.registerLocalSource(playerManager);
+        AudioSourceManagers.registerRemoteSources(playerManager);
+    }
 
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+            String message = event.getMessage().getContent();
+            IUser user = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
             IChannel channel = event.getMessage().getChannel();
             if (PermissionsListener.isModuleOn(guild, MusicModule.name)
                     && PermissionsListener.canModuleInChannel(guild, MusicModule.name, channel)) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
-                    String msg = event.getMessage().getContent();
-                    String[] split = msg.split(" ");
-                    String cmd = split[0].replace(prefix, "");
-                    IUser user = event.getMessage().getAuthor();
-
-                    IAudioManager manager = guild.getAudioManager();
-                    MusicPlayer player;
-                    if (manager.getAudioProvider() instanceof DefaultProvider) {
-                        player = new MusicPlayer();
-                        player.setVolume(DEFAULT_VOLUME);
-                        manager.setAudioProvider(player);
-                    } else {
-                        player = (MusicPlayer) manager.getAudioProvider();
+                    String[] args = message.split(" ");
+                    args[0] = args[0].replace(prefix, "").trim();
+                    String cmd = args[0];
+                    String argsconcat;
+                    try {
+                        argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
+                    } catch (StringIndexOutOfBoundsException e) {
+                        argsconcat = "";
                     }
 
-                    if (cmd.equalsIgnoreCase("join")) {
-                        List<IVoiceChannel> vChannels = user.getConnectedVoiceChannels();
-                        if (vChannels.size() > 0) {
-                            try {
-                                vChannels.get(0).join();
-                            } catch (MissingPermissionsException e) {
-                                BufferedMessage.sendMessage(MusicModule.client, event, "I do not have permission to join your voice channel.");
-                            }
-                        } else {
-                            BufferedMessage.sendMessage(MusicModule.client, event, "You must join a voice channel first.");
-                        }
-                    } else if (cmd.equalsIgnoreCase("leave")) {
-                        List<IVoiceChannel> connectedVC = MusicModule.client.getConnectedVoiceChannels();
-                        for (IVoiceChannel vc : connectedVC) {
-                            if (vc.getGuild().equals(guild)) {
-                                vc.leave();
-                            }
-                        }
-                    } else if (cmd.equalsIgnoreCase("play")) {
-                        if (player.isPlaying()) {
-                            BufferedMessage.sendMessage(MusicModule.client, event, "Player is already playing!");
-                            return;
-                        } else if (player.isPaused()) {
-                            player.play();
-                            BufferedMessage.sendMessage(MusicModule.client, event, "Playback has been **RESUMED**.");
-                        } else {
-                            if (player.getAudioQueue().isEmpty())
-                                BufferedMessage.sendMessage(MusicModule.client, event, "The current audio queue is empty! Add something to the queue first!");
-                            else {
-                                player.play();
-                                BufferedMessage.sendMessage(MusicModule.client, event, "Player has started playing!");
-                            }
-                        }
-                    } else if (cmd.equalsIgnoreCase("stop")) {
-                        player.stop();
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Playback has been **STOPPED**.");
-                    } else if (cmd.equalsIgnoreCase("pause")) {
-                        player.pause();
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Playback has been **PAUSED**.");
-                    } else if (cmd.equalsIgnoreCase("reset")) {
-                        player.stop();
-                        player = new MusicPlayer();
-                        player.setVolume(DEFAULT_VOLUME);
-                        manager.setAudioProvider(player);
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Playback has been **RESET**.");
-                    } else if (cmd.equalsIgnoreCase("skip")) {
-                        player.skipToNext();
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Skipped current song.");
-                    } else if (cmd.equalsIgnoreCase("next")) {
-                        if (player.isPlaying()) {
-                            if (player.getAudioQueue().size() > 1) {
-                                AudioInfo info = player.getAudioQueue().get(0).getInfo();
-                                if (info.getError() == null) {
-                                    BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NEXT UP** :notes:\n`" + info.getDuration().getTimestamp() + "` __" + info.getTitle() + "__");
-                                } else {
-                                    BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NEXT UP** :notes:\n`" + "(N/A)" + "` __" + player.getAudioQueue().get(0).getSource() + "__");
-                                }
-                            } else {
-                                BufferedMessage.sendMessage(MusicModule.client, event, "There is nothing next!");
-                            }
-                        } else {
-                            BufferedMessage.sendMessage(MusicModule.client, event, "There is nothing playing!");
-                        }
-                    } else if (cmd.equals("nowplaying") || cmd.equalsIgnoreCase("np") || cmd.equalsIgnoreCase("playing")) {
-                        if (player.isPlaying()) {
-                            AudioTimestamp currentTime = player.getCurrentTimestamp();
-                            AudioInfo info = player.getCurrentAudioSource().getInfo();
-                            if (info.getError() == null) {
-                                BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NOW PLAYING** :notes:\n`" + currentTime.getTimestamp() + "/" + info.getDuration().getTimestamp() + "` __" + info.getTitle() + "__ \n`" + info.getOrigin() + "`");
-                            } else {
-                                BufferedMessage.sendMessage(MusicModule.client, event, ":notes: **NOW PLAYING** :notes:\n`" + currentTime.getTimestamp() + "/(N/A)" + "` __" + player.getCurrentAudioSource().getSource() + "__");
-                            }
-                        } else {
-                            BufferedMessage.sendMessage(MusicModule.client, event, "There is nothing playing!");
-                        }
+                    GuildMusicManager guildManager = getGuildManager(guild);
+                    if (cmd.equalsIgnoreCase("join") || cmd.equalsIgnoreCase("j")) {
+                        joinVoiceChannel(user, guild, channel);
+                    } else if (cmd.equalsIgnoreCase("leave") || cmd.equalsIgnoreCase("l")) {
+                        leaveVoiceChannel(guild);
                     } else if (cmd.equalsIgnoreCase("queue") || cmd.equalsIgnoreCase("q")) {
-                        if (split.length > 1) {
-                            boolean connected = false;
-                            List<IVoiceChannel> connectedVChannels = MusicModule.client.getConnectedVoiceChannels();
-                            for (IVoiceChannel vc : connectedVChannels) {
-                                if (vc.getGuild().equals(guild)) {
-                                    connected = true;
-                                }
+                        if (args.length > 1) {
+                            if (!argsconcat.contains("www.") || !argsconcat.contains(".com")
+                                    || !argsconcat.contains("youtu.be") || !argsconcat.contains("/")) {
+                                args[1] = youtubeVideoFromKeywords(argsconcat);
                             }
-                            if (!connected) {
-                                try {
-                                    user.getConnectedVoiceChannels().get(0).join();
-                                } catch (MissingPermissionsException e) {
-                                    BufferedMessage.sendMessage(MusicModule.client, event, "I do not have permission to join your voice channel.");
+                            playerManager.loadItemOrdered(guildManager, args[1], new AudioLoadResultHandler() {
+                                @Override
+                                public void trackLoaded(AudioTrack audioTrack) {
+                                    guildManager.scheduler.queue(audioTrack);
+                                    BufferedMessage.sendMessage(MusicModule.client, event, "Queued `" + audioTrack.getInfo().title + "`");
                                 }
-                            }
-                            if (split[1].contains("youtu")) {//URL load
-                                String url = split[1];
-                                if (url.contains("list=")) {
-                                    url = url.substring(0, url.indexOf("list="));
-                                }
-                                Playlist playlist = Playlist.getPlaylist(url);
-                                List<AudioSource> sources = new LinkedList<AudioSource>(playlist.getSources());
 
-                                if (sources.size() > 1) {
-                                    //future playlist handling?
-                                } else {
-                                    AudioSource source = sources.get(0);
-                                    AudioInfo info = source.getInfo();
-                                    if (info.getError() == null) {
-                                        if (info.getDuration().getHours() >= 1) {
-                                            BufferedMessage.sendMessage(MusicModule.client, event, "That song is too long to queue.");
-                                            return;
-                                        }
-                                        player.getAudioQueue().add(source);
-                                        BufferedMessage.sendMessage(MusicModule.client, event, "Queued: " + info.getTitle());
-                                        if (player.isStopped()) {
-                                            player.play();
-                                        }
-                                    } else {
-                                        BufferedMessage.sendMessage(MusicModule.client, event, "There was a problem while loading that video.");
-                                    }
+                                @Override
+                                public void playlistLoaded(AudioPlaylist audioPlaylist) {
+                                    //Load playlist handling
                                 }
-                            } else {//keyword search
-                                String query = "";
-                                for (int i = 1; i < split.length; i++) {
-                                    query += split[i] + "+";
-                                }
-                                query = query.substring(0, query.lastIndexOf('+'));
-                                try {
-                                    URL page = new URL("https://www.youtube.com/results?search_query=" + query);
-                                    Document doc = Jsoup.parse(page, 15000);
-                                    Elements es = doc.select("a[aria-hidden]");
-                                    int i = 0;
-                                    Element e = es.get(i);
-                                    while (e.toString().contains("googleads")) {
-                                        i++;
-                                        e = es.get(i);
-                                    }
-                                    String part = e.toString();
-                                    String youtubeurl = "https://www.youtube.com" + part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
 
-                                    AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
-                                    AudioInfo info = source.getInfo();
-                                    if (info.getError() == null) {
-                                        if (info.getDuration().getHours() >= 1) {
-                                            BufferedMessage.sendMessage(MusicModule.client, event, "The found song is too long to queue.");
-                                            return;
-                                        }
-                                    }
-                                    player.getAudioQueue().add(source);
-                                    BufferedMessage.sendMessage(MusicModule.client, event, "Queued: " + source.getInfo().getTitle());
-                                    if (player.isStopped()) {
-                                        player.play();
-                                    }
-                                } catch (MalformedURLException e) {
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                @Override
+                                public void noMatches() {
+                                    //Search by keyword
+                                    BufferedMessage.sendMessage(MusicModule.client, event, "Nothing found from \"" + args[1] + "\"");
                                 }
-                            }
+
+                                @Override
+                                public void loadFailed(FriendlyException e) {
+                                    BufferedMessage.sendMessage(MusicModule.client, event, "Loading failed.");
+                                }
+                            });
+                            joinVoiceChannel(user, guild, channel);
                         } else {
-                            List<AudioSource> queue = player.getAudioQueue();
-                            if (queue.isEmpty()) {
-                                BufferedMessage.sendMessage(MusicModule.client, event, "The queue is currently empty!");
-                            } else {
-                                String output = "__Queued: " + queue.size() + "__\n";
-                                for (int i = 0; i < queue.size(); i++) {
-                                    AudioInfo info = queue.get(i).getInfo();
-                                    if (info == null) {
-                                        output += "Info Error\n";
-                                    } else {
-                                        output += "`";
-                                        AudioTimestamp time = info.getDuration();
-                                        if (time == null) {
-                                            output += "N/A";
-                                        } else {
-                                            output += info.getDuration().getTimestamp();
-                                        }
-                                        output += "` " + info.getTitle() + "\n";
-                                    }
+                            AudioTrack currentTrack = guildManager.player.getPlayingTrack();
+                            BlockingQueue<AudioTrack> queue = guildManager.scheduler.getQueue();
+                            String out = "```NOW PLAYING: ";
+                            out += currentTrack != null ? currentTrack.getInfo().title : "Nothing is playing, queue something!";
+                            out += "\nQUEUED:\n";
+                            int i = 0;
+                            for (AudioTrack t : queue) {
+                                if (i == 10) {
+                                    break;
+                                } else {
+                                    AudioTrackInfo info = t.getInfo();
+                                    int[] length = parseLength(info.length);
+                                    out += (i + 1) + ". " + String.format("%02d:%02d:%02d - ", length[0], length[1], length[2]) + info.title + "\n";
+                                    i++;
                                 }
-                                BufferedMessage.sendMessage(MusicModule.client, event, output);
                             }
+                            BufferedMessage.sendMessage(MusicModule.client, event, out + "```");
                         }
                     } else if (cmd.equalsIgnoreCase("queuerelated") || cmd.equalsIgnoreCase("qr")) {
-                        //<div class="watch-sidebar-section">
-                        //data-visibility-tracking="
-
-                        if (!player.isPlaying()) {
-                            BufferedMessage.sendMessage(MusicModule.client, event, "There is nothing playing right now!");
-                            return;
+                        BlockingQueue<AudioTrack> queue = guildManager.scheduler.getQueue();
+                        AudioTrack lastInQueue = guildManager.player.getPlayingTrack();
+                        for (AudioTrack t : queue) {
+                            lastInQueue = t;
                         }
-                        String aSource = "";
-                        List<AudioSource> queue = player.getAudioQueue();
-                        if (queue.size() == 0) {
-                            aSource = player.getCurrentAudioSource().getSource();
-                        } else {
-                            aSource = queue.get(queue.size() - 1).getSource();
-                        }
-                        if (aSource.contains("youtu")) {
-                            try {
-                                URL page = new URL(aSource);
-                                Document d = Jsoup.parse(page, 15000);
-                                Elements elements = d.select("a[href]");
-                                Element e = elements.get(0);
-                                for (int i = 0; i < elements.size(); i++) {
-                                    if (elements.get(i).toString().contains("/watch")) {
-                                        e = elements.get(i);
-                                        break;
+                        if (lastInQueue != null) {
+                            String url = getRelatedYoutube("https://www.youtube.com/watch?v=" + lastInQueue.getInfo().identifier);
+                            if (url != null) {
+                                playerManager.loadItemOrdered(guildManager, url, new AudioLoadResultHandler() {
+                                    @Override
+                                    public void trackLoaded(AudioTrack audioTrack) {
+                                        guildManager.scheduler.queue(audioTrack);
+                                        BufferedMessage.sendMessage(MusicModule.client, event, "Queued `" + audioTrack.getInfo().title + "`");
                                     }
-                                }
-                                String part = e.toString();
-                                String watchid = part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
-                                String youtubeurl = "https://www.youtube.com" + watchid;
-                                System.out.println(youtubeurl);
 
-                                AudioSource source = Playlist.getPlaylist(youtubeurl).getSources().get(0);
-                                AudioInfo info = source.getInfo();
-                                if (info.getError() == null) {
-                                    if (info.getDuration().getHours() >= 1) {
-                                        BufferedMessage.sendMessage(MusicModule.client, event, "The related song is too long to queue.");
-                                        return;
+                                    @Override
+                                    public void playlistLoaded(AudioPlaylist audioPlaylist) {
+                                        //Load playlist handling
                                     }
-                                }
-                                player.getAudioQueue().add(source);
-                                BufferedMessage.sendMessage(MusicModule.client, event, "Queued related: " + source.getInfo().getTitle());
-                                if (player.isStopped()) {
-                                    player.play();
-                                }
-                            } catch (MalformedURLException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
+
+                                    @Override
+                                    public void noMatches() {
+                                        //Search by keyword
+                                        BufferedMessage.sendMessage(MusicModule.client, event, "Nothing found from \"" + args[1] + "\"");
+                                    }
+
+                                    @Override
+                                    public void loadFailed(FriendlyException e) {
+                                        BufferedMessage.sendMessage(MusicModule.client, event, "Loading failed.");
+                                    }
+                                });
                             }
                         }
+                    } else if (cmd.equalsIgnoreCase("skip") || cmd.equalsIgnoreCase("s")) {
+                        if (guildManager.scheduler.isPlaying()) {
+                            guildManager.scheduler.nextTrack();
+                            BufferedMessage.sendMessage(MusicModule.client, event, "Current track was skipped.");
+                        }
+                    } else if (cmd.equalsIgnoreCase("pause") || cmd.equalsIgnoreCase("p")) {
+                        if (guildManager.scheduler.isPlaying()) {
+                            guildManager.player.setPaused(true);
+                            BufferedMessage.sendMessage(MusicModule.client, event, "Player was paused.");
+                        }
+                    } else if (cmd.equalsIgnoreCase("unpause") || cmd.equalsIgnoreCase("up")
+                            || cmd.equalsIgnoreCase("resume") || cmd.equalsIgnoreCase("r")) {
+                        if (guildManager.player.isPaused()) {
+                            guildManager.player.setPaused(false);
+                            BufferedMessage.sendMessage(MusicModule.client, event, "Player was unpaused.");
+                        }
+                    } else if (cmd.equalsIgnoreCase("nowplaying") || cmd.equalsIgnoreCase("np")
+                            || cmd.equalsIgnoreCase("currenttrack") || cmd.equalsIgnoreCase("ct")) {
+                        AudioTrack currentTrack = guildManager.player.getPlayingTrack();
+                        int[] currentTime = parseLength(currentTrack.getPosition());
+                        int[] totalLength = parseLength(currentTrack.getDuration());
+                        String current = String.format("%02d:%02d:%02d", currentTime[0], currentTime[1], currentTime[2]);
+                        String end = String.format("%02d:%02d:%02d", totalLength[0], totalLength[1], totalLength[2]);
+                        BufferedMessage.sendMessage(MusicModule.client, event, "Now Playing: **" + currentTrack.getInfo().title + "** `" + current + "/" + end + "`");
+                    } else if (cmd.equalsIgnoreCase("stop")) {
+                        while (guildManager.player.getPlayingTrack() != null) {
+                            guildManager.scheduler.nextTrack();
+                        }
+                        leaveVoiceChannel(guild);
+                        BufferedMessage.sendMessage(MusicModule.client, event, "Player was stopped.");
                     }
                 }
             }
         }
     }
+
+    private GuildMusicManager getGuildManager(IGuild guild) {
+        GuildMusicManager guildManager = guildManagers.get(guild.getID());
+        if (guildManager == null) {
+            guildManager = new GuildMusicManager(playerManager);
+            guildManager.player.setVolume(50);
+            guildManagers.put(guild.getID(), guildManager);
+        }
+        guild.getAudioManager().setAudioProvider(guildManager.getAudioProvider());
+        return guildManager;
+    }
+
+    private void connectToVoiceOf(IUser user, IGuild guild, IChannel channel) {
+        IVoiceChannel userVC = null;
+        if (user.getConnectedVoiceChannels().size() > 0) {
+            userVC = user.getConnectedVoiceChannels().get(0);
+            for (IVoiceChannel vc : guild.getVoiceChannels()) {
+                if (vc == userVC) {
+                    try {
+                        vc.join();
+                        break;
+                    } catch (MissingPermissionsException e) {
+                        BufferedMessage.sendMessage(MusicModule.client, channel, "Missing permission to join your channel.");
+                    }
+                }
+            }
+        } else {
+            BufferedMessage.sendMessage(MusicModule.client, channel, "You are not in a voice channel.");
+        }
+    }
+
+    private boolean isConnectedToVC(IGuild guild) {
+        for (IVoiceChannel vc : guild.getVoiceChannels()) {
+            if (vc.isConnected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void joinVoiceChannel(IUser user, IGuild guild, IChannel channel) {
+        if (!isConnectedToVC(guild)) {
+            connectToVoiceOf(user, guild, channel);
+        }
+    }
+
+    private void leaveVoiceChannel(IGuild guild) {
+        for (IVoiceChannel vc : guild.getVoiceChannels()) {
+            if (vc.isConnected()) {
+                vc.leave();
+                break;
+            }
+        }
+    }
+
+    private int[] parseLength(long longLength) {
+        int sec = (int) (longLength / 1000);
+        int min = sec / 60;
+        int hr = min / 60;
+        sec = sec - min * 60;
+        min = min - hr * 60;
+        return new int[]{hr, min, sec};
+    }
+
+    private String youtubeVideoFromKeywords(String keywords) {
+        String query = keywords.replaceAll(" ", "+");
+        try {
+            URL page = new URL("https://www.youtube.com/results?search_query=" + query);
+            Document doc = Jsoup.parse(page, 15000);
+            Elements es = doc.select("a[aria-hidden]");
+            int i = 0;
+            Element e = es.get(i);
+            while (e.toString().contains("googleads")) {
+                i++;
+                e = es.get(i);
+            }
+            String part = e.toString();
+            String youtubeurl = "https://www.youtube.com" + part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
+            return youtubeurl;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String getRelatedYoutube(String url) {
+        if (url.contains("youtube.com") || url.contains("youtu.be")) {
+            try {
+                URL page = new URL(url);
+                Document d = Jsoup.parse(page, 15000);
+                Elements elements = d.select("a[href]");
+                Element e = elements.get(0);
+                for (int i = 0; i < elements.size(); i++) {
+                    if (elements.get(i).toString().contains("/watch")) {
+                        e = elements.get(i);
+                        break;
+                    }
+                }
+                String part = e.toString();
+                String watchid = part.substring(part.indexOf("href=") + 6, part.indexOf("class=") - 2);
+                String youtubeurl = "https://www.youtube.com" + watchid;
+                System.out.println(youtubeurl);
+                return youtubeurl;
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
 }
