@@ -140,9 +140,6 @@ public class PADHerderAPI {
                 ArrayList<Monster> majorityMonstersWithMajorityAttr = new ArrayList<>();
                 for (int i = 0; i < allSimilar.size(); i++) {
                     Monster m = allSimilar.get(i);
-//                    if (m.getName().equalsIgnoreCase(keywords)) {
-//                        return m;
-//                    }
                     Attribute element = m.getElement().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement())];
                     if (element == majorityAttr)
                         majorityMonstersWithMajorityAttr.add(m);
@@ -201,6 +198,7 @@ public class PADHerderAPI {
 
         ArrayList<Monster> monsters = new ArrayList<>();
         ArrayList<Monster> exactMonsters = new ArrayList<>();
+        ArrayList<Monster> superExactMonsters = new ArrayList<>();
         try {
             int id = Integer.parseInt(keywords.trim());
             monsters.add(getMonster(id));
@@ -246,18 +244,21 @@ public class PADHerderAPI {
                             }
                         }
                     }
-                    boolean hasAMatch = false;
+                    int matches = 0;
                     for (int j = 0; j < found.length; j++) {
                         if (found[j])
-                            hasAMatch = true;
+                            matches++;
                     }
-                    if (hasAMatch) {
+                    if (matches == keywordSplit.length)
+                        superExactMonsters.add(monsters.get(i));
+                    else if (matches > 0)
                         exactMonsters.add(monsters.get(i));
-                    }
                 }
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }
+            if (superExactMonsters.size() > 0)
+                return superExactMonsters;
             if (exactMonsters.size() > 0)
                 return exactMonsters;
             return monsters;
@@ -473,6 +474,7 @@ public class PADHerderAPI {
                         atts[1] = 4;
                         break;
                     default:
+                        atts[0] = -1;
                         atts[1] = -1;
                         break;
                 }
