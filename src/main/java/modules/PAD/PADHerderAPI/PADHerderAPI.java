@@ -474,7 +474,8 @@ public class PADHerderAPI {
                         atts[1] = 4;
                         break;
                     default:
-                        atts[0] = -1;
+                        if (s.length() == 2)
+                            atts[0] = -1;
                         atts[1] = -1;
                         break;
                 }
