@@ -99,10 +99,6 @@ public class PADListener {
                     } else if (cmd.equalsIgnoreCase("as")) {
                         //List monsters with keyword in active?
                         //List monsters with that active "type"?
-                    } else if (cmd.equalsIgnoreCase("reloadabbr") || cmd.equalsIgnoreCase("ra")) {
-
-                    } else if (cmd.equalsIgnoreCase("addabbr") || cmd.equalsIgnoreCase("aa")) {
-
                     } else if (cmd.equalsIgnoreCase("guerilla") || cmd.equalsIgnoreCase("g")) {
                         LocalDate ld = LocalDate.now();
                         Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
@@ -200,14 +196,14 @@ public class PADListener {
                     } else if (cmd.equalsIgnoreCase("updatejson")) {
                         PADHerderAPI.updateJSON();
                         BufferedMessage.sendMessage(PADModule.client, event, "JSON updated.");
+                    } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
+
+                    } else if (cmd.equalsIgnoreCase("deletenickname") || cmd.equalsIgnoreCase("dn")) {
+
                     }
                 }
             }
         }
-    }
-
-    public void loadAbbr() {
-
     }
 
     public String searchMonster(String keyword) {

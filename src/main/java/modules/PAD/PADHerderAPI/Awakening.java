@@ -26,7 +26,7 @@ public enum Awakening {
     HEALERKILLER("Healer Killer", "HealerKill", null), BALANCEDKILLER("Balanced Killer", "BalancedKill", null), AWAKENKILLER("Awaken Material Killer", "AwakenKill", null),
     ENHANCEKILLER("Enhance Material Killer", "EnhanceKill", null), VENDORKILLER("Vendor Material Killer", "VendorKill", null), EVOKILLER("Evolve Killer", "EvoKill", null),
 
-    COOP("Multi Boost", "CoopBoost", null), COMBOBOOST("Enhanced Combo", "7cBoost", null);
+    COOP("Multi Boost", "CoopBoost", null), COMBOBOOST("Enhanced Combo", "7cBoost", null), GAURDBREAK("Guard Break", "DefBreak", null);
 
     private String name;
     private String shortName;
