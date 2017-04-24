@@ -106,6 +106,8 @@ public class YGOListener {
                         } catch (FileNotFoundException e) {
                             updateCards();
                             BufferedMessage.sendMessage(YGOModule.client, event, "Card database was missing, but has been updated. Please try again.");
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -113,9 +115,10 @@ public class YGOListener {
         }
     }
 
-    private JsonObject getCard(String keywords) throws FileNotFoundException {
+    private JsonObject getCard(String keywords) throws IOException {
         JsonParser jsonParser = new JsonParser();
-        JsonArray cards = jsonParser.parse(new FileReader(new File(databaseOutput + databaseFile))).getAsJsonArray();
+        FileReader fr = new FileReader(new File(databaseOutput + databaseFile));
+        JsonArray cards = jsonParser.parse(fr).getAsJsonArray();
         for (JsonElement card : cards) {
             JsonObject obj = card.getAsJsonObject();
             String name = obj.get("name").getAsString().toLowerCase();
@@ -126,9 +129,11 @@ public class YGOListener {
                     matches++;
             }
             if (matches == keywordSplit.length) {
+                fr.close();
                 return obj;
             }
         }
+        fr.close();
         return null;
     }
 
@@ -146,7 +151,12 @@ public class YGOListener {
                     totalCards += jsonArray.size();
                     cards.addAll(jsonArray);
                 } else {
-                    Writer writer = new FileWriter(databaseOutput + databaseFile);
+                    File f = new File(databaseOutput + databaseFile);
+                    if (!f.exists()) {
+                        f.getParentFile().mkdirs();
+                        f.createNewFile();
+                    }
+                    Writer writer = new FileWriter(f);
                     Gson gson = new GsonBuilder().create();
                     gson.toJson(cards, writer);
                     writer.close();
