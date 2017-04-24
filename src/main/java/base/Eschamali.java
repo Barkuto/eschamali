@@ -10,6 +10,8 @@ import modules.Parrot.ParrotModule;
 import modules.Permissions.PermissionsListener;
 import modules.Reactions.ReactionsModule;
 import modules.Roles.RolesModule;
+import modules.Yugioh.YGOListener;
+import modules.Yugioh.YGOModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
@@ -59,6 +61,7 @@ public class Eschamali {
         AdminModule admin = new AdminModule();
         CustomCommandsModule custom = new CustomCommandsModule();
         ReactionsModule reactions = new ReactionsModule();
+        YGOModule ygo = new YGOModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
@@ -69,6 +72,7 @@ public class Eschamali {
         defaultmodules.put(admin, true);
         defaultmodules.put(custom, true);
         defaultmodules.put(reactions, true);
+        defaultmodules.put(ygo, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
@@ -80,6 +84,7 @@ public class Eschamali {
         modules.add(admin);
         modules.add(custom);
         modules.add(reactions);
+        modules.add(ygo);
         modules.sort(new Comparator<IModule>() {
             @Override
             public int compare(IModule o1, IModule o2) {
