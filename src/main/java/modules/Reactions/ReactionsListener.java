@@ -27,7 +27,7 @@ public class ReactionsListener {
             if (PermissionsListener.isModuleOn(guild, ReactionsModule.name) && PermissionsListener.canModuleInChannel(guild, ReactionsModule.name, channel)) {
                 if (message.replace("\'", "").toLowerCase().contains("dont quote me")) {
                     BufferedMessage.sendMessage(ReactionsModule.client, event, "\"" + message + "\" -" + author.getName());
-                } else if (message.contains("alot")) {
+                } else if (message.toLowerCase().contains("alot")) {
                     BufferedMessage.sendMessage(ReactionsModule.client, event, "http://thewritepractice.com/wp-content/uploads/2012/05/Alot-vs-a-lot1-600x450.png");
                 }
             }
