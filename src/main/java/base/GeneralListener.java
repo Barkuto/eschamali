@@ -216,7 +216,7 @@ public class GeneralListener {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
                 String msg = event.getMessage().getContent();
                 String[] args = msg.split(" ");
-                if (msg.startsWith("!help") || msg.startsWith("!h")) {
+                if (msg.startsWith("!help")) {
                     if (args.length == 1) {
                         String output = "__Eschamali Bot commands - Prefix:__ !\n";
                         ArrayList<String> commands = new ArrayList<String>();

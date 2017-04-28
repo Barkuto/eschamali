@@ -66,8 +66,8 @@ public class CustomCommandsListener {
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
-                    if (commands.containsKey(cmd)) {
-                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, commands.get(cmd));
+                    if (commands.containsKey(cmd.toLowerCase())) {
+                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, commands.get(cmd.toLowerCase()));
                     } else {
                         if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)) {
                             String commandName = "";
