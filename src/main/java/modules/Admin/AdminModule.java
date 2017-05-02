@@ -61,6 +61,7 @@ public class AdminModule implements IModule, ICommands {
         cmds.add("`warn`: Warns user, requires BAN or KICK permission. **USAGE**: warn @user");
         cmds.add("`warnings`: Shows how many warnings you have. **USAGE**: warnings");
         cmds.add("`warnings`: Shows how many warnings another use has, requires BAN or KICK permission. **USAGE**: warnings @user");
+        cmds.add("`addbannedword`: Adds a word to ban from people to say, requires some MANAGE permission. **USAGE**: addbannedword <word>");
         return cmds;
     }
 }

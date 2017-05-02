@@ -34,6 +34,8 @@ public class AdminListener {
     private String table2col2 = "strikes";
     private String[] table2Cols = {table2col1, table2col2};
 
+    private String bannedField = "bannedwords";
+
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
         IGuild guild = event.getGuild();
@@ -178,7 +180,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equals("mute")) {
+                    } else if (cmd.equalsIgnoreCase("mute")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
@@ -217,7 +219,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equals("unmute")) {
+                    } else if (cmd.equalsIgnoreCase("unmute")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
@@ -242,7 +244,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equals("muterole")) {
+                    } else if (cmd.equalsIgnoreCase("muterole")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length == 1) {
                                 BufferedMessage.sendMessage(AdminModule.client, event, "The current mute role is: " + guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2)));
@@ -283,7 +285,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equals("lock")) {
+                    } else if (cmd.equalsIgnoreCase("lock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             try {
                                 BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
@@ -296,7 +298,7 @@ public class AdminListener {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (cmd.equals("unlock")) {
+                    } else if (cmd.equalsIgnoreCase("unlock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             try {
                                 channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
@@ -314,7 +316,7 @@ public class AdminListener {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (cmd.equals("warn") || cmd.equals("strike")) {
+                    } else if (cmd.equalsIgnoreCase("warn") || cmd.equalsIgnoreCase("strike")) {
                         if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
                             if (args.length > 1) {
                                 int strikesToAdd = 1;
@@ -355,7 +357,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equals("warnings")) {
+                    } else if (cmd.equalsIgnoreCase("warnings")) {
                         if (args.length == 1) {
                             String userID = author.getID();
                             String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
@@ -376,6 +378,46 @@ public class AdminListener {
                                 BufferedMessage.sendMessage(AdminModule.client, event, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
                             }
                         }
+                    } else if (cmd.equalsIgnoreCase("addbannedword") || cmd.equalsIgnoreCase("addbanword")
+                            || cmd.equalsIgnoreCase("filter") || cmd.equalsIgnoreCase("abw")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
+                                || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
+                            perms.addPerms(tableName, col1, bannedField, col2, argsconcat);
+                            BufferedMessage.sendMessage(AdminModule.client, event, "Banned word/phrase was added.");
+                        }
+                    } else if (cmd.equalsIgnoreCase("deletebannedword") || cmd.equalsIgnoreCase("delbanword")
+                            || cmd.equalsIgnoreCase("unfilter") || cmd.equalsIgnoreCase("dbw")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
+                                || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
+                            String wordToDelete = argsconcat;
+                            String[] bannedWords = perms.getPerms(tableName, col1, bannedField, col2).split(";");
+                            for (int i = 0; i < bannedWords.length; i++) {
+                                if (bannedWords[i].equalsIgnoreCase(wordToDelete)) {
+                                    bannedWords[i] = "";
+                                    break;
+                                }
+                            }
+                            perms.deletePerms(tableName, col1, bannedField);
+                            for (int i = 0; i < bannedWords.length; i++) {
+                                if (bannedWords[i].length() > 0) {
+                                    perms.addPerms(tableName, col1, bannedField, col2, bannedWords[i]);
+                                }
+                            }
+                            BufferedMessage.sendMessage(AdminModule.client, event, "Banned word/phrase was deleted.");
+                        }
+                    } else if (cmd.equalsIgnoreCase("bannedwords") || cmd.equalsIgnoreCase("bw")) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
+                                || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
+                            String[] bannedWords = perms.getPerms(tableName, col1, bannedField, col2).split(";");
+                            String output = "`Banned words:` ";
+                            for (int i = 0; i < bannedWords.length; i++) {
+                                output += bannedWords[i] + ", ";
+                            }
+                            if (output.contains(",")) {
+                                output = output.substring(0, output.lastIndexOf(','));
+                            }
+                            BufferedMessage.sendMessage(AdminModule.client, event, output);
+                        }
                     }
                     perms.close();
                 }
@@ -383,7 +425,40 @@ public class AdminListener {
         }
     }
 
-    public boolean userHasPerm(IUser user, IGuild guild, Permissions perm) {
+    @EventSubscriber
+    public void checkForBannedWord(MessageReceivedEvent event) {
+        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+            String message = event.getMessage().getContent();
+            IUser author = event.getMessage().getAuthor();
+            IGuild guild = event.getMessage().getGuild();
+            IChannel channel = event.getMessage().getChannel();
+            if (PermissionsListener.isModuleOn(guild, AdminModule.name) && PermissionsListener.canModuleInChannel(guild, AdminModule.name, channel)) {
+                if (!message.startsWith(prefix)) {
+                    Permission perms = PermissionsListener.getPermissionDB(guild);
+                    String[] split = message.split(" ");
+                    String[] bannedWords = perms.getPerms(tableName, col1, "bannedwords", col2).split(";");
+                    for (int i = 0; i < split.length; i++) {
+                        for (int j = 0; j < bannedWords.length; j++) {
+                            if (split[i].equalsIgnoreCase(bannedWords[j].trim())) {
+                                try {
+                                    event.getMessage().delete();
+                                } catch (MissingPermissionsException e) {
+                                    e.printStackTrace();
+                                } catch (RateLimitException e) {
+                                    e.printStackTrace();
+                                } catch (DiscordException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                    perms.close();
+                }
+            }
+        }
+    }
+
+    private boolean userHasPerm(IUser user, IGuild guild, Permissions perm) {
         List<IRole> roles = user.getRolesForGuild(guild);
         for (IRole r : roles) {
             if (r.getPermissions().contains(perm)) {
@@ -393,7 +468,7 @@ public class AdminListener {
         return false;
     }
 
-    public String parseUserID(String arg) {
+    private String parseUserID(String arg) {
         String id = "";
         int startIndex = 2;
         if (arg.startsWith("<@!")) {
