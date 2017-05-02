@@ -355,7 +355,9 @@ public class Guerilla implements Serializable {
             }
 
             Guerilla g = new Guerilla(dungeons, dungeonLinks, a, b, c, d, e);
+//            System.out.println(g);
             g.sortByDungeonChrono();
+//            System.out.println(g);
             g.writeOut(outputPath);
             return true;
         } catch (MalformedURLException e) {
@@ -400,15 +402,6 @@ public class Guerilla implements Serializable {
             LocalTime cTime = c.get(i);
             LocalTime dTime = d.get(i);
             LocalTime eTime = e.get(i);
-
-
-        }
-        for (int i = 0; i < dungeons.size(); i++) {
-            LocalTime aTime = a.get(i);
-            LocalTime bTime = b.get(i);
-            LocalTime cTime = c.get(i);
-            LocalTime dTime = d.get(i);
-            LocalTime eTime = e.get(i);
             LocalTime earliestTime = aTime;
 
             if (bTime.compareTo(earliestTime) == -1) {
@@ -431,7 +424,7 @@ public class Guerilla implements Serializable {
         for (int i = 0; i < dungeonEarliestTimes.size(); i++) {
             int smallestIndex = 0;
             for (int j = 0; j < dungeonEarliestTimes.size(); j++) {
-                if (dungeonEarliestTimes.get(j).compareTo(dungeonEarliestTimes.get(smallestIndex)) == 1) {
+                if (dungeonEarliestTimes.get(j).compareTo(dungeonEarliestTimes.get(smallestIndex)) >= 0) {
                     if (!dungeonChrono.contains(j)) {
                         smallestIndex = j;
                     }
