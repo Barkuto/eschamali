@@ -41,7 +41,7 @@ public class AdminListener {
         IGuild guild = event.getGuild();
         Permission perms = PermissionsListener.getPermissionDB(guild);
         if (!perms.tableExists(tableName)) {
-            perms.createTable(table2Name, table1Cols, new String[]{"string", "string"}, false);
+            perms.createTable(tableName, table1Cols, new String[]{"string", "string"}, false);
         }
         if (!perms.tableExists(table2Name)) {
             perms.createTable(table2Name, table2Cols, new String[]{"string", "string"}, false);

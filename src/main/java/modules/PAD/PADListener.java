@@ -2,17 +2,16 @@ package modules.PAD;
 
 import modules.BufferedMessage.BufferedMessage;
 import modules.PAD.PADHerderAPI.*;
+import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPrivateChannel;
-import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -28,11 +27,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by Iggie on 8/25/2016.
@@ -43,6 +40,13 @@ public class PADListener {
     private TreeMap<String, String> abbrDun = new TreeMap<String, String>();
     private int maxMonNum = 3446;
     private String guerillaOutput = "modules/PAD/";
+
+    private String tableName = "pad";
+    private String col1 = "field";
+    private String col2 = "value";
+    private String[] tableCols = {col1, col2};
+
+    private String guerillasField = "guerillas";
 
     public PADListener() {
         super();
@@ -61,6 +65,63 @@ public class PADListener {
         abbrDun.put("mhera", "machine hera descended");
         abbrDun.put("mzeus", "machine zeus descended");
         abbrDun.put("z8", "zaerog descended");
+    }
+
+    @EventSubscriber
+    public void onJoin(GuildCreateEvent event) {
+        IGuild guild = event.getGuild();
+        Permission perms = PermissionsListener.getPermissionDB(guild);
+        if (!perms.tableExists(tableName)) {
+            perms.createTable(tableName, tableCols, new String[]{"string", "string"}, false);
+        }
+        perms.close();
+    }
+
+    @EventSubscriber
+    public void startPADThread(GuildCreateEvent event) {
+        LocalTime targetTime = LocalTime.of(8, 0);
+        Thread t = new Thread("guerilla") {
+            @Override
+            public void run() {
+                while (true) {
+                    LocalTime current = LocalTime.now();
+                    if (current.equals(targetTime) || current.isAfter(targetTime)) {
+                        IGuild guild = event.getGuild();
+                        Permission perms = PermissionsListener.getPermissionDB(guild);
+
+                        ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
+                        for (String s : channels) {
+                            IChannel channel = null;
+                            channel = guild.getChannelByID(s);
+                            if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
+                                    && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
+                                LocalDateTime today = LocalDateTime.now();
+                                IMessage lastMessage = null;
+                                for (IMessage m : channel.getMessages()) {
+                                    if (m.getAuthor().getID() == PADModule.client.getOurUser().getID()) {
+                                        lastMessage = m;
+                                        break;
+                                    }
+                                }
+                                if (lastMessage != null) {
+                                    LocalDateTime mDate = lastMessage.getTimestamp();
+                                    if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
+                                        outputAllGuerillaImgs(channel);
+                                } else
+                                    outputAllGuerillaImgs(channel);
+                                try {
+                                    sleep(1000 * 60 * 20);//1000 millis = 1s; "Roughly" 20min sleep
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        perms.close();
+                    }
+                }
+            }
+        };
+        t.start();
     }
 
     @EventSubscriber
@@ -140,34 +201,7 @@ public class PADListener {
                         } catch (RateLimitException e) {
                         } catch (DiscordException e) {
                         }
-                        Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
-
-                        BufferedImage pstImg = g.getTodayGuerillaImage("pst");
-                        BufferedImage mstImg = g.getTodayGuerillaImage("mst");
-                        BufferedImage cstImg = g.getTodayGuerillaImage("cst");
-                        BufferedImage estImg = g.getTodayGuerillaImage("est");
-                        ArrayList<BufferedImage> images = new ArrayList<>();
-                        images.add(pstImg);
-                        images.add(mstImg);
-                        images.add(cstImg);
-                        images.add(estImg);
-
-                        for (BufferedImage bi : images) {
-                            try {
-                                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                                ImageIO.write(bi, "png", os);
-                                InputStream is = new ByteArrayInputStream(os.toByteArray());
-                                channel.sendFile("", false, is, "img.png");
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        outputAllGuerillaImgs(channel);
                     } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
                         if (Guerilla.updateGuerilla(guerillaOutput)) {
                             BufferedMessage.sendMessage(PADModule.client, event, "Guerillas have been updated for today.");
@@ -200,8 +234,130 @@ public class PADListener {
 
                     } else if (cmd.equalsIgnoreCase("deletenickname") || cmd.equalsIgnoreCase("dn")) {
 
+                    } else if (cmd.equalsIgnoreCase("addguerillachannel") || cmd.equalsIgnoreCase("agc")) {
+                        if (userHasPerm(user, guild, Permissions.MANAGE_SERVER) || userHasPerm(user, guild, Permissions.MANAGE_CHANNEL)
+                                || userHasPerm(user, guild, Permissions.MANAGE_MESSAGES)) {
+                            if (split.length > 1) {
+                                Permission perms = PermissionsListener.getPermissionDB(guild);
+
+                                ArrayList<IChannel> channelsAdded = new ArrayList<>();
+                                for (int i = 1; i < split.length; i++) {
+                                    ArrayList<String> chans = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
+                                    IChannel aChannel = null;
+                                    if (split[i].contains("#")) {
+                                        aChannel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                        if (aChannel != null) {
+                                            if (!chans.contains(aChannel.getID())) {
+                                                channelsAdded.add(aChannel);
+                                                perms.addPerms(tableName, col1, guerillasField, col2, aChannel.getID());
+                                            }
+                                        }
+                                    }
+                                }
+                                String output = "The guerillas will now additionally be posted in: ";
+                                if (channelsAdded.size() > 0) {
+                                    for (IChannel c : channelsAdded) {
+                                        output += c.mention() + " ";
+                                    }
+                                } else
+                                    output = "No channels were added, make sure you mention the channel(s) with `#`";
+                                BufferedMessage.sendMessage(PADModule.client, event, output);
+
+                                perms.close();
+                            }
+                        }
+                    } else if (cmd.equalsIgnoreCase("deleteguerillachannel") || cmd.equalsIgnoreCase("dgc")) {
+                        if (userHasPerm(user, guild, Permissions.MANAGE_SERVER) || userHasPerm(user, guild, Permissions.MANAGE_CHANNEL)
+                                || userHasPerm(user, guild, Permissions.MANAGE_MESSAGES)) {
+                            if (split.length > 1) {
+                                Permission perms = PermissionsListener.getPermissionDB(guild);
+
+                                ArrayList<IChannel> channelsToKeep = new ArrayList<>();
+                                ArrayList<IChannel> channelsToDel = new ArrayList<>();
+                                for (int i = 1; i < split.length; i++) {
+                                    IChannel aChannel = null;
+                                    if (split[i].contains("#")) {
+                                        aChannel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                        if (aChannel != null) {
+                                            channelsToDel.add(aChannel);
+                                        }
+                                    }
+                                }
+
+                                ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
+                                perms.setPerms(tableName, col1, guerillasField, col2, "");
+                                for (String s : channels) {
+                                    IChannel ch = null;
+                                    ch = guild.getChannelByID(s);
+                                    if (ch != null) {
+                                        if (!channelsToDel.contains(ch)) {
+                                            perms.addPerms(tableName, col1, guerillasField, col2, s);
+                                        }
+                                    }
+                                }
+
+                                String output = "The following guerilla channels were removed: ";
+                                if (channelsToDel.size() > 0) {
+                                    for (IChannel c : channelsToDel) {
+                                        output += c.mention() + " ";
+                                    }
+                                } else
+                                    output = "No channels were removed, make sure you mention the channel(s) with `#`";
+
+                                BufferedMessage.sendMessage(PADModule.client, event, output);
+
+                                perms.close();
+                            }
+                        }
+                    } else if (cmd.equalsIgnoreCase("guerillachannels") || cmd.equalsIgnoreCase("gc")) {
+                        if (userHasPerm(user, guild, Permissions.MANAGE_SERVER) || userHasPerm(user, guild, Permissions.MANAGE_CHANNEL)
+                                || userHasPerm(user, guild, Permissions.MANAGE_MESSAGES)) {
+                            Permission perms = PermissionsListener.getPermissionDB(guild);
+                            String[] channels = perms.getPerms(tableName, col1, guerillasField, col2).split(";");
+                            String output = "Guerilla channels are: ";
+                            for (int i = 0; i < channels.length; i++) {
+                                IChannel theChan = guild.getChannelByID(channels[i]);
+                                if (theChan != null) {
+                                    output += theChan.mention() + " ";
+                                }
+                            }
+
+                            BufferedMessage.sendMessage(PADModule.client, event, output);
+                            perms.close();
+                        }
                     }
                 }
+            }
+        }
+    }
+
+    public void outputAllGuerillaImgs(IChannel channel) {
+        Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
+
+        BufferedImage pstImg = g.getTodayGuerillaImage("pst");
+        BufferedImage mstImg = g.getTodayGuerillaImage("mst");
+        BufferedImage cstImg = g.getTodayGuerillaImage("cst");
+        BufferedImage estImg = g.getTodayGuerillaImage("est");
+        ArrayList<BufferedImage> images = new ArrayList<>();
+        images.add(pstImg);
+        images.add(mstImg);
+        images.add(cstImg);
+        images.add(estImg);
+
+        for (BufferedImage bi : images) {
+            try {
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                ImageIO.write(bi, "png", os);
+                InputStream is = new ByteArrayInputStream(os.toByteArray());
+                channel.sendFile("", false, is, "img.png");
+            } catch (DiscordException e) {
+                e.printStackTrace();
+            } catch (RateLimitException e) {
+                e.printStackTrace();
+            } catch (MissingPermissionsException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -366,5 +522,15 @@ public class PADListener {
         eb.withUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getId());
         eb.withColor(c);
         return eb.build();
+    }
+
+    public boolean userHasPerm(IUser user, IGuild guild, Permissions perm) {
+        java.util.List<IRole> roles = user.getRolesForGuild(guild);
+        for (IRole r : roles) {
+            if (r.getPermissions().contains(perm)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

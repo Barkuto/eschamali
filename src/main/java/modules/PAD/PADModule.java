@@ -56,6 +56,10 @@ public class PADModule implements IModule, ICommands {
         cmds.add("`dungeon`:  Searches for a dungeon, and links its PADx page. **USAGE**: dungeon <query>");
         cmds.add("`guerilla`:  Displays the guerilla dungeons for the day. **USAGE**: guerilla <timezone> <group>");
         cmds.add("`pic`:  Displays a monsters full art from PADx. **USAGE**: pic <query>");
+        cmds.add("`guerillaall`: Displays guerillas for all timezones and groups. **USAGE**: guerillaall");
+        cmds.add("`addguerillachannel`: Adds a channel for auto guerilla posting. Requires some MANAGE_ perm **USAGE**: addguerillachannel #channel");
+        cmds.add("`deleteguerillachannel`: Deletes a channel from auto guerilla posting. Requires some MANAGE_ perm **USAGE**: deleteguerillachannel #channel");
+        cmds.add("`guerillachannels`: Shows what channels have automatic guerilla posting. Requires some MANAGE_ perm **USAGE**: guerillachannels");
         return cmds;
     }
 }
