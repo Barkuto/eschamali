@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.*;
 
 /**
  * Created by Iggie on 5/23/2017.
@@ -70,10 +71,44 @@ public class ProfilesListener {
 
                     if (cmd.equalsIgnoreCase("profile")
                             || cmd.equalsIgnoreCase("p")) {
-                        if (profile != null)
-                            BufferedMessage.sendEmbed(ProfilesModule.client, event, profile.getAsEmbed());
-                        else
-                            BufferedMessage.sendMessage(ProfilesModule.client, event, "Something went wrong trying to get your profile!");
+                        if (split.length == 1) {
+                            if (profile != null)
+                                BufferedMessage.sendEmbed(ProfilesModule.client, event, profile.getAsEmbed());
+                            else
+                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Something went wrong trying to get your profile!");
+                        } else {
+                            IUser otherUser = null;
+                            String arg = msg.substring(msg.indexOf(" ") + 1).trim();
+                            if (arg.startsWith("<@")) {
+                                String id = "";
+                                int startIndex = 2;
+                                if (arg.startsWith("<@!")) {
+                                    startIndex++;
+                                }
+                                id += arg.substring(startIndex, arg.length() - 1);
+                                otherUser = guild.getUserByID(id);
+                            } else {
+                                arg = msg.substring(msg.indexOf(" ") + 1).trim();
+                                for (IUser aUser : guild.getUsers()) {
+                                    if (aUser.getName().toLowerCase().contains(arg.toLowerCase())) {
+                                        otherUser = aUser;
+                                        break;
+                                    }
+                                }
+                            }
+                            java.util.List<IUser> users = guild.getUsersByName(arg);
+                            if (users.size() > 0)
+                                otherUser = users.get(0);
+                            if (otherUser != null) {
+                                Profile otherProfile = getProfile(otherUser, db);
+                                if (otherProfile != null)
+                                    BufferedMessage.sendEmbed(ProfilesModule.client, event, otherProfile.getAsEmbed());
+                                else
+                                    BufferedMessage.sendMessage(ProfilesModule.client, event, "Something went wrong trying to get that profile!");
+                            } else {
+                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Could not find that user.");
+                            }
+                        }
                     } else if (profile != null) {
                         /* Profile Set Commands */
                         if (cmd.equalsIgnoreCase("profilesetname")
