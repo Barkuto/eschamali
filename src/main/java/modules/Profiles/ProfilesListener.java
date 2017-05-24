@@ -36,13 +36,13 @@ public class ProfilesListener {
 
     @EventSubscriber
     public void onReady(ReadyEvent event) {
-        Permission perms = new Permission(new Db(output + dbFile));
         try {
             new File(output).mkdirs();
             new File(output + dbFile).createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Permission perms = new Permission(new Db(output + dbFile));
         if (!perms.tableExists(tableName)) {
             perms.createTable(tableName, tableCols, new String[]{"string", "object"}, false);
         }
