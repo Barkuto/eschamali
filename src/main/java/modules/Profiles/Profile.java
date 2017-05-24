@@ -7,6 +7,7 @@ import sx.blah.discord.util.EmbedBuilder;
 import java.awt.*;
 import java.io.*;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -21,9 +22,9 @@ public class Profile implements Serializable {
     private String footerIcon;
     private String footerText;
 
-    private HashMap<String, String> contentFields;//title, content
+    private LinkedHashMap<String, String> contentFields;//title, content
 
-    public Profile(String name, String nickname, String bio, String pictureURL, Color color, String footerIcon, String footerText, HashMap<String, String> contentFields) {
+    public Profile(String name, String nickname, String bio, String pictureURL, Color color, String footerIcon, String footerText, LinkedHashMap<String, String> contentFields) {
         this.name = name;
         this.nickname = nickname;
         this.bio = bio;
@@ -108,6 +109,8 @@ public class Profile implements Serializable {
 
             Profile p = (Profile) ois.readObject();
             return p;
+        } catch (InvalidClassException e) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -117,6 +120,6 @@ public class Profile implements Serializable {
     }
 
     public static Profile getDefaultProfile(IUser user) {
-        return new Profile(user.getName(), "", "", user.getAvatarURL(), Color.GRAY, "", "", new HashMap<>());
+        return new Profile(user.getName(), "", "", user.getAvatarURL(), Color.GRAY, "", "", new LinkedHashMap<>());
     }
 }

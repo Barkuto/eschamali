@@ -69,7 +69,13 @@ public class ProfilesListener {
                     if (cmd.startsWith("p"))
                         profile = getProfile(user, db);
 
-                    if (cmd.equalsIgnoreCase("profile")
+                    if (cmd.equalsIgnoreCase("profilereset")) {
+                        profile = Profile.getDefaultProfile(user);
+                        if (saveProfile(user, profile, db))
+                            BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile has been reset.");
+                        else
+                            BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                    } else if (cmd.equalsIgnoreCase("profile")
                             || cmd.equalsIgnoreCase("p")) {
                         if (split.length == 1) {
                             if (profile != null)
@@ -214,13 +220,7 @@ public class ProfilesListener {
                             }
                         }
                         /* Profile Reset Commands */
-                        else if (cmd.equalsIgnoreCase("profilereset")) {
-                            profile = Profile.getDefaultProfile(user);
-                            if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile has been reset.");
-                            else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetname")) {
+                        else if (cmd.equalsIgnoreCase("profileresetname")) {
                             profile.setName(user.getName());
                             if (saveProfile(user, profile, db))
                                 BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile name has been reset.");
