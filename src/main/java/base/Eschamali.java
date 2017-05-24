@@ -8,6 +8,7 @@ import modules.Music.MusicModule;
 import modules.PAD.PADModule;
 import modules.Parrot.ParrotModule;
 import modules.Permissions.PermissionsListener;
+import modules.Profiles.ProfilesModule;
 import modules.Reactions.ReactionsModule;
 import modules.Roles.RolesModule;
 import modules.Yugioh.YGOListener;
@@ -62,6 +63,7 @@ public class Eschamali {
         CustomCommandsModule custom = new CustomCommandsModule();
         ReactionsModule reactions = new ReactionsModule();
         YGOModule ygo = new YGOModule();
+        ProfilesModule profiles = new ProfilesModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
@@ -73,6 +75,7 @@ public class Eschamali {
         defaultmodules.put(custom, true);
         defaultmodules.put(reactions, true);
         defaultmodules.put(ygo, true);
+        defaultmodules.put(profiles, true);
 
         modules = new ArrayList<IModule>();
         modules.add(roles);
@@ -85,6 +88,7 @@ public class Eschamali {
         modules.add(custom);
         modules.add(reactions);
         modules.add(ygo);
+        modules.add(profiles);
         modules.sort(new Comparator<IModule>() {
             @Override
             public int compare(IModule o1, IModule o2) {
