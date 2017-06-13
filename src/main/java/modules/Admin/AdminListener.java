@@ -9,6 +9,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.DiscordUtils;
 import sx.blah.discord.handle.impl.events.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.MessageUpdateEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
@@ -454,6 +455,37 @@ public class AdminListener {
                     }
                     perms.close();
                 }
+            }
+        }
+    }
+
+    @EventSubscriber
+    public void checkforEditedBannedWord(MessageUpdateEvent event) {
+        String message = event.getNewMessage().getContent();
+        IUser author = event.getNewMessage().getAuthor();
+        IGuild guild = event.getNewMessage().getGuild();
+        IChannel channel = event.getNewMessage().getChannel();
+        if (PermissionsListener.isModuleOn(guild, AdminModule.name) && PermissionsListener.canModuleInChannel(guild, AdminModule.name, channel)) {
+            if (!message.startsWith(prefix)) {
+                Permission perms = PermissionsListener.getPermissionDB(guild);
+                String[] split = message.split(" ");
+                String[] bannedWords = perms.getPerms(tableName, col1, "bannedwords", col2).split(";");
+                for (int i = 0; i < split.length; i++) {
+                    for (int j = 0; j < bannedWords.length; j++) {
+                        if (split[i].equalsIgnoreCase(bannedWords[j].trim())) {
+                            try {
+                                event.getNewMessage().delete();
+                            } catch (MissingPermissionsException e) {
+                                e.printStackTrace();
+                            } catch (RateLimitException e) {
+                                e.printStackTrace();
+                            } catch (DiscordException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+                perms.close();
             }
         }
     }
