@@ -38,8 +38,15 @@
       <property name="caretWidth" class="java.lang.Integer" />
     </properties>
   </component>
-  <component name="EntryPointsManager">
-    <entry_points version="2.0" />
+  <component name="MavenCompilerTasksManager">
+    <option name="afterCompileTasks">
+      <set>
+        <MavenCompilerTask>
+          <option name="goal" value="package" />
+          <option name="projectPath" value="$PROJECT_DIR$/pom.xml" />
+        </MavenCompilerTask>
+      </set>
+    </option>
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">

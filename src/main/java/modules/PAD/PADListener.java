@@ -353,6 +353,24 @@ public class PADListener {
             } catch (DiscordException e) {
                 e.printStackTrace();
             } catch (RateLimitException e) {
+                long delay = e.getRetryDelay();
+                try {
+                    Thread.sleep(delay);
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    ImageIO.write(bi, "png", os);
+                    InputStream is = new ByteArrayInputStream(os.toByteArray());
+                    channel.sendFile("", false, is, "img.png");
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                } catch (DiscordException e1) {
+                    e1.printStackTrace();
+                } catch (RateLimitException e1) {
+                    e1.printStackTrace();
+                } catch (MissingPermissionsException e1) {
+                    e1.printStackTrace();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
                 e.printStackTrace();
             } catch (MissingPermissionsException e) {
                 e.printStackTrace();
