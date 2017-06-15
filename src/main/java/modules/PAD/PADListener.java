@@ -371,7 +371,6 @@ public class PADListener {
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
-                e.printStackTrace();
             } catch (MissingPermissionsException e) {
                 e.printStackTrace();
             } catch (IOException e) {

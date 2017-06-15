@@ -50,7 +50,6 @@ public class JoinLeaveModule implements IModule, ICommands {
     @Override
     public ArrayList<String> commands() {
         ArrayList<String> cmds = new ArrayList<String>();
-        cmds.add(JoinLeaveListener.prefix);
         cmds.add("__**DESC**__: Keeps tracks of people who leave/join.");
         return cmds;
     }
