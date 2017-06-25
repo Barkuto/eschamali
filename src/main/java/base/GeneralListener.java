@@ -206,7 +206,7 @@ public class GeneralListener {
                     EmbedObject embed = eb.build();
                     BufferedMessage.sendEmbed(Eschamali.client, event, embed);
                 } else if (msg.startsWith("?eval")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "`" + msg + "` equals: " + eval(msg.substring(msg.indexOf(" ") + 1)));
+                    BufferedMessage.sendMessage(Eschamali.client, event, "`" + msg.substring(5, msg.length()).trim() + "` equals: " + eval(msg.substring(msg.indexOf(" ") + 1)));
                 }
             }
         }
