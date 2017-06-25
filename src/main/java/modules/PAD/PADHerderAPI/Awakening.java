@@ -22,11 +22,14 @@ public enum Awakening {
     LIGHTROW("Enhanced Light Att.", "LightRow", null), DARKROW("Enhanced Dark Att.", "DarkRow", null),
 
     DRAGONKILLER("Dragon Killer", "DragonKill", null), GODKILLER("God Killer", "GodKill", null), DEVILKILLER("Devil Killer", "DevilKill", null),
-    MACHINEKILLER("Machine Killer", "MachineKill", null), AttackerKILLER("Attacker Killer", "AttackerKill", null), PHYSICALKILLER("Physical Killer", "PhysicalKill", null),
+    MACHINEKILLER("Machine Killer", "MachineKill", null), ATTACKERKILLER("Attacker Killer", "AttackerKill", null), PHYSICALKILLER("Physical Killer", "PhysicalKill", null),
     HEALERKILLER("Healer Killer", "HealerKill", null), BALANCEDKILLER("Balanced Killer", "BalancedKill", null), AWAKENKILLER("Awaken Material Killer", "AwakenKill", null),
     ENHANCEKILLER("Enhance Material Killer", "EnhanceKill", null), VENDORKILLER("Vendor Material Killer", "VendorKill", null), EVOKILLER("Evolve Killer", "EvoKill", null),
 
-    COOP("Multi Boost", "CoopBoost", null), COMBOBOOST("Enhanced Combo", "7cBoost", null), GAURDBREAK("Guard Break", "DefBreak", null);
+    COOP("Multi Boost", "CoopBoost", null), COMBOBOOST("Enhanced Combo", "7cBoost", null), GAURDBREAK("Guard Break", "DefBreak", null),
+
+    REDEEMKILLER("Redeemable Material Killer", "RdmKill", null), FOLLOWUPATTACK("Follow Up Attack", "FUA", null);
+
 
     private String name;
     private String shortName;
