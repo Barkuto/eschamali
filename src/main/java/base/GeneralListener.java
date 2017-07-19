@@ -48,7 +48,7 @@ public class GeneralListener {
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
-                String msg = event.getMessage().getContent();
+                String msg = event.getMessage().getContent().toLowerCase();
                 if (msg.equalsIgnoreCase("!donate")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
                 } else if (msg.equalsIgnoreCase("!maker")) {
@@ -221,7 +221,7 @@ public class GeneralListener {
                 if (msg.startsWith("!help")) {
                     if (args.length == 1) {
                         String output = "__Eschamali Bot commands - Prefix:__ !\n";
-                        ArrayList<String> commands = new ArrayList<String>();
+                        ArrayList<String> commands = new ArrayList<>();
                         commands.add("`help`: Lists commands for certains parts of the bot. **USAGE**: help <module name>");
                         commands.add("`donate`: See where you can donate to fund development/server keep up.");
                         commands.add("`maker`: See who made me.");
@@ -232,7 +232,8 @@ public class GeneralListener {
                         commands.add("`alert`: Alerts Barkuto that something went wrong!");
                         commands.add("`serverinfo`: Shows some information about the current server.");
                         commands.add("`userinfo`: Shows some information about yourself, or the given user.");
-                        commands.add("`?google`: Give a link to google based on your query. Not !?google **UASGE** ?google <query>");
+                        commands.add("`?google`: Give a link to google based on your query. Not !?google **UASGE**: ?google <query>");
+                        commands.add("`?eval`: Evaluate a simple math expression. Supports +,-,*,/,^,sqrt,sin,cos,tan. **USAGE**: ?eval <expression>");
                         Collections.sort(commands);
                         for (int i = 0; i < commands.size(); i++) {
                             output += commands.get(i) + "\n";

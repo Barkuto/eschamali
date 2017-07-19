@@ -227,7 +227,7 @@ public class PADListener {
                         } else {
                             BufferedMessage.sendMessage(PADModule.client, event, found);
                         }
-                    } else if (cmd.equalsIgnoreCase("updatejson")) {
+                    } else if (cmd.equalsIgnoreCase("updatejson") || cmd.equalsIgnoreCase("update")) {
                         PADHerderAPI.updateJSON();
                         BufferedMessage.sendMessage(PADModule.client, event, "JSON updated.");
                     } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
