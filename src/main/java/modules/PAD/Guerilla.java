@@ -9,15 +9,10 @@ import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.WritableRaster;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.Buffer;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -61,7 +56,7 @@ public class Guerilla implements Serializable {
                 break;
         }
         String output = "```\nGuerilla for today in " + timezone.toUpperCase() + "\n   ";
-        ArrayList<Integer> colWidths = new ArrayList<Integer>();
+        ArrayList<Integer> colWidths = new ArrayList<>();
         for (int i = 0; i < dungeons.size(); i++) {
             output += dungeons.get(i) + "|";
             colWidths.add(dungeons.get(i).length());
@@ -124,7 +119,7 @@ public class Guerilla implements Serializable {
                 break;
         }
         String output = "```\nGuerilla for today in " + timezone.toUpperCase() + " for Group " + group.toUpperCase() + "\n   ";
-        ArrayList<Integer> colWidths = new ArrayList<Integer>();
+        ArrayList<Integer> colWidths = new ArrayList<>();
         String DATE_FORMAT = "h:mm a";
         for (int i = 0; i < dungeons.size(); i++) {
             output += dungeons.get(i) + "|";
@@ -137,7 +132,7 @@ public class Guerilla implements Serializable {
         return output + "\n```";
     }
 
-    public void writeOut(String outputFolder) throws FileNotFoundException, IOException {
+    public void writeOut(String outputFolder) throws IOException {
         if (outputFolder.charAt(outputFolder.length() - 1) != '/') {
             outputFolder += "/";
         }
@@ -154,7 +149,7 @@ public class Guerilla implements Serializable {
         fileOut.close();
     }
 
-    public static Guerilla readIn(String inputFile) throws ClassNotFoundException, FileNotFoundException, IOException {
+    public static Guerilla readIn(String inputFile) throws ClassNotFoundException, IOException {
         Guerilla g = null;
         File f = new File(inputFile);
         FileInputStream fileIn = new FileInputStream(f);
@@ -233,7 +228,7 @@ public class Guerilla implements Serializable {
             g.drawLine(xPos, 0, xPos, height);//Vertical Lines
             try {
                 xPos += dungeonImgs.get(i + 1).getWidth();
-            } catch (IndexOutOfBoundsException e) {
+            } catch (IndexOutOfBoundsException ignored) {
             }
         }
 
@@ -243,7 +238,7 @@ public class Guerilla implements Serializable {
             g.drawLine(0, yLinePos, width, yLinePos);
             try {
                 yLinePos += cellHeight;
-            } catch (IndexOutOfBoundsException e) {
+            } catch (IndexOutOfBoundsException ignored) {
             }
         }
 
@@ -305,11 +300,11 @@ public class Guerilla implements Serializable {
             URL home = new URL("http://puzzledragonx.com/");
             Document document = Jsoup.parse(home, 15000);
             Elements sched = document.select("div#metal1a").select("table").get(0).select("tr");
-            ArrayList<LocalTime> a = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> b = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> c = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> d = new ArrayList<LocalTime>();
-            ArrayList<LocalTime> e = new ArrayList<LocalTime>();
+            ArrayList<LocalTime> a = new ArrayList<>();
+            ArrayList<LocalTime> b = new ArrayList<>();
+            ArrayList<LocalTime> c = new ArrayList<>();
+            ArrayList<LocalTime> d = new ArrayList<>();
+            ArrayList<LocalTime> e = new ArrayList<>();
             for (int i = 2; i < sched.size(); i += 2) {
                 Elements times = sched.get(i).select("td");
                 int group = 0;
@@ -336,7 +331,7 @@ public class Guerilla implements Serializable {
                     }
                 }
             }
-            ArrayList<String> dungeons = new ArrayList<String>();
+            ArrayList<String> dungeons = new ArrayList<>();
             for (int i = 1; i < sched.size(); i += 2) {
                 URL url = new URL("http://puzzledragonx.com/" + sched.get(i).select("td").select("a[href]").attr("href"));
                 Document doc = Jsoup.parse(url, 150000);
@@ -360,8 +355,6 @@ public class Guerilla implements Serializable {
 //            System.out.println(g);
             g.writeOut(outputPath);
             return true;
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -372,14 +365,14 @@ public class Guerilla implements Serializable {
         Guerilla g = null;
         try {
             g = Guerilla.readIn(path + "guerilla-" + year + "-" + month + "-" + day + ".ser");
-        } catch (ClassNotFoundException e) {
-        } catch (IOException e) {
+        } catch (ClassNotFoundException | IOException e) {
+            e.printStackTrace();
         }
         return g;
     }
 
     public static Guerilla getTodayGuerilla(String outputPath) {
-        Guerilla g = null;
+        Guerilla g;
         LocalDate ld = LocalDate.now();
         g = getGuerilla(outputPath, ld.getYear(), ld.getMonthValue(), ld.getDayOfMonth());
         if (g == null) {

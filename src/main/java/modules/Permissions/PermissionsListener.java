@@ -3,15 +3,18 @@ package modules.Permissions;
 import base.Eschamali;
 import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.modules.IModule;
 
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Iggie on 9/1/2016.
@@ -50,7 +53,7 @@ public class PermissionsListener {
             String message = event.getMessage().getContent();
             IUser author = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
-            if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID)) {
+            if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getStringID().equals(ownerID)) {
                 if (message.startsWith(prefix)) {
                     String[] args = message.split(" ");
                     args[0] = args[0].replace(prefix, "").trim();
@@ -83,14 +86,14 @@ public class PermissionsListener {
                             }
                             String channels = message.substring(message.indexOf(cmd) + cmd.length() + 1);
                             String[] split = channels.split(" ");
-                            ArrayList<IChannel> channelsAdded = new ArrayList<IChannel>();
+                            ArrayList<IChannel> channelsAdded = new ArrayList<>();
                             for (int i = 0; i < split.length; i++) {
                                 IChannel channel = null;
                                 if (split[i].contains("#")) {
-                                    channel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                    channel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
                                     if (channel != null) {
                                         if (!canTalkInChannel(guild, channel)) {
-                                            perms.addPerms("channels", "module", "General", "channels", channel.getID());
+                                            perms.addPerms("channels", "module", "General", "channels", channel.getStringID());
                                             channelsAdded.add(channel);
                                         }
                                     }
@@ -118,9 +121,9 @@ public class PermissionsListener {
                                 return;
                             }
                             for (int i = 0; i < currChans.length; i++) {
-                                IChannel c = guild.getChannelByID(currChans[i]);
+                                IChannel c = guild.getChannelByID(Long.parseLong(currChans[i]));
                                 if (c != null) {
-                                    currentChannels.add(guild.getChannelByID(currChans[i]));
+                                    currentChannels.add(guild.getChannelByID(Long.parseLong(currChans[i])));
                                 }
                             }
 
@@ -128,7 +131,7 @@ public class PermissionsListener {
                             for (int i = 0; i < split.length; i++) {
                                 IChannel channel = null;
                                 if (split[i].contains("#")) {
-                                    channel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                    channel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
                                     if (channel != null) {
                                         deleteChannels.add(channel);
                                     }
@@ -139,7 +142,7 @@ public class PermissionsListener {
                             for (int i = 0; i < currentChannels.size(); i++) {
                                 boolean add = true;
                                 for (int j = 0; j < deleteChannels.size(); j++) {
-                                    if (currentChannels.get(i).getID().equalsIgnoreCase(deleteChannels.get(j).getID())) {
+                                    if (currentChannels.get(i).getLongID() == deleteChannels.get(j).getLongID()) {
                                         add = false;
                                     }
                                 }
@@ -151,7 +154,7 @@ public class PermissionsListener {
                             String output = "I can no longer talk in: ";
                             String newTalkChannels = "";
                             for (int i = 0; i < newChannels.size(); i++) {
-                                newTalkChannels += newChannels.get(i).getID() + ";";
+                                newTalkChannels += newChannels.get(i).getStringID() + ";";
                             }
                             if (newTalkChannels.contains(";")) {
                                 newTalkChannels = newTalkChannels.substring(0, newTalkChannels.lastIndexOf(";"));
@@ -173,7 +176,7 @@ public class PermissionsListener {
                         }
                         String output = "General talk channels are: ";
                         for (String s : channels) {
-                            IChannel chan = guild.getChannelByID(s);
+                            IChannel chan = guild.getChannelByID(Long.parseLong(s));
                             if (chan != null) {
                                 output += chan.mention() + " ";
                             }
@@ -271,15 +274,15 @@ public class PermissionsListener {
                                     BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " can already be used in all channels.");
                                     return;
                                 }
-                                ArrayList<IChannel> channelsAdded = new ArrayList<IChannel>();
+                                ArrayList<IChannel> channelsAdded = new ArrayList<>();
                                 for (int i = 2; i < args.length; i++) {
                                     IChannel channel = null;
                                     if (args[i].contains("#")) {
-                                        channel = guild.getChannelByID(args[i].replace("<#", "").replace(">", ""));
+                                        channel = guild.getChannelByID(Long.parseLong(args[i].replace("<#", "").replace(">", "")));
                                         if (channel != null) {
                                             if (!canModuleInChannel(guild, module.getName(), channel)) {
                                                 channelsAdded.add(channel);
-                                                perms.addPerms("channels", "module", module.getName(), "channels", channel.getID());
+                                                perms.addPerms("channels", "module", module.getName(), "channels", channel.getStringID());
                                             }
                                         }
                                     }
@@ -308,35 +311,35 @@ public class PermissionsListener {
                                 String channels = message.substring(message.indexOf(cmd) + cmd.length() + 1);
                                 String[] split = channels.split(" ");
 
-                                ArrayList<IChannel> currentChannels = new ArrayList<IChannel>();
+                                ArrayList<IChannel> currentChannels = new ArrayList<>();
                                 String[] currChans = perms.getPerms("channels", "module", module.getName(), "channels").split(";");
                                 if (currChans[0].equalsIgnoreCase("all")) {
                                     BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can currently be used in all channels.");
                                     return;
                                 }
                                 for (int i = 0; i < currChans.length; i++) {
-                                    IChannel c = guild.getChannelByID(currChans[i]);
+                                    IChannel c = guild.getChannelByID(Long.parseLong(currChans[i]));
                                     if (c != null) {
-                                        currentChannels.add(guild.getChannelByID(currChans[i]));
+                                        currentChannels.add(guild.getChannelByID(Long.parseLong(currChans[i])));
                                     }
                                 }
 
-                                ArrayList<IChannel> deleteChannels = new ArrayList<IChannel>();
+                                ArrayList<IChannel> deleteChannels = new ArrayList<>();
                                 for (int i = 0; i < split.length; i++) {
                                     IChannel channel = null;
                                     if (split[i].contains("#")) {
-                                        channel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                        channel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
                                         if (channel != null) {
                                             deleteChannels.add(channel);
                                         }
                                     }
                                 }
 
-                                ArrayList<IChannel> newChannels = new ArrayList<IChannel>();
+                                ArrayList<IChannel> newChannels = new ArrayList<>();
                                 for (int i = 0; i < currentChannels.size(); i++) {
                                     boolean add = true;
                                     for (int j = 0; j < deleteChannels.size(); j++) {
-                                        if (currentChannels.get(i).getID().equalsIgnoreCase(deleteChannels.get(j).getID())) {
+                                        if (currentChannels.get(i).getLongID() == deleteChannels.get(j).getLongID()) {
                                             add = false;
                                         }
                                     }
@@ -348,7 +351,7 @@ public class PermissionsListener {
                                 String output = module.getName() + " module can no longer be used in: ";
                                 String newTalkChannels = "";
                                 for (int i = 0; i < newChannels.size(); i++) {
-                                    newTalkChannels += newChannels.get(i).getID() + ";";
+                                    newTalkChannels += newChannels.get(i).getStringID() + ";";
                                 }
                                 if (newTalkChannels.contains(";")) {
                                     newTalkChannels = newTalkChannels.substring(0, newTalkChannels.lastIndexOf(";"));
@@ -401,7 +404,7 @@ public class PermissionsListener {
                             }
                             String[] channels = chans.split(";");
                             for (int i = 0; i < channels.length; i++) {
-                                IChannel channel = guild.getChannelByID(channels[i]);
+                                IChannel channel = guild.getChannelByID(Long.parseLong(channels[i]));
                                 if (channel != null) {
                                     output += channel.mention() + " ";
                                 }
@@ -448,7 +451,7 @@ public class PermissionsListener {
         Permission perms = getPermissionDB(guild);
         List<String> list = Arrays.asList(perms.getPerms("channels", "module", "General", "channels").split(";"));
         for (String s : list) {
-            if (s.equalsIgnoreCase(channel.getID()) || s.equalsIgnoreCase("all")) {
+            if (s.equalsIgnoreCase(channel.getStringID()) || s.equalsIgnoreCase("all")) {
                 perms.close();
                 return true;
             }
@@ -462,7 +465,7 @@ public class PermissionsListener {
         String chans = perms.getPerms("channels", "module", module, "channels");
         List<String> list = Arrays.asList(chans.split(";"));
         for (String s : list) {
-            if (s.equalsIgnoreCase(channel.getID()) || s.equalsIgnoreCase("all")) {
+            if (s.equalsIgnoreCase(channel.getStringID()) || s.equalsIgnoreCase("all")) {
                 perms.close();
                 return true;
             }
@@ -491,6 +494,6 @@ public class PermissionsListener {
     public static Permission getPermissionDB(IGuild guild) {
         String path = "servers/";
         new File(path).mkdirs();
-        return new Permission(new Db(path + guild.getID() + ".db"));
+        return new Permission(new Db(path + guild.getStringID() + ".db"));
     }
 }

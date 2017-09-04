@@ -73,7 +73,7 @@ public class Profile implements Serializable {
 
     public EmbedObject getAsEmbed() {
         EmbedBuilder eb = new EmbedBuilder();
-        eb.ignoreNullEmptyFields();
+        eb.setLenient(true);
         eb.withTitle(name + (nickname.length() > 0 ? " AKA " + nickname : ""));
         eb.withDesc(bio);
         eb.withThumbnail(pictureURL);

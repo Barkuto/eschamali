@@ -4,13 +4,11 @@ import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.modules.IModule;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
 
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -18,7 +16,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -55,7 +52,7 @@ public class GeneralListener {
                     BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
                 } else if (msg.equalsIgnoreCase("!ayy")) {
                     List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
-                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID())) {
+                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
                         ayy = !ayy;
                         if (ayy) {
                             BufferedMessage.sendMessage(Eschamali.client, event, "lmao!");
@@ -86,15 +83,8 @@ public class GeneralListener {
                 } else if (msg.equalsIgnoreCase("!alert")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
                 } else if (msg.startsWith("!say")) {
-                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID())) {
-                        try {
-                            event.getMessage().delete();
-                        } catch (MissingPermissionsException e) {
-                        } catch (RateLimitException e) {
-                            e.printStackTrace();
-                        } catch (DiscordException e) {
-                            e.printStackTrace();
-                        }
+                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
+                        event.getMessage().delete();
                         BufferedMessage.sendMessage(Eschamali.client, event, msg.substring(msg.indexOf(" ")));
                     }
                 } else if (msg.equalsIgnoreCase("!serverinfo") || msg.startsWith("!sinfo")) {
@@ -104,7 +94,7 @@ public class GeneralListener {
                     EmbedBuilder eb = new EmbedBuilder();
                     eb.withTitle(guild.getName());
                     eb.withThumbnail(guild.getIconURL());
-                    eb.withDesc("ID: " + guild.getID());
+                    eb.withDesc("ID: " + guild.getLongID());
                     eb.appendField("Created", creationDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")), true);
                     eb.appendField("Server Age", DAYS.between(creationDate, LocalDateTime.now()) + " days", true);
                     eb.appendField("Region", guild.getRegion().getName(), true);
@@ -127,7 +117,7 @@ public class GeneralListener {
                                 startIndex++;
                             }
                             id += arg.substring(startIndex, arg.length() - 1);
-                            user = guild.getUserByID(id);
+                            user = guild.getUserByID(Long.parseLong(id));
                         } else {
                             List<IUser> users = guild.getUsers();
                             for (IUser u : users) {
@@ -146,13 +136,12 @@ public class GeneralListener {
                     }
                     String name = user.getName();
                     String disc = user.getDiscriminator();
-                    String nick = user.getNicknameForGuild(guild).isPresent() ? user.getNicknameForGuild(guild).get() : "";
-                    String id = user.getID();
+                    String nick = user.getNicknameForGuild(guild) != null ? user.getNicknameForGuild(guild) : "";
+                    long id = user.getLongID();
                     String avatar = user.getAvatarURL();
                     LocalDateTime accCreated = user.getCreationDate();
                     LocalDateTime guildJoinDate = null;
                     List<IRole> roles = user.getRolesForGuild(guild);
-                    String status = user.getStatus().getStatusMessage();
                     EmbedBuilder eb = new EmbedBuilder();
 
                     try {
@@ -162,31 +151,38 @@ public class GeneralListener {
                     }
 
                     String statusType = "";
-                    switch (user.getStatus().getType().ordinal()) {
-                        case 0://GAME
-                            statusType = "Playing ";
+                    switch (user.getPresence().getStatus()) {
+                        case ONLINE:
+                            statusType = "Online";
                             break;
-                        case 1://STREAM
+                        case OFFLINE:
+                            statusType = "Offline";
+                            break;
+                        case IDLE:
+                            statusType = "Idle";
+                            break;
+                        case DND:
+                            statusType = "Do Not Disturb";
+                            break;
+                        case STREAMING:
                             statusType = "Streaming ";
                             break;
-                        case 2://NONE
+                        case UNKNOWN:
+                            statusType = "Unknown";
                             break;
                     }
 
                     eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
-                    eb.withDesc("Status: " + (user.getStatus().getType() != Status.StatusType.NONE ? statusType + status : "None."));
+                    eb.withDesc("Status: " + (user.getPresence().getPlayingText().isPresent() ? "Playing " + user.getPresence().getPlayingText().get() : statusType));
                     eb.withThumbnail(avatar.replace(".jpg", ".gif"));
                     List<IUser> usersSortedByJoin = guild.getUsers();
-                    usersSortedByJoin.sort(new Comparator<IUser>() {
-                        @Override
-                        public int compare(IUser o1, IUser o2) {
-                            try {
-                                return guild.getJoinTimeForUser(o1).compareTo(guild.getJoinTimeForUser(o2));
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            }
-                            return -2;
+                    usersSortedByJoin.sort((o1, o2) -> {
+                        try {
+                            return guild.getJoinTimeForUser(o1).compareTo(guild.getJoinTimeForUser(o2));
+                        } catch (DiscordException e) {
+                            e.printStackTrace();
                         }
+                        return -2;
                     });
                     eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
                     eb.appendField("Account Created", accCreated.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(accCreated, LocalDateTime.now()) + " days ago", true);

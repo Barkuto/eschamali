@@ -9,8 +9,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.events.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
@@ -29,16 +29,19 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.TreeMap;
 
 /**
  * Created by Iggie on 8/25/2016.
  */
 public class PADListener {
     public static String prefix = "&";
-    private TreeMap<String, String> abbrMon = new TreeMap<String, String>();
-    private TreeMap<String, String> abbrDun = new TreeMap<String, String>();
-    private int maxMonNum = 3446;
+    private TreeMap<String, String> abbrMon = new TreeMap<>();
+    private TreeMap<String, String> abbrDun = new TreeMap<>();
+    private int maxMonNum = 4000;
     private String guerillaOutput = "modules/PAD/";
 
     private String tableName = "pad";
@@ -92,13 +95,13 @@ public class PADListener {
                         ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
                         for (String s : channels) {
                             IChannel channel = null;
-                            channel = guild.getChannelByID(s);
+                            channel = guild.getChannelByID(Long.parseLong(s));
                             if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
                                     && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
                                 LocalDateTime today = LocalDateTime.now();
                                 IMessage lastMessage = null;
-                                for (IMessage m : channel.getMessages()) {
-                                    if (m.getAuthor().getID() == PADModule.client.getOurUser().getID()) {
+                                for (IMessage m : channel.getMessageHistory()) {
+                                    if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
                                         lastMessage = m;
                                         break;
                                     }
@@ -171,12 +174,6 @@ public class PADListener {
                                 channel.sendFile("", false, is, "img.png");
                             } catch (IOException e) {
                                 e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
                             }
                         } else if (split.length == 2) {
                             try {
@@ -186,28 +183,17 @@ public class PADListener {
                                 channel.sendFile("", false, is, "img.png");
                             } catch (IOException e) {
                                 e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
-                        try {
-                            event.getMessage().delete();
-                        } catch (MissingPermissionsException e) {
-                        } catch (RateLimitException e) {
-                        } catch (DiscordException e) {
-                        }
+                        event.getMessage().delete();
                         outputAllGuerillaImgs(channel);
                     } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
                         if (Guerilla.updateGuerilla(guerillaOutput)) {
                             BufferedMessage.sendMessage(PADModule.client, event, "Guerillas have been updated for today.");
                         }
                     } else if (cmd.equalsIgnoreCase("pic")) {
-                        if (split[1].contains("sheen")) {
+                        if (split.length > 1 && split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);
                             System.out.println(roll);
                             if (roll >= 95) {
@@ -245,11 +231,11 @@ public class PADListener {
                                     ArrayList<String> chans = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
                                     IChannel aChannel = null;
                                     if (split[i].contains("#")) {
-                                        aChannel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                        aChannel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
                                         if (aChannel != null) {
-                                            if (!chans.contains(aChannel.getID())) {
+                                            if (!chans.contains(aChannel.getStringID())) {
                                                 channelsAdded.add(aChannel);
-                                                perms.addPerms(tableName, col1, guerillasField, col2, aChannel.getID());
+                                                perms.addPerms(tableName, col1, guerillasField, col2, aChannel.getLongID() + "");
                                             }
                                         }
                                     }
@@ -277,7 +263,7 @@ public class PADListener {
                                 for (int i = 1; i < split.length; i++) {
                                     IChannel aChannel = null;
                                     if (split[i].contains("#")) {
-                                        aChannel = guild.getChannelByID(split[i].replace("<#", "").replace(">", ""));
+                                        aChannel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
                                         if (aChannel != null) {
                                             channelsToDel.add(aChannel);
                                         }
@@ -288,7 +274,7 @@ public class PADListener {
                                 perms.setPerms(tableName, col1, guerillasField, col2, "");
                                 for (String s : channels) {
                                     IChannel ch = null;
-                                    ch = guild.getChannelByID(s);
+                                    ch = guild.getChannelByID(Long.parseLong(s));
                                     if (ch != null) {
                                         if (!channelsToDel.contains(ch)) {
                                             perms.addPerms(tableName, col1, guerillasField, col2, s);
@@ -316,7 +302,7 @@ public class PADListener {
                             String[] channels = perms.getPerms(tableName, col1, guerillasField, col2).split(";");
                             String output = "Guerilla channels are: ";
                             for (int i = 0; i < channels.length; i++) {
-                                IChannel theChan = guild.getChannelByID(channels[i]);
+                                IChannel theChan = guild.getChannelByID(Long.parseLong(channels[i]));
                                 if (theChan != null) {
                                     output += theChan.mention() + " ";
                                 }
@@ -350,29 +336,17 @@ public class PADListener {
                 ImageIO.write(bi, "png", os);
                 InputStream is = new ByteArrayInputStream(os.toByteArray());
                 channel.sendFile("", false, is, "img.png");
-            } catch (DiscordException e) {
-                e.printStackTrace();
             } catch (RateLimitException e) {
-                long delay = e.getRetryDelay();
                 try {
+                    long delay = e.getRetryDelay();
                     Thread.sleep(delay);
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     ImageIO.write(bi, "png", os);
                     InputStream is = new ByteArrayInputStream(os.toByteArray());
                     channel.sendFile("", false, is, "img.png");
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                } catch (DiscordException e1) {
-                    e1.printStackTrace();
-                } catch (RateLimitException e1) {
-                    e1.printStackTrace();
-                } catch (MissingPermissionsException e1) {
-                    e1.printStackTrace();
-                } catch (IOException e1) {
+                } catch (InterruptedException | IOException e1) {
                     e1.printStackTrace();
                 }
-            } catch (MissingPermissionsException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -409,8 +383,6 @@ public class PADListener {
                     return searchDungeon(keyword.replace("+", " ") + " descended");
                 }
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IndexOutOfBoundsException e) {
@@ -449,7 +421,7 @@ public class PADListener {
     }
 
     public static EmbedObject getInfoEmbed(Monster m, String query) {
-        EmbedBuilder eb = new EmbedBuilder().ignoreNullEmptyFields();
+        EmbedBuilder eb = new EmbedBuilder().setLenient(true);
 
         Color c = Color.GRAY;
         switch (m.getElement()) {

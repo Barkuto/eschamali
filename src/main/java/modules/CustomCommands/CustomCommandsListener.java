@@ -1,12 +1,11 @@
 package modules.CustomCommands;
 
-import base.Eschamali;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 
 import java.sql.ResultSet;
@@ -23,7 +22,7 @@ public class CustomCommandsListener {
     private String col1 = "command";
     private String col2 = "message";
     private String[] tableCols = new String[]{col1, col2};
-    private String ownerID = "85844964633747456";
+    private long ownerID = 85844964633747456L;
 
     @EventSubscriber
     public void onJoin(GuildCreateEvent event) {
@@ -69,7 +68,7 @@ public class CustomCommandsListener {
                     if (commands.containsKey(cmd.toLowerCase())) {
                         BufferedMessage.sendMessage(CustomCommandsModule.client, event, commands.get(cmd.toLowerCase()));
                     } else {
-                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getID().equals(ownerID) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)) {
+                        if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getLongID() == ownerID || userHasPerm(author, guild, Permissions.MANAGE_ROLES)) {
                             String commandName = "";
                             String commandText = "";
                             if (args.length > 1) {

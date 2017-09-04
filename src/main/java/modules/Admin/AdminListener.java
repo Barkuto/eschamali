@@ -1,21 +1,19 @@
 package modules.Admin;
 
-import base.Eschamali;
 import modules.BufferedMessage.BufferedMessage;
-import modules.Games.GamesModule;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.api.internal.DiscordUtils;
-import sx.blah.discord.handle.impl.events.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.impl.events.MessageUpdateEvent;
+import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageUpdateEvent;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import sx.blah.discord.util.MessageHistory;
+import sx.blah.discord.util.RateLimitException;
+import sx.blah.discord.util.RequestBuffer;
+import sx.blah.discord.util.RoleBuilder;
 
 import java.awt.*;
-import java.nio.Buffer;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -89,16 +87,8 @@ public class AdminListener {
                             }
 //                            String reason = message.substring(message.indexOf("\""), message.lastIndexOf("\""));
                             for (int i = 0; i < usersToKick.size(); i++) {
-                                try {
-                                    guild.kickUser(usersToKick.get(i));
+                                guild.kickUser(usersToKick.get(i));
 //                                    BufferedMessage.sendMessage(AdminModule.client, AdminModule.client.getOrCreatePMChannel(usersToKick.get(i)), "`You have been kicked because: `" + reason);
-                                } catch (MissingPermissionsException e) {
-                                    e.printStackTrace();
-                                } catch (RateLimitException e) {
-                                    e.printStackTrace();
-                                } catch (DiscordException e) {
-                                    e.printStackTrace();
-                                }
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("ban")) {
@@ -120,16 +110,8 @@ public class AdminListener {
                             }
 //                            String reason = message.substring(message.indexOf("\""), message.lastIndexOf("\""));
                             for (int i = 0; i < usersToBan.size(); i++) {
-                                try {
-                                    guild.banUser(usersToBan.get(i));
+                                guild.banUser(usersToBan.get(i));
 //                                    BufferedMessage.sendMessage(AdminModule.client, AdminModule.client.getOrCreatePMChannel(usersToBan.get(i)), "`You have been banned because: `" + reason);
-                                } catch (MissingPermissionsException e) {
-                                    e.printStackTrace();
-                                } catch (RateLimitException e) {
-                                    e.printStackTrace();
-                                } catch (DiscordException e) {
-                                    e.printStackTrace();
-                                }
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("prune")) {
@@ -144,7 +126,7 @@ public class AdminListener {
                                 }
                                 ArrayList<IMessage> msgsToDelete = new ArrayList<>();
                                 if (user != null && msgCount > 0) {
-                                    MessageList messages = channel.getMessages();
+                                    MessageHistory messages = channel.getMessageHistory();
                                     for (int i = 0; i < messages.size(); i++) {
                                         if (messages.get(i).getAuthor().equals(user)) {
                                             if (msgsToDelete.size() < msgCount) {
@@ -160,20 +142,10 @@ public class AdminListener {
                                             } catch (RateLimitException e) {
                                                 try {
                                                     Thread.sleep(e.getRetryDelay());
-                                                    try {
-                                                        mesg.delete();
-                                                    } catch (MissingPermissionsException e1) {
-                                                        e1.printStackTrace();
-                                                    } catch (DiscordException e1) {
-                                                        e1.printStackTrace();
-                                                    }
+                                                    mesg.delete();
                                                 } catch (InterruptedException e1) {
                                                     e1.printStackTrace();
                                                 }
-                                            } catch (MissingPermissionsException e) {
-                                                e.printStackTrace();
-                                            } catch (DiscordException e) {
-                                                e.printStackTrace();
                                             }
                                         });
                                     }
@@ -186,35 +158,18 @@ public class AdminListener {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
                                 if (user != null) {
-                                    IRole muteRole = guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2));
+                                    IRole muteRole = guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2)));
                                     if (muteRole == null) {
-                                        try {
-                                            muteRole = new RoleBuilder(guild).withName("Muted").withColor(new Color(12, 0, 0)).build();
-                                            perms.setPerms(tableName, col1, "muterole", col2, muteRole.getID());
-                                        } catch (MissingPermissionsException e) {
-                                            e.printStackTrace();
-                                        } catch (RateLimitException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
-                                            e.printStackTrace();
-                                        }
+                                        muteRole = new RoleBuilder(guild).withName("Muted").withColor(new Color(12, 0, 0)).build();
+                                        perms.setPerms(tableName, col1, "muterole", col2, muteRole.getLongID() + "");
                                     }
-                                    if (muteRole != null) {
-                                        try {
-                                            user.addRole(muteRole);
-                                            List<IChannel> serverChannels = guild.getChannels();
-                                            for (IChannel c : serverChannels) {
-                                                c.overrideRolePermissions(muteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
-                                            }
-                                            BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been muted.");
-                                        } catch (MissingPermissionsException e) {
-                                            e.printStackTrace();
-                                        } catch (RateLimitException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
-                                            e.printStackTrace();
-                                        }
+
+                                    user.addRole(muteRole);
+                                    List<IChannel> serverChannels = guild.getChannels();
+                                    for (IChannel c : serverChannels) {
+                                        c.overrideRolePermissions(muteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
                                     }
+                                    BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been muted.");
                                 } else {
                                     BufferedMessage.sendMessage(AdminModule.client, event, "Invalid user");
                                 }
@@ -225,18 +180,10 @@ public class AdminListener {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
                                 if (user != null) {
-                                    IRole muteRole = guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2));
+                                    IRole muteRole = guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2)));
                                     if (muteRole != null) {
-                                        try {
-                                            user.removeRole(muteRole);
-                                            BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been unmuted.");
-                                        } catch (MissingPermissionsException e) {
-                                            e.printStackTrace();
-                                        } catch (RateLimitException e) {
-                                            e.printStackTrace();
-                                        } catch (DiscordException e) {
-                                            e.printStackTrace();
-                                        }
+                                        user.removeRole(muteRole);
+                                        BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been unmuted.");
                                     } else {
                                         BufferedMessage.sendMessage(AdminModule.client, event, "There is no mute role.");
                                     }
@@ -248,21 +195,20 @@ public class AdminListener {
                     } else if (cmd.equalsIgnoreCase("muterole")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length == 1) {
-                                BufferedMessage.sendMessage(AdminModule.client, event, "The current mute role is: " + guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2)));
+                                BufferedMessage.sendMessage(AdminModule.client, event, "The current mute role is: " + guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2))));
                             } else if (args.length >= 2) {
-                                try {
-                                    IRole newMuteRole = guild.getRolesByName(argsconcat.trim()).get(0);
-                                    IRole oldMuteRole = guild.getRoleByID(perms.getPerms(tableName, col1, "muterole", col2));
-                                    if (oldMuteRole != null) {
-                                        List<IChannel> serverChannels = guild.getChannels();
-                                        for (IChannel c : serverChannels) {
-                                            c.removePermissionsOverride(oldMuteRole);
-                                            c.overrideRolePermissions(newMuteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
-                                        }
+                                IRole newMuteRole = guild.getRolesByName(argsconcat.trim()).get(0);
+                                IRole oldMuteRole = guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2)));
+                                if (oldMuteRole != null) {
+                                    List<IChannel> serverChannels = guild.getChannels();
+                                    for (IChannel c : serverChannels) {
+                                        c.removePermissionsOverride(oldMuteRole);
+                                        c.overrideRolePermissions(newMuteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
                                     }
-                                    perms.setPerms(tableName, col1, "muterole", col2, newMuteRole.getID());
+                                }
+                                perms.setPerms(tableName, col1, "muterole", col2, newMuteRole.getLongID() + "");
 
-                                    //Not working for some reason, not removing roles, sometimes adds role.
+                                //Not working for some reason, not removing roles, sometimes adds role.
 //                                    for (IUser u : guild.getUsers()) {
 //                                        List<IRole> userRoles = u.getRolesForGuild(guild);
 //                                        for (IRole r : userRoles) {
@@ -274,48 +220,23 @@ public class AdminListener {
 //                                        }
 //                                    }
 
-                                    BufferedMessage.sendMessage(AdminModule.client, event, "The mute role has been set to the role: " + newMuteRole.getName());
-                                } catch (IndexOutOfBoundsException e) {
-                                    e.printStackTrace();
-                                } catch (DiscordException e) {
-                                    e.printStackTrace();
-                                } catch (RateLimitException e) {
-                                    e.printStackTrace();
-                                } catch (MissingPermissionsException e) {
-                                    e.printStackTrace();
-                                }
+                                BufferedMessage.sendMessage(AdminModule.client, event, "The mute role has been set to the role: " + newMuteRole.getName());
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("lock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
-                            try {
-                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
-                                channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            }
+                            BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
+                            channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
                         }
                     } else if (cmd.equalsIgnoreCase("unlock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
+                            channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
                             try {
-                                channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
-                                try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (DiscordException e) {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                            BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
                         }
                     } else if (cmd.equalsIgnoreCase("warn") || cmd.equalsIgnoreCase("strike")) {
                         if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
@@ -323,10 +244,10 @@ public class AdminListener {
                                 int strikesToAdd = 1;
                                 try {
                                     strikesToAdd = Integer.parseInt(args[2]);
-                                } catch (Exception e) {
+                                } catch (Exception ignored) {
                                 }
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
-                                String userID = user.getID();
+                                String userID = user.getStringID();
                                 String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
                                 int numStrikes = 0;
                                 if (strikes.length() > 0) {
@@ -335,32 +256,16 @@ public class AdminListener {
                                 numStrikes += strikesToAdd;
                                 perms.setPerms(table2Name, table2col1, userID, table2col2, numStrikes + "");
                                 BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been warned, and now has `" + numStrikes + "` strike(s).");
-                                if (numStrikes >= 3) {
-                                    try {
-                                        guild.kickUser(user);
-                                    } catch (MissingPermissionsException e) {
-                                        e.printStackTrace();
-                                    } catch (RateLimitException e) {
-                                        e.printStackTrace();
-                                    } catch (DiscordException e) {
-                                        e.printStackTrace();
-                                    }
-                                } else if (numStrikes >= 5) {
-                                    try {
-                                        guild.banUser(user);
-                                    } catch (MissingPermissionsException e) {
-                                        e.printStackTrace();
-                                    } catch (RateLimitException e) {
-                                        e.printStackTrace();
-                                    } catch (DiscordException e) {
-                                        e.printStackTrace();
-                                    }
+                                if (numStrikes >= 5) {
+                                    guild.banUser(user);
+                                } else if (numStrikes >= 3) {
+                                    guild.kickUser(user);
                                 }
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("warnings")) {
                         if (args.length == 1) {
-                            String userID = author.getID();
+                            String userID = author.getStringID();
                             String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
                             int numStrikes = 0;
                             if (strikes.length() > 0) {
@@ -370,7 +275,7 @@ public class AdminListener {
                         } else if (args.length == 2) {
                             if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
-                                String userID = user.getID();
+                                String userID = user.getStringID();
                                 String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
                                 int numStrikes = 0;
                                 if (strikes.length() > 0) {
@@ -441,15 +346,7 @@ public class AdminListener {
                     for (int i = 0; i < split.length; i++) {
                         for (int j = 0; j < bannedWords.length; j++) {
                             if (split[i].equalsIgnoreCase(bannedWords[j].trim())) {
-                                try {
-                                    event.getMessage().delete();
-                                } catch (MissingPermissionsException e) {
-                                    e.printStackTrace();
-                                } catch (RateLimitException e) {
-                                    e.printStackTrace();
-                                } catch (DiscordException e) {
-                                    e.printStackTrace();
-                                }
+                                event.getMessage().delete();
                             }
                         }
                     }
@@ -473,15 +370,7 @@ public class AdminListener {
                 for (int i = 0; i < split.length; i++) {
                     for (int j = 0; j < bannedWords.length; j++) {
                         if (split[i].equalsIgnoreCase(bannedWords[j].trim())) {
-                            try {
-                                event.getNewMessage().delete();
-                            } catch (MissingPermissionsException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            }
+                            event.getNewMessage().delete();
                         }
                     }
                 }
@@ -500,13 +389,13 @@ public class AdminListener {
         return false;
     }
 
-    private String parseUserID(String arg) {
+    private Long parseUserID(String arg) {
         String id = "";
         int startIndex = 2;
         if (arg.startsWith("<@!")) {
             startIndex++;
         }
         id += arg.substring(startIndex, arg.length() - 1);
-        return id;
+        return Long.parseLong(id);
     }
 }

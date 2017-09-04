@@ -3,7 +3,7 @@ package modules.Games;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
@@ -21,7 +21,7 @@ public class GamesListener {
 
     public GamesListener() {
         super();
-        answers = new ArrayList<String>();
+        answers = new ArrayList<>();
         answers.add("It is certain");
         answers.add("It is decidedly so");
         answers.add("Without a doubt");
@@ -67,7 +67,7 @@ public class GamesListener {
                             for (int i = 1; i < args.length; i++) {
                                 question += args[i] + " ";
                             }
-                            question.trim();
+                            question = question.trim();
                             BufferedMessage.sendMessage(GamesModule.client, event, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers` " + answers.get(num));
                         }
                     } else if (cmd.equalsIgnoreCase("choose")) {
@@ -108,7 +108,7 @@ public class GamesListener {
                                     return;
                             }
                             int botPick = new Random().nextInt(3);
-                            String output = "";
+                            String output;
                             if (pick == botPick)
                                 output = "It's a draw! Both picked :" + rpsPick(pick) + ":";
                             else if ((pick == 0 && botPick == 1) ||

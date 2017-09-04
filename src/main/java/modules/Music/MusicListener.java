@@ -15,10 +15,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.MissingPermissionsException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -187,33 +186,21 @@ public class MusicListener {
     }
 
     private GuildMusicManager getGuildManager(IGuild guild) {
-        GuildMusicManager guildManager = guildManagers.get(guild.getID());
+        GuildMusicManager guildManager = guildManagers.get(guild.getStringID());
         if (guildManager == null) {
             guildManager = new GuildMusicManager(playerManager);
             guildManager.player.setVolume(50);
-            guildManagers.put(guild.getID(), guildManager);
+            guildManagers.put(guild.getStringID(), guildManager);
         }
         guild.getAudioManager().setAudioProvider(guildManager.getAudioProvider());
         return guildManager;
     }
 
     private void connectToVoiceOf(IUser user, IGuild guild, IChannel channel) {
-        IVoiceChannel userVC = null;
-        if (user.getConnectedVoiceChannels().size() > 0) {
-            userVC = user.getConnectedVoiceChannels().get(0);
-            for (IVoiceChannel vc : guild.getVoiceChannels()) {
-                if (vc == userVC) {
-                    try {
-                        vc.join();
-                        break;
-                    } catch (MissingPermissionsException e) {
-                        BufferedMessage.sendMessage(MusicModule.client, channel, "Missing permission to join your channel.");
-                    }
-                }
-            }
-        } else {
+        IVoiceChannel userVC = user.getVoiceStateForGuild(guild).getChannel();
+        if (userVC == null)
             BufferedMessage.sendMessage(MusicModule.client, channel, "You are not in a voice channel.");
-        }
+        else userVC.join();
     }
 
     private boolean isConnectedToVC(IGuild guild) {

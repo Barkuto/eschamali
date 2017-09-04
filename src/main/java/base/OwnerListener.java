@@ -2,29 +2,23 @@ package base;
 
 import modules.BufferedMessage.BufferedMessage;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.GuildCreateEvent;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IVoiceChannel;
-import sx.blah.discord.handle.obj.Status;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.Image;
-import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
-import javax.lang.model.util.ElementScanner6;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.List;
+import java.util.Properties;
+import java.util.Scanner;
 
 /**
  * Created by Iggie on 8/23/2016.
@@ -35,7 +29,7 @@ public class OwnerListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (event.getMessage().getChannel() instanceof IPrivateChannel) {
-            if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getID()) && event.getMessage().getContent().startsWith(prefix)) {
+            if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID()) && event.getMessage().getContent().startsWith(prefix)) {
                 String message = event.getMessage().getContent();
                 String[] args = message.split(" ");
                 String argsconcat = "";
@@ -47,9 +41,9 @@ public class OwnerListener {
                 argsconcat = argsconcat.trim();
                 if (cmd.equalsIgnoreCase("changestatus") || cmd.equalsIgnoreCase("status") || cmd.equalsIgnoreCase("cs")) {
                     if (args.length > 1) {
-                        Eschamali.client.changeStatus(Status.game(argsconcat));
+                        Eschamali.client.changePlayingText(argsconcat);
                     } else {
-                        Eschamali.client.changeStatus(Status.empty());
+                        Eschamali.client.changePlayingText(null);
                     }
                 } else if (cmd.equalsIgnoreCase("changedefaultstatus") || cmd.equalsIgnoreCase("cds")) {
                     Properties props = new Properties();
@@ -66,9 +60,9 @@ public class OwnerListener {
                         BufferedMessage.sendMessage(Eschamali.client, event, "Default status has been changed to `" + argsconcat + "`.");
 
                         if (args.length > 1) {
-                            Eschamali.client.changeStatus(Status.game(argsconcat));
+                            Eschamali.client.changePlayingText(argsconcat);
                         } else {
-                            Eschamali.client.changeStatus(Status.empty());
+                            Eschamali.client.changePlayingText(null);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -80,45 +74,27 @@ public class OwnerListener {
                     output += String.format("%-50s | %-20s | %-10s", centerString("Server Name", 50), centerString("Server ID", 20), centerString("Users", 10)) + "\n";
                     output += String.format("%-50s-|-%-20s-|-%-10s", repeatString("-", 50), repeatString("-", 20), repeatString("-", 10)) + "\n";
                     for (IGuild g : guilds) {
-                        output += String.format("%50s | %s | %s", g.getName(), centerString(g.getID(), 20), centerString(g.getUsers().size() + "", 10)) + "\n";
+                        output += String.format("%50s | %s | %s", g.getName(), centerString(g.getLongID() + "", 20), centerString(g.getUsers().size() + "", 10)) + "\n";
                     }
                     output += "```";
                     BufferedMessage.sendMessage(Eschamali.client, event, output);
                 } else if (cmd.equalsIgnoreCase("leave")) {
                     if (args.length > 1) {
                         String id = message.substring(message.indexOf(" "));
-                        IGuild g = Eschamali.client.getGuildByID(id);
+                        IGuild g = Eschamali.client.getGuildByID(Long.parseLong(id));
                         if (g != null) {
-                            try {
-                                g.leaveGuild();
-                                BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Left server `" + g.getName() + "`");
-                            } catch (DiscordException e) {
-                                e.printStackTrace();
-                            } catch (RateLimitException e) {
-                                e.printStackTrace();
-                            }
+                            g.leave();
+                            BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Left server `" + g.getName() + "`");
                         }
                     }
                 } else if (cmd.equalsIgnoreCase("setavatar")) {
                     String url = message.substring(message.indexOf(" "));
                     String imgtype = url.substring(url.lastIndexOf(".") + 1);
-                    try {
-                        Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
-                        BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Avatar changed.");
-                    } catch (DiscordException e) {
-                        e.printStackTrace();
-                    } catch (RateLimitException e) {
-                        e.printStackTrace();
-                    }
+                    Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
+                    BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Avatar changed.");
                 } else if (cmd.equalsIgnoreCase("changename")) {
-                    try {
-                        Eschamali.client.changeUsername(message.substring(message.indexOf(" ") + 1));
-                        BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Username changed.");
-                    } catch (DiscordException e) {
-                        e.printStackTrace();
-                    } catch (RateLimitException e) {
-                        e.printStackTrace();
-                    }
+                    Eschamali.client.changeUsername(message.substring(message.indexOf(" ") + 1));
+                    BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Username changed.");
                 } else if (cmd.equalsIgnoreCase("uptime") || cmd.equalsIgnoreCase("up")) {
                     BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
                 } else if (cmd.equalsIgnoreCase("shutdown") || cmd.equalsIgnoreCase("sd")) {

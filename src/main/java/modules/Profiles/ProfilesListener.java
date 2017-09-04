@@ -5,8 +5,8 @@ import modules.Permissions.Db;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
@@ -62,7 +62,7 @@ public class ProfilesListener {
                     String[] split = msg.split(" ");
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
-                    String userID = user.getID();
+                    String userID = user.getStringID();
                     Db db = new Db(output + dbFile);
                     Profile profile = null;
 
@@ -92,7 +92,7 @@ public class ProfilesListener {
                                     startIndex++;
                                 }
                                 id += arg.substring(startIndex, arg.length() - 1);
-                                otherUser = guild.getUserByID(id);
+                                otherUser = guild.getUserByID(Long.parseLong(id));
                             } else {
                                 arg = msg.substring(msg.indexOf(" ") + 1).trim();
                                 for (IUser aUser : guild.getUsers()) {
@@ -275,7 +275,7 @@ public class ProfilesListener {
         Profile profile = null;
         PreparedStatement read = db.getPreparedStatement("SELECT " + col2 + " FROM " + tableName + " WHERE " + col1 + " = ?");
         try {
-            read.setString(1, user.getID());
+            read.setString(1, user.getStringID());
             ResultSet rs = read.executeQuery();
             if (rs.next())
                 profile = Profile.getFromBytes(rs.getBytes(col2));
@@ -291,7 +291,7 @@ public class ProfilesListener {
 
     public boolean saveProfile(IUser user, Profile profile, Db db) {
         byte[] bytes = profile.getAsBytes();
-        String id = user.getID();
+        String id = user.getStringID();
 
         PreparedStatement ps = null;
         ResultSet rs = db.executeQuery("SELECT " + "*" + " FROM " + tableName + " WHERE " + col1 + "='" + id + "'");

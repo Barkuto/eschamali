@@ -4,15 +4,12 @@ import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.*;
-import sx.blah.discord.handle.impl.obj.User;
+import sx.blah.discord.handle.impl.events.guild.member.UserBanEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserJoinEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserLeaveEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Created by Iggie on 8/17/2016.
@@ -27,7 +24,7 @@ public class JoinLeaveListener {
             Permission perms = PermissionsListener.getPermissionDB(guild);
             String channel = perms.getPerms("channels", "module", JoinLeaveModule.name, "channels");
             if (channel != null && channel.length() > 0) {
-                IChannel chan = guild.getChannelByID(channel);
+                IChannel chan = guild.getChannelByID(Long.parseLong(channel));
                 BufferedMessage.sendMessage(JoinLeaveModule.client, chan, user.mention() + " : " + user.getName() + "#" + user.getDiscriminator() + " has joined.");
             }
             perms.close();
@@ -42,7 +39,7 @@ public class JoinLeaveListener {
             Permission perms = PermissionsListener.getPermissionDB(guild);
             String channel = perms.getPerms("channels", "module", JoinLeaveModule.name, "channels");
             if (channel != null && channel.length() > 0) {
-                IChannel chan = guild.getChannelByID(channel);
+                IChannel chan = guild.getChannelByID(Long.parseLong(channel));
                 BufferedMessage.sendMessage(JoinLeaveModule.client, chan, user.mention() + " : " + user.getName() + "#" + user.getDiscriminator() + " has left.");
             }
             perms.close();
@@ -57,7 +54,7 @@ public class JoinLeaveListener {
             Permission perms = PermissionsListener.getPermissionDB(guild);
             String channel = perms.getPerms("channels", "module", JoinLeaveModule.name, "channels");
             if (channel != null && channel.length() > 0) {
-                IChannel chan = guild.getChannelByID(channel);
+                IChannel chan = guild.getChannelByID(Long.parseLong(channel));
                 BufferedMessage.sendMessage(JoinLeaveModule.client, chan, user.mention() + " : " + user.getName() + "#" + user.getDiscriminator() + " has been banned.");
             }
             perms.close();

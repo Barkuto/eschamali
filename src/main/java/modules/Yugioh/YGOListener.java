@@ -1,41 +1,19 @@
 package modules.Yugioh;
 
 import com.google.gson.*;
-import com.google.gson.stream.JsonWriter;
-import jdk.nashorn.internal.parser.JSONParser;
 import modules.BufferedMessage.BufferedMessage;
-import modules.PAD.Guerilla;
-import modules.PAD.PADHerderAPI.*;
 import modules.Permissions.PermissionsListener;
-import org.apache.commons.io.FileUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.impl.obj.Embed;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.TreeMap;
 
 /**
  * Created by Iggie on 4/8/2017.

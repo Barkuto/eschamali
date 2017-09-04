@@ -11,15 +11,12 @@ import modules.Permissions.PermissionsListener;
 import modules.Profiles.ProfilesModule;
 import modules.Reactions.ReactionsModule;
 import modules.Roles.RolesModule;
-import modules.Yugioh.YGOListener;
 import modules.Yugioh.YGOModule;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.obj.Status;
 import sx.blah.discord.modules.IModule;
-import sx.blah.discord.util.DiscordException;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -42,7 +39,7 @@ public class Eschamali {
     public static TreeMap<IModule, Boolean> defaultmodules;
     public static IDiscordClient client;
     //    public static String ownerID = "85844964633747456";
-    public static ArrayList<String> ownerIDs = new ArrayList<>();
+    public static ArrayList<Long> ownerIDs = new ArrayList<>();
     public static final LocalDateTime startTime = LocalDateTime.now();
 
     public Eschamali() {
@@ -77,7 +74,7 @@ public class Eschamali {
         defaultmodules.put(ygo, true);
         defaultmodules.put(profiles, true);
 
-        modules = new ArrayList<IModule>();
+        modules = new ArrayList<>();
         modules.add(roles);
         modules.add(games);
         modules.add(parrot);
@@ -89,12 +86,7 @@ public class Eschamali {
         modules.add(reactions);
         modules.add(ygo);
         modules.add(profiles);
-        modules.sort(new Comparator<IModule>() {
-            @Override
-            public int compare(IModule o1, IModule o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        modules.sort(Comparator.comparing(IModule::getName));
 
         Properties props = new Properties();
         try {
@@ -108,9 +100,9 @@ public class Eschamali {
             } else {
                 this.token = token;
             }
-            ownerIDs.add("85844964633747456");//Barkuto's ID
+            ownerIDs.add(85844964633747456L);//Barkuto's ID
             for (int i = 0; i < ownerIDS.length; i++) {
-                ownerIDs.add(ownerIDS[i]);
+                ownerIDs.add(Long.parseLong(ownerIDS[i]));
             }
             this.status = status;
         } catch (IOException e) {
@@ -130,22 +122,18 @@ public class Eschamali {
     @EventSubscriber
     public void onReady(ReadyEvent event) {
         if (status.length() > 0) {
-            client.changeStatus(Status.game(status));
+            client.changePlayingText(status);
         }
     }
 
     public void run() {
-        try {
-            client = new ClientBuilder().withToken(token).login();
-            client.getDispatcher().registerListener(this);
-            client.getDispatcher().registerListener(new GeneralListener());
-            client.getDispatcher().registerListener(new OwnerListener());
-            client.getDispatcher().registerListener(new PermissionsListener());
-            for (IModule m : modules) {
-                m.enable(client);
-            }
-        } catch (DiscordException e) {
-            e.printStackTrace();
+        client = new ClientBuilder().withToken(token).login();
+        client.getDispatcher().registerListener(this);
+        client.getDispatcher().registerListener(new GeneralListener());
+        client.getDispatcher().registerListener(new OwnerListener());
+        client.getDispatcher().registerListener(new PermissionsListener());
+        for (IModule m : modules) {
+            m.enable(client);
         }
     }
 
