@@ -14,6 +14,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -104,6 +109,15 @@ public class OwnerListener {
                         v.leave();
                     }
                     System.exit(0);
+                } else if (cmd.equalsIgnoreCase("version") || cmd.equalsIgnoreCase("v")) {
+                    Path file = FileSystems.getDefault().getPath("", "Eschamali-1.0-SNAPSHOT-shaded.jar");
+                    try {
+                        BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
+                        BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(),
+                                "Last Modified: " + new SimpleDateFormat().format(attr.lastModifiedTime().toMillis()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
