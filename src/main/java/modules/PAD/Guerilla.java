@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 /**
  * Created by Iggie on 9/13/2016.
@@ -412,20 +414,16 @@ public class Guerilla implements Serializable {
             dungeonEarliestTimes.add(earliestTime);
         }
 
-        ArrayList<Integer> dungeonChrono = new ArrayList<>();
-
+        ArrayList<IndexTimeObj> objs = new ArrayList<>();
         for (int i = 0; i < dungeonEarliestTimes.size(); i++) {
-            int smallestIndex = 0;
-            for (int j = 0; j < dungeonEarliestTimes.size(); j++) {
-                if (dungeonEarliestTimes.get(j).compareTo(dungeonEarliestTimes.get(smallestIndex)) >= 0) {
-                    if (!dungeonChrono.contains(j)) {
-                        smallestIndex = j;
-                    }
-                }
-            }
-            dungeonChrono.add(smallestIndex);
+            objs.add(new IndexTimeObj(i, dungeonEarliestTimes.get(i)));
         }
+        objs.sort(Comparator.comparing(o -> o.time));
 
+        ArrayList<Integer> dungeonChrono = new ArrayList<>();
+        for (int i = 0; i < objs.size(); i++) {
+            dungeonChrono.add(objs.get(i).index);
+        }
 
         ArrayList<String> newDungeons = new ArrayList<>();
         ArrayList<String> newDungeonImgLinks = new ArrayList<>();
@@ -434,7 +432,7 @@ public class Guerilla implements Serializable {
         ArrayList<LocalTime> newC = new ArrayList<>();
         ArrayList<LocalTime> newD = new ArrayList<>();
         ArrayList<LocalTime> newE = new ArrayList<>();
-        for (int i = dungeonChrono.size() - 1; i >= 0; i--) {
+        for (int i = 0; i < dungeonChrono.size(); i++) {
             newDungeons.add(dungeons.get(dungeonChrono.get(i)));
             newDungeonImgLinks.add(dungeonImgLinks.get(dungeonChrono.get(i)));
             newA.add(a.get(dungeonChrono.get(i)));
@@ -506,5 +504,23 @@ public class Guerilla implements Serializable {
 
     public String toString() {
         return "<" + dungeons + "\n" + dungeonImgLinks + "\n" + a + "\n" + b + "\n" + c + "\n" + d + "\n" + e + ">";
+    }
+
+    private class IndexTimeObj {
+        private int index;
+        private LocalTime time;
+
+        public IndexTimeObj(int index, LocalTime time) {
+            this.index = index;
+            this.time = time;
+        }
+
+        public int getIndex() {
+            return index;
+        }
+
+        public LocalTime getTime() {
+            return time;
+        }
     }
 }
