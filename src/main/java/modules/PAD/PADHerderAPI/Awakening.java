@@ -28,7 +28,9 @@ public enum Awakening {
 
     COOP("Multi Boost", "CoopBoost", null), COMBOBOOST("Enhanced Combo", "7cBoost", null), GAURDBREAK("Guard Break", "DefBreak", null),
 
-    REDEEMKILLER("Redeemable Material Killer", "RdmKill", null), FOLLOWUPATTACK("Follow Up Attack", "FUA", null);
+    REDEEMKILLER("Redeemable Material Killer", "RdmKill", null), FOLLOWUPATTACK("Follow Up Attack", "FUA", null),
+
+    HPPLUS("Team HP+", "HP+", null), RCVPLUS("Team RCV+", "RCV+", null), VOIDDMGVOID("Void Penetration", "DmgVoid", null);
 
 
     private String name;

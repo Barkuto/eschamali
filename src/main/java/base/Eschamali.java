@@ -102,7 +102,6 @@ public class Eschamali {
             }
             ownerIDs.add(85844964633747456L);//Barkuto's ID
             for (int i = 0; i < ownerIDS.length; i++) {
-                //This was changed.
                 if (ownerIDS[i].length() > 0)
                     ownerIDs.add(Long.parseLong(ownerIDS[i]));
             }

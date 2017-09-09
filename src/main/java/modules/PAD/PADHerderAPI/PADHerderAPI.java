@@ -314,13 +314,6 @@ public class PADHerderAPI {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        if (id == 45) {
-            JsonObject fua = new JsonObject();
-            fua.addProperty("desc", "Deal 1 damage after matching orbs.");
-            fua.addProperty("id", 45);
-            fua.addProperty("name", "Follow Up Attack");
-            return new AwokenSkill(fua);
-        }
         return null;
     }
 
