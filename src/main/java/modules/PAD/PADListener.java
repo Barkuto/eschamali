@@ -9,30 +9,23 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
+import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
+import java.io.*;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Iggie on 8/25/2016.
@@ -51,6 +44,10 @@ public class PADListener {
 
     private String guerillasField = "guerillas";
 
+    private String emoteServerFile = "modules/PAD/emoteserver.txt";
+    private ArrayList<IGuild> emoteServers = new ArrayList<>();
+    private boolean useEmotes = false;
+
     public PADListener() {
         super();
         abbrMon.put("mzeus", "awoken machine zeus");
@@ -68,6 +65,28 @@ public class PADListener {
         abbrDun.put("mhera", "machine hera descended");
         abbrDun.put("mzeus", "machine zeus descended");
         abbrDun.put("z8", "zaerog descended");
+    }
+
+    @EventSubscriber
+    public void loadEmoteServer(ReadyEvent event) {
+        File f = new File(emoteServerFile);
+        try {
+            Scanner s = new Scanner(f);
+            String[] line = s.nextLine().split(";");
+            long[] ids = new long[line.length];
+            for (int i = 0; i < line.length; i++) {
+                IGuild g = PADModule.client.getGuildByID(Long.parseLong(line[i]));
+                if (g != null)
+                    emoteServers.add(g);
+            }
+
+            if (emoteServers.size() > 0)
+                useEmotes = true;
+
+            s.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @EventSubscriber
@@ -94,13 +113,15 @@ public class PADListener {
 
                         ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
                         for (String s : channels) {
+                            if (s.length() == 0)
+                                break;
                             IChannel channel = null;
                             channel = guild.getChannelByID(Long.parseLong(s));
                             if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
                                     && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
                                 LocalDateTime today = LocalDateTime.now();
                                 IMessage lastMessage = null;
-                                for (IMessage m : channel.getMessageHistory()) {
+                                for (IMessage m : channel.getMessageHistory(50)) {
                                     if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
                                         lastMessage = m;
                                         break;
@@ -420,7 +441,7 @@ public class PADListener {
         return output;
     }
 
-    public static EmbedObject getInfoEmbed(Monster m, String query) {
+    public EmbedObject getInfoEmbed(Monster m, String query) {
         EmbedBuilder eb = new EmbedBuilder().setLenient(true);
 
         Color c = Color.GRAY;
@@ -444,13 +465,21 @@ public class PADListener {
         String desc = "";
         AwokenSkill[] awakenings = m.getAwoken_skills();
         for (int i = 0; i < awakenings.length; i++) {
-            if (awakenings[i] != null) {
-                desc += Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName();
+            if (useEmotes) {
+                if (awakenings[i] != null) {
+                    desc += findEmote(Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getEmote());
+                } else {
+                    desc += "??";
+                }
             } else {
-                desc += "??";
-            }
-            if (i != awakenings.length - 1) {
-                desc += "║";
+                if (awakenings[i] != null) {
+                    desc += Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName();
+                } else {
+                    desc += "??";
+                }
+                if (i != awakenings.length - 1) {
+                    desc += "║";
+                }
             }
         }
         if (desc.length() == 0)
@@ -521,5 +550,16 @@ public class PADListener {
             }
         }
         return false;
+    }
+
+    private IEmoji findEmote(String emoteName) {
+        for (IGuild g : emoteServers) {
+            List<IEmoji> emojis = g.getEmojis();
+            for (IEmoji e : emojis) {
+                if (e.getName().equalsIgnoreCase(emoteName))
+                    return e;
+            }
+        }
+        return null;
     }
 }

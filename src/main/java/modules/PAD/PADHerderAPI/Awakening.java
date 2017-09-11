@@ -4,33 +4,33 @@ package modules.PAD.PADHerderAPI;
  * Created by Iggie on 9/30/2016.
  */
 public enum Awakening {
-    UNKNOWN("??", "??", "??"), HP("Enhanced HP", "+HP", null), ATK("Enhanced Attack", "+ATK", null), RCV("Enhanced Heal", "+RCV", null),
+    UNKNOWN("??", "??", "Unkown"), HP("Enhanced HP", "+HP", "HP"), ATK("Enhanced Attack", "+ATK", "ATK"), RCV("Enhanced Heal", "+RCV", "RCV"),
 
-    AUTORCV("Auto-Recover", "Auto-RCV", null), TIMEEXTEND("Extend Time", "TE", null), BINDRCV("Recover Bind", "BindRCV", null),
-    SKILLBOOST("Skill Boost", "SB", null), TPA("Two-Pronged Attack", "TPA", null), SBR("Resistance-Skill Lock", "SBR", null),
+    AUTORCV("Auto-Recover", "Auto-RCV", "AutoRCV"), TIMEEXTEND("Extend Time", "TE", "TE"), BINDRCV("Recover Bind", "BindRCV", "BindRCV"),
+    SKILLBOOST("Skill Boost", "SB", "SB"), TPA("Two-Pronged Attack", "TPA", "TPA"), SBR("Resistance-Skill Lock", "SBR", "SBR"),
 
-    FIRERES("Reduce Fire Damage", "FireRes", null), WATERRES("Reduce Water Damage", "WaterRes", null), WOODRES("Reduce Wood Damage", "WoodRes", null),
-    LIGHTRES("Reduce Light Damage", "LightRes", null), DARKRES("Reduce Dark Damage", "DarkRes", null),
+    FIRERES("Reduce Fire Damage", "FireRes", "FireRes"), WATERRES("Reduce Water Damage", "WaterRes", "WaterRes"), WOODRES("Reduce Wood Damage", "WoodRes", "WoodRes"),
+    LIGHTRES("Reduce Light Damage", "LightRes", "LightRes"), DARKRES("Reduce Dark Damage", "DarkRes", "DarkRes"),
 
-    BINDRES("Resistance-Bind", "BindRes", null), BLINDRES("Resistance-Dark", "BlindRes", null), JAMRES("Resistance-Jammers", "JamRes", null),
-    POIRES("Resistance-Poison", "PoiRes", null),
+    BINDRES("Resistance-Bind", "BindRes", "BindRes"), BLINDRES("Resistance-Dark", "BlindRes", "BlindRes"), JAMRES("Resistance-Jammers", "JamRes", "JamRes"),
+    POIRES("Resistance-Poison", "PoiRes", "PoiRes"),
 
-    FIREOE("Enhanced Fire Orbs", "FireOE", null), WATEROE("Enhanced Water Orbs", "WaterOE", null), WOODOE("Enhanced Wood Orbs", "WoodOE", null),
-    LIGHTOE("Enhanced Light Orbs", "LightOE", null), DARKOE("Enhanced Dark Orbs", "DarkOE", null), HEARTOE("Enhanced Heart Orbs", "HeartOE", null),
+    FIREOE("Enhanced Fire Orbs", "FireOE", "FireOE"), WATEROE("Enhanced Water Orbs", "WaterOE", "WaterOE"), WOODOE("Enhanced Wood Orbs", "WoodOE", "WoodOE"),
+    LIGHTOE("Enhanced Light Orbs", "LightOE", "LightOE"), DARKOE("Enhanced Dark Orbs", "DarkOE", "DarkOE"), HEARTOE("Enhanced Heart Orbs", "HeartOE", "HeartOE"),
 
-    FIREROW("Enhanced Fire Att.", "FireRow", null), WATERROW("Enhanced Water Att.", "WaterRow", null), WOODROW("Enhanced Wood Att.", "WoodRow", null),
-    LIGHTROW("Enhanced Light Att.", "LightRow", null), DARKROW("Enhanced Dark Att.", "DarkRow", null),
+    FIREROW("Enhanced Fire Att.", "FireRow", "FireRow"), WATERROW("Enhanced Water Att.", "WaterRow", "WaterRow"), WOODROW("Enhanced Wood Att.", "WoodRow", "WoodRow"),
+    LIGHTROW("Enhanced Light Att.", "LightRow", "LightRow"), DARKROW("Enhanced Dark Att.", "DarkRow", "DarkRow"),
 
-    DRAGONKILLER("Dragon Killer", "DragonKill", null), GODKILLER("God Killer", "GodKill", null), DEVILKILLER("Devil Killer", "DevilKill", null),
-    MACHINEKILLER("Machine Killer", "MachineKill", null), ATTACKERKILLER("Attacker Killer", "AttackerKill", null), PHYSICALKILLER("Physical Killer", "PhysicalKill", null),
-    HEALERKILLER("Healer Killer", "HealerKill", null), BALANCEDKILLER("Balanced Killer", "BalancedKill", null), AWAKENKILLER("Awaken Material Killer", "AwakenKill", null),
-    ENHANCEKILLER("Enhance Material Killer", "EnhanceKill", null), VENDORKILLER("Vendor Material Killer", "VendorKill", null), EVOKILLER("Evolve Killer", "EvoKill", null),
+    DRAGONKILLER("Dragon Killer", "DragonKill", "DragonKill"), GODKILLER("God Killer", "GodKill", "GodKill"), DEVILKILLER("Devil Killer", "DevilKill", "DevilKill"),
+    MACHINEKILLER("Machine Killer", "MachineKill", "MachineKill"), ATTACKERKILLER("Attacker Killer", "AttackerKill", "AttackerKill"), PHYSICALKILLER("Physical Killer", "PhysicalKill", "PhysKill"),
+    HEALERKILLER("Healer Killer", "HealerKill", "HealerKill"), BALANCEDKILLER("Balanced Killer", "BalancedKill", "BalanceKill"), AWAKENKILLER("Awaken Material Killer", "AwakenKill", "AwokenKill"),
+    ENHANCEKILLER("Enhance Material Killer", "EnhanceKill", "EnhanceKill"), VENDORKILLER("Vendor Material Killer", "VendorKill", "VendorKill"), EVOKILLER("Evolve Killer", "EvoKill", "EvoKill"),
 
-    COOP("Multi Boost", "CoopBoost", null), COMBOBOOST("Enhanced Combo", "7cBoost", null), GAURDBREAK("Guard Break", "DefBreak", null),
+    COOP("Multi Boost", "CoopBoost", "CoopBoost"), COMBOBOOST("Enhanced Combo", "7cBoost", "7c"), GAURDBREAK("Guard Break", "DefBreak", "GuardBreak"),
 
-    REDEEMKILLER("Redeemable Material Killer", "RdmKill", null), FOLLOWUPATTACK("Follow Up Attack", "FUA", null),
+    FOLLOWUPATTACK("Follow Up Attack", "FUA", "FUA"),
 
-    HPPLUS("Team HP+", "HP+", null), RCVPLUS("Team RCV+", "RCV+", null), VOIDDMGVOID("Void Penetration", "DmgVoid", null);
+    HPPLUS("Team HP+", "HP+", "TeamHP"), RCVPLUS("Team RCV+", "RCV+", "TeamRCV"), VOIDPEN("Void Penetration", "VoidPen", "VoidPen");
 
 
     private String name;
