@@ -84,6 +84,9 @@ public class PADListener {
                 useEmotes = true;
 
             s.close();
+
+            Awakening.loadEmojis(emoteServers);
+            Awakening.loadShortNames();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -466,17 +469,16 @@ public class PADListener {
         AwokenSkill[] awakenings = m.getAwoken_skills();
         for (int i = 0; i < awakenings.length; i++) {
             if (useEmotes) {
-                if (awakenings[i] != null) {
-                    desc += findEmote(Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getEmote());
-                } else {
-                    desc += "??";
-                }
+                if (awakenings[i] != null)
+                    desc += Awakening.getEmoji(awakenings[i].getId());
+                else
+                    desc += Awakening.UNKNOWN;
             } else {
-                if (awakenings[i] != null) {
-                    desc += Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName();
-                } else {
-                    desc += "??";
-                }
+                if (awakenings[i] != null)
+                    desc += Awakening.getShortName(awakenings[i].getId());
+                else
+                    desc += Awakening.UNKNOWN.getShortName();
+
                 if (i != awakenings.length - 1) {
                     desc += "║";
                 }
@@ -550,16 +552,5 @@ public class PADListener {
             }
         }
         return false;
-    }
-
-    private IEmoji findEmote(String emoteName) {
-        for (IGuild g : emoteServers) {
-            List<IEmoji> emojis = g.getEmojis();
-            for (IEmoji e : emojis) {
-                if (e.getName().equalsIgnoreCase(emoteName))
-                    return e;
-            }
-        }
-        return null;
     }
 }
