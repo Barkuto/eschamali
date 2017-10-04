@@ -203,7 +203,12 @@ public class GeneralListener {
                     EmbedObject embed = eb.build();
                     Sender.sendEmbed(channel, embed);
                 } else if (msg.startsWith("?eval")) {
-                    Sender.sendMessage(channel, "`" + msg.substring(5, msg.length()).trim() + "` equals: " + eval(msg.substring(msg.indexOf(" ") + 1)));
+                    try {
+                        double ans = eval(msg.substring(msg.indexOf(" ") + 1));
+                        Sender.sendMessage(channel, "`" + msg.substring(5, msg.length()).trim() + "` equals: " + ans);
+                    } catch (RuntimeException e) {
+                        Sender.sendMessage(channel, "Invalid expression.");
+                    }
                 }
             }
         }
@@ -343,6 +348,7 @@ public class GeneralListener {
                 double x = parseFactor();
                 for (; ; ) {
                     if (eat('*')) x *= parseFactor(); // multiplication
+                    else if (eat('%')) x %= parseFactor(); // modulus
                     else if (eat('/')) x /= parseFactor(); // division
                     else return x;
                 }
@@ -360,6 +366,15 @@ public class GeneralListener {
                 } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
                     while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
                     x = Double.parseDouble(str.substring(startPos, this.pos));
+                } else if (ch == 'e') {
+                    nextChar();
+                    x = Math.E;
+                } else if (ch == 'p') {
+                    nextChar();
+                    if (ch == 'i') {
+                        nextChar();
+                        x = Math.PI;
+                    } else throw new RuntimeException("Derp");
                 } else if (ch >= 'a' && ch <= 'z') { // functions
                     while (ch >= 'a' && ch <= 'z') nextChar();
                     String func = str.substring(startPos, this.pos);
@@ -368,7 +383,15 @@ public class GeneralListener {
                     else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
                     else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
                     else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
-                    else if (func.equals("e")) x = Math.E;
+                    else if (func.equals("asin")) x = Math.toDegrees(Math.asin(x));
+                    else if (func.equals("acos")) x = Math.toDegrees(Math.acos(x));
+                    else if (func.equals("atan")) x = Math.toDegrees(Math.atan(x));
+                    else if (func.equals("floor")) x = Math.floor(x);
+                    else if (func.equals("ceil")) x = Math.ceil(x);
+                    else if (func.equals("rad")) x = Math.toRadians(x);
+                    else if (func.equals("deg")) x = Math.toDegrees(x);
+                    else if (func.equals("ln")) x = Math.log(x);
+                    else if (func.equals("log")) x = Math.log10(x);
                     else throw new RuntimeException("Unknown function: " + func);
                 } else {
                     throw new RuntimeException("Unexpected: " + (char) ch);
