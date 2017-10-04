@@ -1,16 +1,24 @@
 package modules.Games;
 
+import com.vdurmont.emoji.Emoji;
+import com.vdurmont.emoji.EmojiManager;
 import modules.BufferedMessage.BufferedMessage;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
+import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPrivateChannel;
-import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.impl.obj.Embed;
+import sx.blah.discord.handle.impl.obj.ReactionEmoji;
+import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.util.EmbedBuilder;
+import sx.blah.discord.util.RateLimitException;
+import sx.blah.discord.util.RequestBuffer;
+import sx.blah.discord.util.RequestBuilder;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+import static java.lang.Thread.sleep;
 
 /**
  * Created by Iggie on 8/17/2016.
@@ -121,10 +129,55 @@ public class GamesListener {
                         }
                     } else if (cmd.equalsIgnoreCase("roll")) {
                         BufferedMessage.sendMessage(GamesModule.client, event, "You rolled a `" + (new Random().nextInt(100) + 1) + "`!");
+                    } else if (cmd.equalsIgnoreCase("poll")) {
+                        String[] params = msg.substring(msg.indexOf(" ")).split(";");
+                        if (params.length > 1 && params.length <= 27) {
+                            EmbedBuilder eb = new EmbedBuilder();
+                            eb.withTitle(params[0]);
+
+                            String a = "🇦";
+                            int startCodepoint = a.codePointAt(0);
+
+                            StringBuilder desc = new StringBuilder();
+                            ArrayList<Integer> codes = new ArrayList<>();
+                            for (int i = 1; i < params.length; i++) {
+                                int code = startCodepoint + i - 1;
+                                codes.add(code);
+                                desc.appendCodePoint(code);
+                                desc.append(": " + params[i] + "\n");
+                            }
+
+                            eb.withDesc(desc.toString());
+
+                            EmbedObject e = eb.build();
+
+                            RequestBuffer.request(() -> {
+                                IMessage m = channel.sendMessage(e);
+
+                                RequestBuilder rb = new RequestBuilder(GamesModule.client);
+                                rb.shouldBufferRequests(true);
+                                for (int i = 0; i < codes.size(); i++) {
+                                    String unicode = new StringBuilder().appendCodePoint(codes.get(i)).toString();
+
+                                    if (i == 0)
+                                        rb.doAction(() -> {
+                                            m.addReaction(ReactionEmoji.of(unicode));
+                                            return true;
+                                        });
+                                    else
+                                        rb.andThen(() -> {
+                                            m.addReaction(ReactionEmoji.of(unicode));
+                                            return true;
+                                        });
+                                }
+                                rb.build();
+                            });
+                        }
                     }
                 }
             }
         }
+
     }
 
     public String rpsPick(int pick) {
