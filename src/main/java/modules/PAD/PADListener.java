@@ -1,6 +1,6 @@
 package modules.PAD;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.PAD.PADHerderAPI.*;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.List;
 
 /**
  * Created by Iggie on 8/25/2016.
@@ -165,25 +164,25 @@ public class PADListener {
                     IUser user = event.getMessage().getAuthor();
 
                     if (cmd.equalsIgnoreCase("monster") || cmd.equalsIgnoreCase("mon") || cmd.equalsIgnoreCase("m")) {
-                        BufferedMessage.sendMessage(PADModule.client, event, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
+                        Sender.sendMessage(channel, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         if (split.length == 1) {
                             Monster m = PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
                             if (m != null)
-                                BufferedMessage.sendEmbed(PADModule.client, event, getInfoEmbed(m, m.getId() + ""));
+                                Sender.sendEmbed(channel, getInfoEmbed(m, m.getId() + ""));
                             else
-                                BufferedMessage.sendMessage(PADModule.client, event, "Bad Number rolled.");
+                                Sender.sendMessage(channel, "Bad Number rolled.");
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
                             Monster m = PADHerderAPI.getMonster(query);
                             if (m != null) {
-                                BufferedMessage.sendEmbed(PADModule.client, event, getInfoEmbed(m, query));
+                                Sender.sendEmbed(channel, getInfoEmbed(m, query));
                             } else {
-                                BufferedMessage.sendMessage(PADModule.client, event, "Monster not found.");
+                                Sender.sendMessage(channel, "Monster not found.");
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("dungeon") || cmd.equalsIgnoreCase("dun") || cmd.equalsIgnoreCase("d")) {
-                        BufferedMessage.sendMessage(PADModule.client, event, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
+                        Sender.sendMessage(channel, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
                     } else if (cmd.equalsIgnoreCase("as")) {
                         //List monsters with keyword in active?
                         //List monsters with that active "type"?
@@ -214,14 +213,14 @@ public class PADListener {
                         outputAllGuerillaImgs(channel);
                     } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
                         if (Guerilla.updateGuerilla(guerillaOutput)) {
-                            BufferedMessage.sendMessage(PADModule.client, event, "Guerillas have been updated for today.");
+                            Sender.sendMessage(channel, "Guerillas have been updated for today.");
                         }
                     } else if (cmd.equalsIgnoreCase("pic")) {
                         if (split.length > 1 && split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);
                             System.out.println(roll);
                             if (roll >= 95) {
-                                BufferedMessage.sendMessage(PADModule.client, event, "http://i.imgur.com/oicGMFu.png");
+                                Sender.sendMessage(channel, "http://i.imgur.com/oicGMFu.png");
                                 return;
                             }
                         }
@@ -233,13 +232,13 @@ public class PADListener {
                         }
                         if (found.contains("n=")) {
                             found = found.substring(found.indexOf("=") + 1);
-                            BufferedMessage.sendMessage(PADModule.client, event, "http://puzzledragonx.com/en/img/monster/MONS_" + found + ".jpg");
+                            Sender.sendMessage(channel, "http://puzzledragonx.com/en/img/monster/MONS_" + found + ".jpg");
                         } else {
-                            BufferedMessage.sendMessage(PADModule.client, event, found);
+                            Sender.sendMessage(channel, found);
                         }
                     } else if (cmd.equalsIgnoreCase("updatejson") || cmd.equalsIgnoreCase("update")) {
                         PADHerderAPI.updateJSON();
-                        BufferedMessage.sendMessage(PADModule.client, event, "JSON updated.");
+                        Sender.sendMessage(channel, "JSON updated.");
                     } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
 
                     } else if (cmd.equalsIgnoreCase("deletenickname") || cmd.equalsIgnoreCase("dn")) {
@@ -271,7 +270,7 @@ public class PADListener {
                                     }
                                 } else
                                     output = "No channels were added, make sure you mention the channel(s) with `#`";
-                                BufferedMessage.sendMessage(PADModule.client, event, output);
+                                Sender.sendMessage(channel, output);
 
                                 perms.close();
                             }
@@ -314,7 +313,7 @@ public class PADListener {
                                 } else
                                     output = "No channels were removed, make sure you mention the channel(s) with `#`";
 
-                                BufferedMessage.sendMessage(PADModule.client, event, output);
+                                Sender.sendMessage(channel, output);
 
                                 perms.close();
                             }
@@ -332,7 +331,7 @@ public class PADListener {
                                 }
                             }
 
-                            BufferedMessage.sendMessage(PADModule.client, event, output);
+                            Sender.sendMessage(channel, output);
                             perms.close();
                         }
                     }

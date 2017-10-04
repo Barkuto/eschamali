@@ -1,7 +1,7 @@
 package modules.Yugioh;
 
 import com.google.gson.*;
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
@@ -37,7 +37,7 @@ public class YGOListener {
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
                     if (cmd.equalsIgnoreCase("update") || cmd.equalsIgnoreCase("u")) {
-                        BufferedMessage.sendMessage(YGOModule.client, event, "YGO Database updated. Card total = " + updateCards());
+                        Sender.sendMessage(channel, "YGO Database updated. Card total = " + updateCards());
                     } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         try {
                             JsonObject obj = getCard(msg.toLowerCase().substring(cmd.length() + 1).trim());
@@ -77,13 +77,13 @@ public class YGOListener {
                                             desc +
                                             (source.length() > 0 ? "\n\n" + "**Source:** " + source : ""));
                                 }
-                                BufferedMessage.sendEmbed(YGOModule.client, event, eb.build());
+                                Sender.sendEmbed(channel, eb.build());
                             } else {
-                                BufferedMessage.sendMessage(YGOModule.client, event, "Card not found.");
+                                Sender.sendMessage(channel, "Card not found.");
                             }
                         } catch (FileNotFoundException e) {
                             updateCards();
-                            BufferedMessage.sendMessage(YGOModule.client, event, "Card database was missing, but has been updated. Please try again.");
+                            Sender.sendMessage(channel, "Card database was missing, but has been updated. Please try again.");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

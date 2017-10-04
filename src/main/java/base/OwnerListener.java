@@ -1,14 +1,13 @@
 package base;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
+import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IVoiceChannel;
-import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.Image;
-import sx.blah.discord.util.RateLimitException;
 
 import java.io.File;
 import java.io.FileReader;
@@ -36,6 +35,7 @@ public class OwnerListener {
         if (event.getMessage().getChannel() instanceof IPrivateChannel) {
             if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID()) && event.getMessage().getContent().startsWith(prefix)) {
                 String message = event.getMessage().getContent();
+                IChannel channel = event.getChannel();
                 String[] args = message.split(" ");
                 String argsconcat = "";
                 String cmd = args[0].replace(prefix, "");
@@ -62,7 +62,7 @@ public class OwnerListener {
                         if (str.startsWith("#"))
                             comments += str.replaceFirst("#", "");
                         props.store(new FileWriter(Eschamali.configFileName), comments);
-                        BufferedMessage.sendMessage(Eschamali.client, event, "Default status has been changed to `" + argsconcat + "`.");
+                        Sender.sendMessage(channel, "Default status has been changed to `" + argsconcat + "`.");
 
                         if (args.length > 1) {
                             Eschamali.client.changePlayingText(argsconcat);
@@ -82,28 +82,28 @@ public class OwnerListener {
                         output += String.format("%50s | %s | %s", g.getName(), centerString(g.getLongID() + "", 20), centerString(g.getUsers().size() + "", 10)) + "\n";
                     }
                     output += "```";
-                    BufferedMessage.sendMessage(Eschamali.client, event, output);
+                    Sender.sendMessage(channel, output);
                 } else if (cmd.equalsIgnoreCase("leave")) {
                     if (args.length > 1) {
                         String id = message.substring(message.indexOf(" "));
                         IGuild g = Eschamali.client.getGuildByID(Long.parseLong(id));
                         if (g != null) {
                             g.leave();
-                            BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Left server `" + g.getName() + "`");
+                            Sender.sendMessage(channel, "Left server `" + g.getName() + "`");
                         }
                     }
                 } else if (cmd.equalsIgnoreCase("setavatar")) {
                     String url = message.substring(message.indexOf(" "));
                     String imgtype = url.substring(url.lastIndexOf(".") + 1);
                     Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
-                    BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Avatar changed.");
+                    Sender.sendMessage(channel, "Avatar changed.");
                 } else if (cmd.equalsIgnoreCase("changename")) {
                     Eschamali.client.changeUsername(message.substring(message.indexOf(" ") + 1));
-                    BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Username changed.");
+                    Sender.sendMessage(channel, "Username changed.");
                 } else if (cmd.equalsIgnoreCase("uptime") || cmd.equalsIgnoreCase("up")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
+                    Sender.sendMessage(channel, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
                 } else if (cmd.equalsIgnoreCase("shutdown") || cmd.equalsIgnoreCase("sd")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(), "Shutting down...");
+                    Sender.sendMessage(channel, "Shutting down...");
                     List<IVoiceChannel> connectedVoice = Eschamali.client.getConnectedVoiceChannels();
                     for (IVoiceChannel v : connectedVoice) {
                         v.leave();
@@ -113,7 +113,7 @@ public class OwnerListener {
                     Path file = FileSystems.getDefault().getPath("", "Eschamali-1.0-SNAPSHOT-shaded.jar");
                     try {
                         BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
-                        BufferedMessage.sendMessage(Eschamali.client, event.getMessage().getChannel(),
+                        Sender.sendMessage(channel,
                                 "Last Modified: " + new SimpleDateFormat().format(attr.lastModifiedTime().toMillis()));
                     } catch (IOException e) {
                         e.printStackTrace();

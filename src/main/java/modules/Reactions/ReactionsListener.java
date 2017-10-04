@@ -1,6 +1,6 @@
 package modules.Reactions;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent;
@@ -9,8 +9,6 @@ import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IPrivateChannel;
 import sx.blah.discord.handle.obj.IUser;
-
-import java.awt.image.BufferedImage;
 
 /**
  * Created by Iggie on 11/17/2016.
@@ -26,9 +24,9 @@ public class ReactionsListener {
             IChannel channel = event.getMessage().getChannel();
             if (PermissionsListener.isModuleOn(guild, ReactionsModule.name) && PermissionsListener.canModuleInChannel(guild, ReactionsModule.name, channel)) {
                 if (message.replace("\'", "").toLowerCase().contains("dont quote me")) {
-                    BufferedMessage.sendMessage(ReactionsModule.client, event, "\"" + message + "\" -" + author.getName());
+                    Sender.sendMessage(channel, "\"" + message + "\" -" + author.getName());
                 } else if (message.toLowerCase().contains("alot")) {
-                    BufferedMessage.sendMessage(ReactionsModule.client, event, "http://thewritepractice.com/wp-content/uploads/2012/05/Alot-vs-a-lot1-600x450.png");
+                    Sender.sendMessage(channel, "http://thewritepractice.com/wp-content/uploads/2012/05/Alot-vs-a-lot1-600x450.png");
                 }
             }
         }

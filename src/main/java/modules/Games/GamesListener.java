@@ -1,17 +1,13 @@
 package modules.Games;
 
-import com.vdurmont.emoji.Emoji;
-import com.vdurmont.emoji.EmojiManager;
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.impl.obj.Embed;
 import sx.blah.discord.handle.impl.obj.ReactionEmoji;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.EmbedBuilder;
-import sx.blah.discord.util.RateLimitException;
 import sx.blah.discord.util.RequestBuffer;
 import sx.blah.discord.util.RequestBuilder;
 
@@ -76,7 +72,7 @@ public class GamesListener {
                                 question += args[i] + " ";
                             }
                             question = question.trim();
-                            BufferedMessage.sendMessage(GamesModule.client, event, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers` " + answers.get(num));
+                            Sender.sendMessage(channel, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers` " + answers.get(num));
                         }
                     } else if (cmd.equalsIgnoreCase("choose")) {
                         if (args.length > 1) {
@@ -92,7 +88,7 @@ public class GamesListener {
                             for (int i = 0; i < choices.length; i++) {
                                 choices[i] = choices[i].trim();
                             }
-                            BufferedMessage.sendMessage(GamesModule.client, event, choices[new Random().nextInt(choices.length)]);
+                            Sender.sendMessage(channel, choices[new Random().nextInt(choices.length)]);
                         }
                     } else if (cmd.equalsIgnoreCase("rps")) {
                         if (args.length > 1) {
@@ -125,10 +121,10 @@ public class GamesListener {
                                 output = GamesModule.client.getOurUser().mention() + " won! :" + rpsPick(botPick) + ": beats :" + rpsPick(pick) + ":";
                             else
                                 output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
-                            BufferedMessage.sendMessage(GamesModule.client, event, output);
+                            Sender.sendMessage(channel, output);
                         }
                     } else if (cmd.equalsIgnoreCase("roll")) {
-                        BufferedMessage.sendMessage(GamesModule.client, event, "You rolled a `" + (new Random().nextInt(100) + 1) + "`!");
+                        Sender.sendMessage(channel, "You rolled a `" + (new Random().nextInt(100) + 1) + "`!");
                     } else if (cmd.equalsIgnoreCase("poll")) {
                         String[] params = msg.substring(msg.indexOf(" ")).split(";");
                         if (params.length > 1 && params.length <= 27) {

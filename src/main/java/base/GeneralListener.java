@@ -1,6 +1,6 @@
 package base;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
@@ -35,7 +35,7 @@ public class GeneralListener {
                     String query = msg.substring(msg.indexOf(" ") + 1, msg.length());
                     query = query.replaceAll(" ", "+");
                     String url = "https://www.google.com/#q=";
-                    BufferedMessage.sendMessage(Eschamali.client, event, url + query);
+                    Sender.sendMessage(event.getChannel(), url + query);
                 }
             }
         }
@@ -46,46 +46,47 @@ public class GeneralListener {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
                 String msg = event.getMessage().getContent().toLowerCase();
+                IChannel channel = event.getChannel();
                 if (msg.equalsIgnoreCase("!donate")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
+                    Sender.sendMessage(channel, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
                 } else if (msg.equalsIgnoreCase("!maker")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
+                    Sender.sendMessage(channel, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
                 } else if (msg.equalsIgnoreCase("!ayy")) {
                     List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
                     if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
                         ayy = !ayy;
                         if (ayy) {
-                            BufferedMessage.sendMessage(Eschamali.client, event, "lmao!");
+                            Sender.sendMessage(channel, "lmao!");
                         } else {
-                            BufferedMessage.sendMessage(Eschamali.client, event, "lmao...");
+                            Sender.sendMessage(channel, "lmao...");
                         }
                     } else {
                         for (IRole r : roles) {
                             if (r.getPermissions().contains(Permissions.ADMINISTRATOR) || r.getPermissions().contains(Permissions.MANAGE_SERVER)) {
                                 ayy = !ayy;
                                 if (ayy) {
-                                    BufferedMessage.sendMessage(Eschamali.client, event, "lmao!");
+                                    Sender.sendMessage(channel, "lmao!");
                                 } else {
-                                    BufferedMessage.sendMessage(Eschamali.client, event, "lmao...");
+                                    Sender.sendMessage(channel, "lmao...");
                                 }
                                 break;
                             }
                         }
                     }
                 } else if (msg.equalsIgnoreCase("ayy") && ayy) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "lmao");
+                    Sender.sendMessage(channel, "lmao");
                 } else if (msg.equalsIgnoreCase("!tilt")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "*T* *I* *L* *T* *E* *D*");
+                    Sender.sendMessage(channel, "*T* *I* *L* *T* *E* *D*");
                 } else if (msg.equalsIgnoreCase("!riot")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
+                    Sender.sendMessage(channel, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
                 } else if (msg.equalsIgnoreCase("!ping")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "pong!");
+                    Sender.sendMessage(channel, "pong!");
                 } else if (msg.equalsIgnoreCase("!alert")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
+                    Sender.sendMessage(channel, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
                 } else if (msg.startsWith("!say")) {
                     if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
                         event.getMessage().delete();
-                        BufferedMessage.sendMessage(Eschamali.client, event, msg.substring(msg.indexOf(" ")));
+                        Sender.sendMessage(channel, msg.substring(msg.indexOf(" ")));
                     }
                 } else if (msg.equalsIgnoreCase("!serverinfo") || msg.startsWith("!sinfo")) {
                     IGuild guild = event.getMessage().getGuild();
@@ -104,7 +105,7 @@ public class GeneralListener {
                     eb.withColor(Color.WHITE);
                     EmbedObject embed = eb.build();
 
-                    BufferedMessage.sendEmbed(Eschamali.client, event, embed);
+                    Sender.sendEmbed(channel, embed);
                 } else if (msg.startsWith("!userinfo") || msg.startsWith("!uinfo")) {
                     IGuild guild = event.getMessage().getGuild();
                     IUser user = null;
@@ -131,7 +132,7 @@ public class GeneralListener {
                         user = event.getMessage().getAuthor();
                     }
                     if (user == null) {
-                        BufferedMessage.sendMessage(Eschamali.client, event, "Could not find that user.");
+                        Sender.sendMessage(channel, "Could not find that user.");
                         return;
                     }
                     String name = user.getName();
@@ -200,9 +201,9 @@ public class GeneralListener {
                     eb.appendField("Roles", rolesString, false);
                     eb.withColor(roles.get(0).getColor());
                     EmbedObject embed = eb.build();
-                    BufferedMessage.sendEmbed(Eschamali.client, event, embed);
+                    Sender.sendEmbed(channel, embed);
                 } else if (msg.startsWith("?eval")) {
-                    BufferedMessage.sendMessage(Eschamali.client, event, "`" + msg.substring(5, msg.length()).trim() + "` equals: " + eval(msg.substring(msg.indexOf(" ") + 1)));
+                    Sender.sendMessage(channel, "`" + msg.substring(5, msg.length()).trim() + "` equals: " + eval(msg.substring(msg.indexOf(" ") + 1)));
                 }
             }
         }
@@ -213,6 +214,7 @@ public class GeneralListener {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
                 String msg = event.getMessage().getContent();
+                IChannel channel = event.getChannel();
                 String[] args = msg.split(" ");
                 if (msg.startsWith("!help")) {
                     if (args.length == 1) {
@@ -234,7 +236,7 @@ public class GeneralListener {
                         for (int i = 0; i < commands.size(); i++) {
                             output += commands.get(i) + "\n";
                         }
-                        BufferedMessage.sendMessage(Eschamali.client, event, output);
+                        Sender.sendMessage(channel, output);
                     } else {
                         String module = "";
                         for (int i = 1; i < args.length; i++) {
@@ -257,9 +259,9 @@ public class GeneralListener {
                             for (int i = 1; i < cmds.size(); i++) {
                                 output += cmds.get(i) + "\n";
                             }
-                            BufferedMessage.sendMessage(Eschamali.client, event, output);
+                            Sender.sendMessage(channel, output);
                         } else {
-                            BufferedMessage.sendMessage(Eschamali.client, event, "There is no module with that name.");
+                            Sender.sendMessage(channel, "There is no module with that name.");
                         }
                     }
                 }
@@ -366,6 +368,7 @@ public class GeneralListener {
                     else if (func.equals("sin")) x = Math.sin(Math.toRadians(x));
                     else if (func.equals("cos")) x = Math.cos(Math.toRadians(x));
                     else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
+                    else if (func.equals("e")) x = Math.E;
                     else throw new RuntimeException("Unknown function: " + func);
                 } else {
                     throw new RuntimeException("Unexpected: " + (char) ch);

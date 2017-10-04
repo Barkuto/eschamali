@@ -8,7 +8,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.PermissionsListener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -76,7 +76,7 @@ public class MusicListener {
                                 @Override
                                 public void trackLoaded(AudioTrack audioTrack) {
                                     guildManager.scheduler.queue(audioTrack);
-                                    BufferedMessage.sendMessage(MusicModule.client, event, "Queued `" + audioTrack.getInfo().title + "`");
+                                    Sender.sendMessage(channel, "Queued `" + audioTrack.getInfo().title + "`");
                                 }
 
                                 @Override
@@ -87,12 +87,12 @@ public class MusicListener {
                                 @Override
                                 public void noMatches() {
                                     //Search by keyword
-                                    BufferedMessage.sendMessage(MusicModule.client, event, "Nothing found from \"" + args[1] + "\"");
+                                    Sender.sendMessage(channel, "Nothing found from \"" + args[1] + "\"");
                                 }
 
                                 @Override
                                 public void loadFailed(FriendlyException e) {
-                                    BufferedMessage.sendMessage(MusicModule.client, event, "Loading failed.");
+                                    Sender.sendMessage(channel, "Loading failed.");
                                 }
                             });
                             joinVoiceChannel(user, guild, channel);
@@ -113,7 +113,7 @@ public class MusicListener {
                                     i++;
                                 }
                             }
-                            BufferedMessage.sendMessage(MusicModule.client, event, out + "```");
+                            Sender.sendMessage(channel, out + "```");
                         }
                     } else if (cmd.equalsIgnoreCase("queuerelated") || cmd.equalsIgnoreCase("qr")) {
                         BlockingQueue<AudioTrack> queue = guildManager.scheduler.getQueue();
@@ -128,7 +128,7 @@ public class MusicListener {
                                     @Override
                                     public void trackLoaded(AudioTrack audioTrack) {
                                         guildManager.scheduler.queue(audioTrack);
-                                        BufferedMessage.sendMessage(MusicModule.client, event, "Queued `" + audioTrack.getInfo().title + "`");
+                                        Sender.sendMessage(channel, "Queued `" + audioTrack.getInfo().title + "`");
                                     }
 
                                     @Override
@@ -139,12 +139,12 @@ public class MusicListener {
                                     @Override
                                     public void noMatches() {
                                         //Search by keyword
-                                        BufferedMessage.sendMessage(MusicModule.client, event, "Nothing found from \"" + args[1] + "\"");
+                                        Sender.sendMessage(channel, "Nothing found from \"" + args[1] + "\"");
                                     }
 
                                     @Override
                                     public void loadFailed(FriendlyException e) {
-                                        BufferedMessage.sendMessage(MusicModule.client, event, "Loading failed.");
+                                        Sender.sendMessage(channel, "Loading failed.");
                                     }
                                 });
                             }
@@ -152,18 +152,18 @@ public class MusicListener {
                     } else if (cmd.equalsIgnoreCase("skip") || cmd.equalsIgnoreCase("s")) {
                         if (guildManager.scheduler.isPlaying()) {
                             guildManager.scheduler.nextTrack();
-                            BufferedMessage.sendMessage(MusicModule.client, event, "Current track was skipped.");
+                            Sender.sendMessage(channel, "Current track was skipped.");
                         }
                     } else if (cmd.equalsIgnoreCase("pause") || cmd.equalsIgnoreCase("p")) {
                         if (guildManager.scheduler.isPlaying()) {
                             guildManager.player.setPaused(true);
-                            BufferedMessage.sendMessage(MusicModule.client, event, "Player was paused.");
+                            Sender.sendMessage(channel, "Player was paused.");
                         }
                     } else if (cmd.equalsIgnoreCase("unpause") || cmd.equalsIgnoreCase("up")
                             || cmd.equalsIgnoreCase("resume") || cmd.equalsIgnoreCase("r")) {
                         if (guildManager.player.isPaused()) {
                             guildManager.player.setPaused(false);
-                            BufferedMessage.sendMessage(MusicModule.client, event, "Player was unpaused.");
+                            Sender.sendMessage(channel, "Player was unpaused.");
                         }
                     } else if (cmd.equalsIgnoreCase("nowplaying") || cmd.equalsIgnoreCase("np")
                             || cmd.equalsIgnoreCase("currenttrack") || cmd.equalsIgnoreCase("ct")) {
@@ -172,13 +172,13 @@ public class MusicListener {
                         int[] totalLength = parseLength(currentTrack.getDuration());
                         String current = String.format("%02d:%02d:%02d", currentTime[0], currentTime[1], currentTime[2]);
                         String end = String.format("%02d:%02d:%02d", totalLength[0], totalLength[1], totalLength[2]);
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Now Playing: **" + currentTrack.getInfo().title + "** `" + current + "/" + end + "`");
+                        Sender.sendMessage(channel, "Now Playing: **" + currentTrack.getInfo().title + "** `" + current + "/" + end + "`");
                     } else if (cmd.equalsIgnoreCase("stop")) {
                         while (guildManager.player.getPlayingTrack() != null) {
                             guildManager.scheduler.nextTrack();
                         }
                         leaveVoiceChannel(guild);
-                        BufferedMessage.sendMessage(MusicModule.client, event, "Player was stopped.");
+                        Sender.sendMessage(channel, "Player was stopped.");
                     }
                 }
             }
@@ -199,7 +199,7 @@ public class MusicListener {
     private void connectToVoiceOf(IUser user, IGuild guild, IChannel channel) {
         IVoiceChannel userVC = user.getVoiceStateForGuild(guild).getChannel();
         if (userVC == null)
-            BufferedMessage.sendMessage(MusicModule.client, channel, "You are not in a voice channel.");
+            Sender.sendMessage(channel, "You are not in a voice channel.");
         else userVC.join();
     }
 

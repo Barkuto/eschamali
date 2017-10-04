@@ -1,6 +1,6 @@
 package modules.CustomCommands;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
@@ -66,7 +66,7 @@ public class CustomCommandsListener {
                         e.printStackTrace();
                     }
                     if (commands.containsKey(cmd.toLowerCase())) {
-                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, commands.get(cmd.toLowerCase()));
+                        Sender.sendMessage(channel, commands.get(cmd.toLowerCase()));
                     } else {
                         if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getLongID() == ownerID || userHasPerm(author, guild, Permissions.MANAGE_ROLES)) {
                             String commandName = "";
@@ -81,23 +81,23 @@ public class CustomCommandsListener {
                                 if (cmd.equals("addcustomcommand") || cmd.equalsIgnoreCase("acc")) {
                                     if (perms.getPerms(tableName, col1, commandName, col2).equals("")) {
                                         perms.setPerms(tableName, col1, commandName, col2, commandText);
-                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Added custom command \"" + commandName + "\"");
+                                        Sender.sendMessage(channel, "Added custom command \"" + commandName + "\"");
                                     } else {
-                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is already a custom command!");
+                                        Sender.sendMessage(channel, "That is already a custom command!");
                                     }
                                 } else if (cmd.equals("deletecustomcommand") || cmd.equals("dcc") || cmd.equals("rcc")) {
                                     if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
                                         perms.deletePerms(tableName, col1, commandName);
-                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Deleted custom command \"" + commandName + "\"");
+                                        Sender.sendMessage(channel, "Deleted custom command \"" + commandName + "\"");
                                     } else {
-                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                                        Sender.sendMessage(channel, "That is not a custom command!");
                                     }
                                 } else if (cmd.equals("editcustomcommand") || cmd.equals("ecc")) {
                                     if (!perms.getPerms(tableName, col1, commandName, col2).equals("")) {
                                         perms.setPerms(tableName, col1, commandName, col2, commandText);
-                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "Edited custom command \"" + commandName + "\"");
+                                        Sender.sendMessage(channel, "Edited custom command \"" + commandName + "\"");
                                     } else {
-                                        BufferedMessage.sendMessage(CustomCommandsModule.client, event, "That is not a custom command!");
+                                        Sender.sendMessage(channel, "That is not a custom command!");
                                     }
                                 }
                             }
@@ -116,7 +116,7 @@ public class CustomCommandsListener {
                             } catch (SQLException e) {
                                 e.printStackTrace();
                             }
-                            BufferedMessage.sendMessage(CustomCommandsModule.client, event, output);
+                            Sender.sendMessage(channel, output);
                         }
                     }
                     perms.close();

@@ -1,6 +1,6 @@
 package modules.Profiles;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.Db;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
 
 /**
  * Created by Iggie on 5/23/2017.
@@ -72,16 +71,16 @@ public class ProfilesListener {
                     if (cmd.equalsIgnoreCase("profilereset")) {
                         profile = Profile.getDefaultProfile(user);
                         if (saveProfile(user, profile, db))
-                            BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile has been reset.");
+                            Sender.sendMessage(channel, "Your profile has been reset.");
                         else
-                            BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                            Sender.sendMessage(channel, profileSaveErrorMessage);
                     } else if (cmd.equalsIgnoreCase("profile")
                             || cmd.equalsIgnoreCase("p")) {
                         if (split.length == 1) {
                             if (profile != null)
-                                BufferedMessage.sendEmbed(ProfilesModule.client, event, profile.getAsEmbed());
+                                Sender.sendEmbed(channel, profile.getAsEmbed());
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Something went wrong trying to get your profile!");
+                                Sender.sendMessage(channel, "Something went wrong trying to get your profile!");
                         } else {
                             IUser otherUser = null;
                             String arg = msg.substring(msg.indexOf(" ") + 1).trim();
@@ -108,11 +107,11 @@ public class ProfilesListener {
                             if (otherUser != null) {
                                 Profile otherProfile = getProfile(otherUser, db);
                                 if (otherProfile != null)
-                                    BufferedMessage.sendEmbed(ProfilesModule.client, event, otherProfile.getAsEmbed());
+                                    Sender.sendEmbed(channel, otherProfile.getAsEmbed());
                                 else
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, "Something went wrong trying to get that profile!");
+                                    Sender.sendMessage(channel, "Something went wrong trying to get that profile!");
                             } else {
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Could not find that user.");
+                                Sender.sendMessage(channel, "Could not find that user.");
                             }
                         }
                     } else if (profile != null) {
@@ -122,33 +121,33 @@ public class ProfilesListener {
                             String newName = msg.substring(cmd.length() + 1).trim();
                             profile.setName(newName);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile name has been set to \"" + newName + "\".");
+                                Sender.sendMessage(channel, "Your profile name has been set to \"" + newName + "\".");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Something went wrong when saving your profile.");
+                                Sender.sendMessage(channel, "Something went wrong when saving your profile.");
                         } else if (cmd.equalsIgnoreCase("profilesetnickname") || cmd.equalsIgnoreCase("profilesetnick")
                                 || cmd.equalsIgnoreCase("psnn")) {
                             String newNick = msg.substring(cmd.length() + 1).trim();
                             profile.setNickname(newNick);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile nickname has been set to \"" + newNick + "\".");
+                                Sender.sendMessage(channel, "Your profile nickname has been set to \"" + newNick + "\".");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profilesetbio")
                                 || cmd.equalsIgnoreCase("psb")) {
                             String newBio = msg.substring(cmd.length() + 1).trim();
                             profile.setBio(newBio);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile bio has been set.");
+                                Sender.sendMessage(channel, "Your profile bio has been set.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profilesetpicture")
                                 || cmd.equalsIgnoreCase("psp")) {
                             String newPic = msg.substring(cmd.length() + 1).trim();
                             profile.setPictureURL(newPic);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile picture has been set.");
+                                Sender.sendMessage(channel, "Your profile picture has been set.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profilesetcolor")
                                 || cmd.equalsIgnoreCase("psc")) {
                             Color newColor = null;
@@ -159,7 +158,7 @@ public class ProfilesListener {
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
                                 } catch (NoSuchFieldException e) {
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, "Invalid color given. Provide a valid color name, or enter RGB values(0-255) separated by spaces.");
+                                    Sender.sendMessage(channel, "Invalid color given. Provide a valid color name, or enter RGB values(0-255) separated by spaces.");
                                 }
                             } else if (split.length == 4) {
                                 try {
@@ -174,26 +173,26 @@ public class ProfilesListener {
                             if (newColor != null) {
                                 profile.setColor(newColor);
                                 if (saveProfile(user, profile, db))
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile color has been set.");
+                                    Sender.sendMessage(channel, "Your profile color has been set.");
                                 else
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                    Sender.sendMessage(channel, profileSaveErrorMessage);
                             }
                         } else if (cmd.equalsIgnoreCase("profilesetfootericon")
                                 || cmd.equalsIgnoreCase("psfi")) {
                             String newFooterIcon = msg.substring(cmd.length() + 1).trim();
                             profile.setFooterIcon(newFooterIcon);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile footer icon has been set.");
+                                Sender.sendMessage(channel, "Your profile footer icon has been set.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profilesetfooter")
                                 || cmd.equalsIgnoreCase("psf")) {
                             String newFooter = msg.substring(cmd.length() + 1).trim();
                             profile.setFooterText(newFooter);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile footer has been set.");
+                                Sender.sendMessage(channel, "Your profile footer has been set.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileaddfield")
                                 || cmd.equalsIgnoreCase("paf")) {
                             if (split.length > 1) {
@@ -201,67 +200,67 @@ public class ProfilesListener {
                                 String content = msg.substring(msg.indexOf(';') + 1).trim();
                                 profile.appendField(title, content);
                                 if (saveProfile(user, profile, db))
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, "The field \"" + title + "\" has been added.");
+                                    Sender.sendMessage(channel, "The field \"" + title + "\" has been added.");
                                 else
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                    Sender.sendMessage(channel, profileSaveErrorMessage);
                             } else {
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Invalid command format. Use: &" + cmd + " title;content");
+                                Sender.sendMessage(channel, "Invalid command format. Use: &" + cmd + " title;content");
                             }
                         } else if (cmd.equalsIgnoreCase("profileremovefield")
                                 || cmd.equalsIgnoreCase("prf") || cmd.equalsIgnoreCase("pdf")) {
                             String title = msg.substring(cmd.length() + 1).trim();
                             if (profile.removeField(title) != null) {
                                 if (saveProfile(user, profile, db))
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, "The field \"" + title + "\" has been removed.");
+                                    Sender.sendMessage(channel, "The field \"" + title + "\" has been removed.");
                                 else
-                                    BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                    Sender.sendMessage(channel, profileSaveErrorMessage);
                             } else {
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Invalid field.");
+                                Sender.sendMessage(channel, "Invalid field.");
                             }
                         }
                         /* Profile Reset Commands */
                         else if (cmd.equalsIgnoreCase("profileresetname")) {
                             profile.setName(user.getName());
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile name has been reset.");
+                                Sender.sendMessage(channel, "Your profile name has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileresetnickname") || cmd.equalsIgnoreCase("profileresetnick")) {
                             profile.setNickname("");
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile nickname has been reset.");
+                                Sender.sendMessage(channel, "Your profile nickname has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileresetbio")) {
                             profile.setBio("");
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile bio has been reset.");
+                                Sender.sendMessage(channel, "Your profile bio has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileresetpicture")) {
                             profile.setPictureURL(user.getAvatarURL());
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile picture has been reset.");
+                                Sender.sendMessage(channel, "Your profile picture has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileresetcolor")) {
                             profile.setColor(Color.GRAY);
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile color has been reset.");
+                                Sender.sendMessage(channel, "Your profile color has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileresetfootericon")) {
                             profile.setFooterIcon("");
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile footer icon has been reset.");
+                                Sender.sendMessage(channel, "Your profile footer icon has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         } else if (cmd.equalsIgnoreCase("profileresetfooter")) {
                             profile.setFooterText("");
                             if (saveProfile(user, profile, db))
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, "Your profile footer has been reset.");
+                                Sender.sendMessage(channel, "Your profile footer has been reset.");
                             else
-                                BufferedMessage.sendMessage(ProfilesModule.client, event, profileSaveErrorMessage);
+                                Sender.sendMessage(channel, profileSaveErrorMessage);
                         }
                     }
 

@@ -1,7 +1,7 @@
 package modules.Permissions;
 
 import base.Eschamali;
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
@@ -51,6 +51,7 @@ public class PermissionsListener {
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             String message = event.getMessage().getContent();
+            IChannel channel = event.getChannel();
             IUser author = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
             if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || author.getStringID().equals(ownerID)) {
@@ -68,7 +69,7 @@ public class PermissionsListener {
                     Permission perms = getPermissionDB(guild);
 
                     if (cmd.equalsIgnoreCase("db")) {
-                        BufferedMessage.sendMessage(Eschamali.client, event, databaseString(guild));
+                        Sender.sendMessage(channel, databaseString(guild));
                     }
                     ////////////////
                     //CHANNEL PERMS
@@ -77,24 +78,24 @@ public class PermissionsListener {
                         if (args.length >= 2) {
                             if (argsconcat.trim().equalsIgnoreCase("all")) {
                                 perms.setPerms("channels", "module", "General", "channels", "all");
-                                BufferedMessage.sendMessage(Eschamali.client, event, "I can now talk in all channels.");
+                                Sender.sendMessage(channel, "I can now talk in all channels.");
                                 return;
                             }
                             if (perms.getPerms("channels", "module", "General", "channels").equalsIgnoreCase("all")) {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "I can already talk in all channels.");
+                                Sender.sendMessage(channel, "I can already talk in all channels.");
                                 return;
                             }
                             String channels = message.substring(message.indexOf(cmd) + cmd.length() + 1);
                             String[] split = channels.split(" ");
                             ArrayList<IChannel> channelsAdded = new ArrayList<>();
                             for (int i = 0; i < split.length; i++) {
-                                IChannel channel = null;
+                                IChannel aChannel = null;
                                 if (split[i].contains("#")) {
-                                    channel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
-                                    if (channel != null) {
-                                        if (!canTalkInChannel(guild, channel)) {
-                                            perms.addPerms("channels", "module", "General", "channels", channel.getStringID());
-                                            channelsAdded.add(channel);
+                                    aChannel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
+                                    if (aChannel != null) {
+                                        if (!canTalkInChannel(guild, aChannel)) {
+                                            perms.addPerms("channels", "module", "General", "channels", aChannel.getStringID());
+                                            channelsAdded.add(aChannel);
                                         }
                                     }
                                 }
@@ -104,9 +105,9 @@ public class PermissionsListener {
                                 output += channelsAdded.get(i).mention() + " ";
                             }
                             if (channelsAdded.size() >= 1) {
-                                BufferedMessage.sendMessage(Eschamali.client, event, output);
+                                Sender.sendMessage(channel, output);
                             } else {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "No new talk channels added.");
+                                Sender.sendMessage(channel, "No new talk channels added.");
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("dtc") || cmd.equalsIgnoreCase("deletetalkchannel")) {
@@ -117,7 +118,7 @@ public class PermissionsListener {
                             ArrayList<IChannel> currentChannels = new ArrayList<IChannel>();
                             String[] currChans = perms.getPerms("channels", "module", "General", "channels").split(";");
                             if (currChans[0].equalsIgnoreCase("all")) {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "I can currently talk in all channels.");
+                                Sender.sendMessage(channel, "I can currently talk in all channels.");
                                 return;
                             }
                             for (int i = 0; i < currChans.length; i++) {
@@ -129,11 +130,11 @@ public class PermissionsListener {
 
                             ArrayList<IChannel> deleteChannels = new ArrayList<IChannel>();
                             for (int i = 0; i < split.length; i++) {
-                                IChannel channel = null;
+                                IChannel aChannel = null;
                                 if (split[i].contains("#")) {
-                                    channel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
-                                    if (channel != null) {
-                                        deleteChannels.add(channel);
+                                    aChannel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
+                                    if (aChannel != null) {
+                                        deleteChannels.add(aChannel);
                                     }
                                 }
                             }
@@ -163,15 +164,15 @@ public class PermissionsListener {
                             for (int i = 0; i < deleteChannels.size(); i++) {
                                 output += deleteChannels.get(i).mention() + " ";
                             }
-                            BufferedMessage.sendMessage(Eschamali.client, event, output.trim());
+                            Sender.sendMessage(channel, output.trim());
                         }
                     } else if (cmd.equalsIgnoreCase("rtc") || cmd.equalsIgnoreCase("resettalkchannels")) {
                         perms.setPerms("channels", "module", "General", "channels", "");
-                        BufferedMessage.sendMessage(Eschamali.client, event, "General talk channels have been reset.");
+                        Sender.sendMessage(channel, "General talk channels have been reset.");
                     } else if (cmd.equalsIgnoreCase("tc") || cmd.equalsIgnoreCase("talkchannels")) {
                         List<String> channels = Arrays.asList(perms.getPerms("channels", "module", "General", "channels").split(";"));
                         if (channels.get(0).equalsIgnoreCase("all")) {
-                            BufferedMessage.sendMessage(Eschamali.client, event, "I can talk in all channels.");
+                            Sender.sendMessage(channel, "I can talk in all channels.");
                             return;
                         }
                         String output = "General talk channels are: ";
@@ -181,7 +182,7 @@ public class PermissionsListener {
                                 output += chan.mention() + " ";
                             }
                         }
-                        BufferedMessage.sendMessage(Eschamali.client, event, output);
+                        Sender.sendMessage(channel, output);
                     }
                     ///////////////
                     //MODULE PERMS
@@ -195,28 +196,28 @@ public class PermissionsListener {
                                 output += (enabled ? ":o: " : ":x: ") + m.getName() + "\n";
                             }
                         }
-                        BufferedMessage.sendMessage(Eschamali.client, event, output);
+                        Sender.sendMessage(channel, output);
                     } else if (cmd.equalsIgnoreCase("dam") || cmd.equalsIgnoreCase("disableallmodules")) {
                         perms.deleteTable("modules");
                         perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (IModule m : Eschamali.modules) {
                             perms.addPerms("modules", "module", m.getName(), "enabled", "false");
                         }
-                        BufferedMessage.sendMessage(Eschamali.client, event, "All Modules have been __disabled__.");
+                        Sender.sendMessage(channel, "All Modules have been __disabled__.");
                     } else if (cmd.equalsIgnoreCase("edm") || cmd.equalsIgnoreCase("enabledefaultmodules")) {
                         perms.deleteTable("modules");
                         perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (Map.Entry<IModule, Boolean> entry : Eschamali.defaultmodules.entrySet()) {
                             perms.addPerms("modules", "module", entry.getKey().getName(), "enabled", entry.getValue().toString());
                         }
-                        BufferedMessage.sendMessage(Eschamali.client, event, "Default Modules have been __enabled__.");
+                        Sender.sendMessage(channel, "Default Modules have been __enabled__.");
                     } else if (cmd.equalsIgnoreCase("eam") || cmd.equalsIgnoreCase("enableallmodules")) {
                         perms.deleteTable("modules");
                         perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (IModule m : Eschamali.modules) {
                             perms.addPerms("modules", "module", m.getName(), "enabled", "true");
                         }
-                        BufferedMessage.sendMessage(Eschamali.client, event, "All Modules have been __enabled__.");
+                        Sender.sendMessage(channel, "All Modules have been __enabled__.");
                     } else if (cmd.equalsIgnoreCase("em") || cmd.equalsIgnoreCase("enablemodule")) {
                         if (args.length >= 2) {
                             IModule module = null;
@@ -228,9 +229,9 @@ public class PermissionsListener {
                             }
                             if (module != null) {
                                 perms.setPerms("modules", "module", module.getName(), "enabled", "true");
-                                BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module has been enabled.");
+                                Sender.sendMessage(channel, "The " + module.getName() + " module has been enabled.");
                             } else {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "That is not a valid module.");
+                                Sender.sendMessage(channel, "That is not a valid module.");
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("dm") || cmd.equalsIgnoreCase("disablemodule")) {
@@ -244,9 +245,9 @@ public class PermissionsListener {
                             }
                             if (module != null) {
                                 perms.setPerms("modules", "module", module.getName(), "enabled", "false");
-                                BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module has been disabled.");
+                                Sender.sendMessage(channel, "The " + module.getName() + " module has been disabled.");
                             } else {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "That is not a valid module.");
+                                Sender.sendMessage(channel, "That is not a valid module.");
                             }
                         }
                     }
@@ -267,22 +268,22 @@ public class PermissionsListener {
                             if (module != null) {
                                 if (argsconcat.substring(moduleName.length() + 1, argsconcat.length()).equalsIgnoreCase("all")) {
                                     perms.setPerms("channels", "module", module.getName(), "channels", "all");
-                                    BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can now be used in all channels.");
+                                    Sender.sendMessage(channel, "The " + module.getName() + " module can now be used in all channels.");
                                     return;
                                 }
                                 if (perms.getPerms("channels", "module", module.getName(), "channels").equalsIgnoreCase("all")) {
-                                    BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " can already be used in all channels.");
+                                    Sender.sendMessage(channel, "The " + module.getName() + " can already be used in all channels.");
                                     return;
                                 }
                                 ArrayList<IChannel> channelsAdded = new ArrayList<>();
                                 for (int i = 2; i < args.length; i++) {
-                                    IChannel channel = null;
+                                    IChannel aChannel = null;
                                     if (args[i].contains("#")) {
-                                        channel = guild.getChannelByID(Long.parseLong(args[i].replace("<#", "").replace(">", "")));
-                                        if (channel != null) {
-                                            if (!canModuleInChannel(guild, module.getName(), channel)) {
-                                                channelsAdded.add(channel);
-                                                perms.addPerms("channels", "module", module.getName(), "channels", channel.getStringID());
+                                        aChannel = guild.getChannelByID(Long.parseLong(args[i].replace("<#", "").replace(">", "")));
+                                        if (aChannel != null) {
+                                            if (!canModuleInChannel(guild, module.getName(), aChannel)) {
+                                                channelsAdded.add(aChannel);
+                                                perms.addPerms("channels", "module", module.getName(), "channels", aChannel.getStringID());
                                             }
                                         }
                                     }
@@ -291,9 +292,9 @@ public class PermissionsListener {
                                 for (IChannel c : channelsAdded) {
                                     output += c.mention() + " ";
                                 }
-                                BufferedMessage.sendMessage(Eschamali.client, event, output);
+                                Sender.sendMessage(channel, output);
                             } else {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "\"" + moduleName + "\" is a not a valid module.");
+                                Sender.sendMessage(channel, "\"" + moduleName + "\" is a not a valid module.");
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("dmc") || cmd.equalsIgnoreCase("deletemodulechannel")) {
@@ -314,7 +315,7 @@ public class PermissionsListener {
                                 ArrayList<IChannel> currentChannels = new ArrayList<>();
                                 String[] currChans = perms.getPerms("channels", "module", module.getName(), "channels").split(";");
                                 if (currChans[0].equalsIgnoreCase("all")) {
-                                    BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can currently be used in all channels.");
+                                    Sender.sendMessage(channel, "The " + module.getName() + " module can currently be used in all channels.");
                                     return;
                                 }
                                 for (int i = 0; i < currChans.length; i++) {
@@ -326,11 +327,11 @@ public class PermissionsListener {
 
                                 ArrayList<IChannel> deleteChannels = new ArrayList<>();
                                 for (int i = 0; i < split.length; i++) {
-                                    IChannel channel = null;
+                                    IChannel aChannel = null;
                                     if (split[i].contains("#")) {
-                                        channel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
-                                        if (channel != null) {
-                                            deleteChannels.add(channel);
+                                        aChannel = guild.getChannelByID(Long.parseLong(split[i].replace("<#", "").replace(">", "")));
+                                        if (aChannel != null) {
+                                            deleteChannels.add(aChannel);
                                         }
                                     }
                                 }
@@ -360,9 +361,9 @@ public class PermissionsListener {
                                 for (int i = 0; i < deleteChannels.size(); i++) {
                                     output += deleteChannels.get(i).mention() + " ";
                                 }
-                                BufferedMessage.sendMessage(Eschamali.client, event, output.trim());
+                                Sender.sendMessage(channel, output.trim());
                             } else {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "\"" + moduleName + "\" is a not a valid module.");
+                                Sender.sendMessage(channel, "\"" + moduleName + "\" is a not a valid module.");
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("rmc") || cmd.equalsIgnoreCase("resetmodulechannels")) {
@@ -386,7 +387,7 @@ public class PermissionsListener {
                             if (output.contains(",")) {
                                 output = output.substring(0, output.lastIndexOf(","));
                             }
-                            BufferedMessage.sendMessage(Eschamali.client, event, output);
+                            Sender.sendMessage(channel, output);
                         }
                     } else if (cmd.equalsIgnoreCase("mc") || cmd.equalsIgnoreCase("modulechannels")) {
                         IModule module = null;
@@ -399,19 +400,19 @@ public class PermissionsListener {
                             String output = "The " + module.getName() + " module can be used in the following channels: ";
                             String chans = perms.getPerms("channels", "module", module.getName(), "channels");
                             if (chans.equalsIgnoreCase("all")) {
-                                BufferedMessage.sendMessage(Eschamali.client, event, "The " + module.getName() + " module can used in all channels.");
+                                Sender.sendMessage(channel, "The " + module.getName() + " module can used in all channels.");
                                 return;
                             }
                             String[] channels = chans.split(";");
                             for (int i = 0; i < channels.length; i++) {
-                                IChannel channel = guild.getChannelByID(Long.parseLong(channels[i]));
-                                if (channel != null) {
-                                    output += channel.mention() + " ";
+                                IChannel theChannel = guild.getChannelByID(Long.parseLong(channels[i]));
+                                if (theChannel != null) {
+                                    output += theChannel.mention() + " ";
                                 }
                             }
-                            BufferedMessage.sendMessage(Eschamali.client, event, output);
+                            Sender.sendMessage(channel, output);
                         } else {
-                            BufferedMessage.sendMessage(Eschamali.client, event, "That is not a valid module.");
+                            Sender.sendMessage(channel, "That is not a valid module.");
                         }
                     }
                     perms.close();

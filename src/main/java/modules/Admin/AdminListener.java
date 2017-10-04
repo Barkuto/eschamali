@@ -1,6 +1,6 @@
 package modules.Admin;
 
-import modules.BufferedMessage.BufferedMessage;
+import modules.BufferedMessage.Sender;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import sx.blah.discord.api.events.EventSubscriber;
@@ -149,7 +149,7 @@ public class AdminListener {
                                             }
                                         });
                                     }
-                                    BufferedMessage.sendMessage(AdminModule.client, event, "Deleted `" + msgsToDelete.size() + "` messages of user " + user.mention());
+                                    Sender.sendMessage(channel, "Deleted `" + msgsToDelete.size() + "` messages of user " + user.mention());
                                 }
                             }
                         }
@@ -169,9 +169,9 @@ public class AdminListener {
                                     for (IChannel c : serverChannels) {
                                         c.overrideRolePermissions(muteRole, null, EnumSet.of(Permissions.READ_MESSAGES, Permissions.SEND_MESSAGES));
                                     }
-                                    BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been muted.");
+                                    Sender.sendMessage(channel, user.mention() + " has been muted.");
                                 } else {
-                                    BufferedMessage.sendMessage(AdminModule.client, event, "Invalid user");
+                                    Sender.sendMessage(channel, "Invalid user");
                                 }
                             }
                         }
@@ -183,19 +183,19 @@ public class AdminListener {
                                     IRole muteRole = guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2)));
                                     if (muteRole != null) {
                                         user.removeRole(muteRole);
-                                        BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been unmuted.");
+                                        Sender.sendMessage(channel, user.mention() + " has been unmuted.");
                                     } else {
-                                        BufferedMessage.sendMessage(AdminModule.client, event, "There is no mute role.");
+                                        Sender.sendMessage(channel, "There is no mute role.");
                                     }
                                 } else {
-                                    BufferedMessage.sendMessage(AdminModule.client, event, "Invalid user");
+                                    Sender.sendMessage(channel, "Invalid user");
                                 }
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("muterole")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length == 1) {
-                                BufferedMessage.sendMessage(AdminModule.client, event, "The current mute role is: " + guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2))));
+                                Sender.sendMessage(channel, "The current mute role is: " + guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2))));
                             } else if (args.length >= 2) {
                                 IRole newMuteRole = guild.getRolesByName(argsconcat.trim()).get(0);
                                 IRole oldMuteRole = guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2)));
@@ -220,12 +220,12 @@ public class AdminListener {
 //                                        }
 //                                    }
 
-                                BufferedMessage.sendMessage(AdminModule.client, event, "The mute role has been set to the role: " + newMuteRole.getName());
+                                Sender.sendMessage(channel, "The mute role has been set to the role: " + newMuteRole.getName());
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("lock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
-                            BufferedMessage.sendMessage(AdminModule.client, event, "Channel locked.");
+                            Sender.sendMessage(channel, "Channel locked.");
                             channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
                         }
                     } else if (cmd.equalsIgnoreCase("unlock")) {
@@ -236,7 +236,7 @@ public class AdminListener {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            BufferedMessage.sendMessage(AdminModule.client, event, "Channel unlocked.");
+                            Sender.sendMessage(channel, "Channel unlocked.");
                         }
                     } else if (cmd.equalsIgnoreCase("warn") || cmd.equalsIgnoreCase("strike")) {
                         if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
@@ -255,7 +255,7 @@ public class AdminListener {
                                 }
                                 numStrikes += strikesToAdd;
                                 perms.setPerms(table2Name, table2col1, userID, table2col2, numStrikes + "");
-                                BufferedMessage.sendMessage(AdminModule.client, event, user.mention() + " has been warned, and now has `" + numStrikes + "` strike(s).");
+                                Sender.sendMessage(channel, user.mention() + " has been warned, and now has `" + numStrikes + "` strike(s).");
                                 if (numStrikes >= 5) {
                                     guild.banUser(user);
                                 } else if (numStrikes >= 3) {
@@ -271,7 +271,7 @@ public class AdminListener {
                             if (strikes.length() > 0) {
                                 numStrikes = Integer.parseInt(strikes);
                             }
-                            BufferedMessage.sendMessage(AdminModule.client, event, "You have `" + numStrikes + "` strike(s).");
+                            Sender.sendMessage(channel, "You have `" + numStrikes + "` strike(s).");
                         } else if (args.length == 2) {
                             if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
@@ -281,7 +281,7 @@ public class AdminListener {
                                 if (strikes.length() > 0) {
                                     numStrikes = Integer.parseInt(strikes);
                                 }
-                                BufferedMessage.sendMessage(AdminModule.client, event, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
+                                Sender.sendMessage(channel, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
                             }
                         }
                     } else if (cmd.equalsIgnoreCase("addbannedword") || cmd.equalsIgnoreCase("addbanword")
@@ -289,7 +289,7 @@ public class AdminListener {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
                                 || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
                             perms.addPerms(tableName, col1, bannedField, col2, argsconcat);
-                            BufferedMessage.sendMessage(AdminModule.client, event, "Banned word/phrase was added.");
+                            Sender.sendMessage(channel, "Banned word/phrase was added.");
                         }
                     } else if (cmd.equalsIgnoreCase("deletebannedword") || cmd.equalsIgnoreCase("delbanword")
                             || cmd.equalsIgnoreCase("unfilter") || cmd.equalsIgnoreCase("dbw")) {
@@ -309,7 +309,7 @@ public class AdminListener {
                                     perms.addPerms(tableName, col1, bannedField, col2, bannedWords[i]);
                                 }
                             }
-                            BufferedMessage.sendMessage(AdminModule.client, event, "Banned word/phrase was deleted.");
+                            Sender.sendMessage(channel, "Banned word/phrase was deleted.");
                         }
                     } else if (cmd.equalsIgnoreCase("bannedwords") || cmd.equalsIgnoreCase("bw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
@@ -322,7 +322,7 @@ public class AdminListener {
                             if (output.contains(",")) {
                                 output = output.substring(0, output.lastIndexOf(','));
                             }
-                            BufferedMessage.sendMessage(AdminModule.client, event, output);
+                            Sender.sendMessage(channel, output);
                         }
                     }
                     perms.close();
