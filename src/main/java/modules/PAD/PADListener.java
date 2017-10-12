@@ -51,8 +51,8 @@ public class PADListener {
     private boolean useEmotes = false;
 
     private Pattern p1 = Pattern.compile("^&(buttoncalc|bc) (\\d+)\\s*(\\d+)?\\s*(\\d+)?\\s*(\\d+)?\\s*([TtYyFfNn])?\\s*(\\d+)?\\s*(\\d+)?\\s*$");
-    private Pattern p2 = Pattern.compile("(\\d+)");
-    private Pattern p3 = Pattern.compile("([TtYyFfNn])");
+    private Pattern p2 = Pattern.compile("\\d+");
+    private Pattern p3 = Pattern.compile(" [TtYyFfNn]");
 
     public PADListener() {
         super();
@@ -362,15 +362,16 @@ public class PADListener {
                             if (m2.find()) inheritatk = Double.parseDouble(m2.group());
                             if (m2.find()) nuke = Double.parseDouble(m2.group());
                             if (m3.find())
-                                switch (m3.group().charAt(0)) {
+                                switch (m3.group().trim().charAt(0)) {
                                     case 'T':
                                     case 't':
                                     case 'Y':
                                     case 'y':
                                         coop = true;
+                                        break;
                                 }
 
-                            double finalatk = ((attack + (plusses * 5) + (attack * (0.01 * atkL)) + (attack * (0.03 * atkPL))) + Math.floor(inheritatk * 0.05)) * (coop ? 1.5 : 1.0);
+                            double finalatk = ((attack + (plusses * 5) + ((attack * 0.01) * atkL) + ((attack * 0.03) * atkPL)) + Math.floor(inheritatk * 0.05)) * (coop ? 1.5 : 1.0);
                             DecimalFormat df = new DecimalFormat("##,##,##,##,##,##,##0.00");
                             if (nuke == 1)
                                 Sender.sendMessage(channel, "Attack Base = " + df.format(finalatk));
