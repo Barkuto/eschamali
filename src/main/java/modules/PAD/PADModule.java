@@ -60,7 +60,7 @@ public class PADModule implements IModule, ICommands {
         cmds.add("`addguerillachannel`: Adds a channel for auto guerilla posting. Requires some MANAGE_ perm **USAGE**: addguerillachannel #channel");
         cmds.add("`deleteguerillachannel`: Deletes a channel from auto guerilla posting. Requires some MANAGE_ perm **USAGE**: deleteguerillachannel #channel");
         cmds.add("`guerillachannels`: Shows what channels have automatic guerilla posting. Requires some MANAGE_ perm **USAGE**: guerillachannels");
-        cmds.add("`buttoncalc`: Calc dmg for buttoning things. **USAGE**: &buttoncalc <attack base> <plusses:0-99> <coop: Y/N> <inherit attack> <nuke amount>");
+        cmds.add("`buttoncalc`: Calc dmg for buttoning things. **USAGE**: &buttoncalc <base atk> <atk plusses> <atk lnts> <atk+ lnts> <coop: Y/N> <inherit base atk> <nuke amt>");
         return cmds;
     }
 }

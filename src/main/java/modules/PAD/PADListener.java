@@ -26,6 +26,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Iggie on 8/25/2016.
@@ -47,6 +49,10 @@ public class PADListener {
     private String emoteServerFile = "modules/PAD/emoteserver.txt";
     private ArrayList<IGuild> emoteServers = new ArrayList<>();
     private boolean useEmotes = false;
+
+    private Pattern p1 = Pattern.compile("^&(buttoncalc|bc) (\\d+)\\s*(\\d+)?\\s*(\\d+)?\\s*(\\d+)?\\s*([TtYyFfNn])?\\s*(\\d+)?\\s*(\\d+)?\\s*$");
+    private Pattern p2 = Pattern.compile("(\\d+)");
+    private Pattern p3 = Pattern.compile("([TtYyFfNn])");
 
     public PADListener() {
         super();
@@ -336,47 +342,47 @@ public class PADListener {
                             perms.close();
                         }
                     } else if (cmd.equalsIgnoreCase("buttoncalc") || cmd.equalsIgnoreCase("bc")) {
-                        if (split.length == 1) {
-                            Sender.sendMessage(channel, "&buttoncalc <attack base> <atk plusses> <coop: Y/N> <inherit attack> <nuke amount>");
-                        } else {
-                            try {
-                                double attack = 0.0;
-                                double plusses = 0.0;
-                                boolean coop = false;
-                                double inheritatk = 0.0;
-                                double nuke = 1.0;
+                        double attack = 0.0;
+                        double plusses = 0.0;
+                        int atkL = 0;
+                        int atkPL = 0;
+                        boolean coop = false;
+                        double inheritatk = 0.0;
+                        double nuke = 1.0;
 
-                                attack = Double.parseDouble(split[1]);
-                                if (split.length >= 3) {
-                                    plusses = Double.parseDouble(split[2]);
-                                    if (plusses > 99) plusses = 99;
-                                    else if (plusses < 0) plusses = 0;
-                                }
-                                if (split.length >= 4) {
-                                    char c = split[3].charAt(0);
-                                    if (c == 'T' || c == 't' || c == 'y' || c == 'Y') coop = true;
-                                }
-                                if (split.length >= 5) {
-                                    inheritatk = Double.parseDouble(split[4]);
-                                }
-                                if (split.length >= 6) {
-                                    nuke = Double.parseDouble(split[5]);
+                        Matcher m1 = p1.matcher(msg);
+                        if (m1.matches()) {
+                            Matcher m2 = p2.matcher(msg);
+                            Matcher m3 = p3.matcher(msg);
+
+                            if (m2.find()) attack = Double.parseDouble(m2.group());
+                            if (m2.find()) plusses = Double.parseDouble(m2.group());
+                            if (m2.find()) atkL = Integer.parseInt(m2.group());
+                            if (m2.find()) atkPL = Integer.parseInt(m2.group());
+                            if (m2.find()) inheritatk = Double.parseDouble(m2.group());
+                            if (m2.find()) nuke = Double.parseDouble(m2.group());
+                            if (m3.find())
+                                switch (m3.group().charAt(0)) {
+                                    case 'T':
+                                    case 't':
+                                    case 'Y':
+                                    case 'y':
+                                        coop = true;
                                 }
 
-                                double finalatk = ((attack + (plusses * 5)) + Math.floor(inheritatk * 0.05)) * (coop ? 1.5 : 1.0);
-                                DecimalFormat df = new DecimalFormat("##,##,##,##,##,##,##0.00");
-                                if (split.length < 6)
-                                    Sender.sendMessage(channel, "Attack Base = " + df.format(finalatk));
-                                else
-                                    Sender.sendMessage(channel, "Nuke Damage = " + df.format(finalatk * nuke));
-                            } catch (NumberFormatException e) {
-                                Sender.sendMessage(channel, "Invalid params.");
-                            }
-                        }
+                            double finalatk = ((attack + (plusses * 5) + (attack * (0.01 * atkL)) + (attack * (0.03 * atkPL))) + Math.floor(inheritatk * 0.05)) * (coop ? 1.5 : 1.0);
+                            DecimalFormat df = new DecimalFormat("##,##,##,##,##,##,##0.00");
+                            if (nuke == 1)
+                                Sender.sendMessage(channel, "Attack Base = " + df.format(finalatk));
+                            else
+                                Sender.sendMessage(channel, "Nuke Damage = " + df.format(finalatk * nuke));
+                        } else
+                            Sender.sendMessage(channel, "&buttoncalc <base atk> <atk plusses> <atk lnts> <atk+ lnts> <coop: Y/N> <inherit base atk> <nuke amt>");
                     }
                 }
             }
         }
+
     }
 
     public void outputAllGuerillaImgs(IChannel channel) {
