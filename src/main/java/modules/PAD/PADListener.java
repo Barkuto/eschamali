@@ -21,6 +21,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -333,6 +334,44 @@ public class PADListener {
 
                             Sender.sendMessage(channel, output);
                             perms.close();
+                        }
+                    } else if (cmd.equalsIgnoreCase("buttoncalc") || cmd.equalsIgnoreCase("bc")) {
+                        if (split.length == 1) {
+                            Sender.sendMessage(channel, "&buttoncalc <attack base> <atk plusses> <coop: Y/N> <inherit attack> <nuke amount>");
+                        } else {
+                            try {
+                                double attack = 0.0;
+                                double plusses = 0.0;
+                                boolean coop = false;
+                                double inheritatk = 0.0;
+                                double nuke = 1.0;
+
+                                attack = Double.parseDouble(split[1]);
+                                if (split.length >= 3) {
+                                    plusses = Double.parseDouble(split[2]);
+                                    if (plusses > 99) plusses = 99;
+                                    else if (plusses < 0) plusses = 0;
+                                }
+                                if (split.length >= 4) {
+                                    char c = split[3].charAt(0);
+                                    if (c == 'T' || c == 't' || c == 'y' || c == 'Y') coop = true;
+                                }
+                                if (split.length >= 5) {
+                                    inheritatk = Double.parseDouble(split[4]);
+                                }
+                                if (split.length >= 6) {
+                                    nuke = Double.parseDouble(split[5]);
+                                }
+
+                                double finalatk = ((attack + (plusses * 5)) + Math.floor(inheritatk * 0.05)) * (coop ? 1.5 : 1.0);
+                                DecimalFormat df = new DecimalFormat("##,##,##,##,##,##,##0.00");
+                                if (split.length < 6)
+                                    Sender.sendMessage(channel, "Attack Base = " + df.format(finalatk));
+                                else
+                                    Sender.sendMessage(channel, "Nuke Damage = " + df.format(finalatk * nuke));
+                            } catch (NumberFormatException e) {
+                                Sender.sendMessage(channel, "Invalid params.");
+                            }
                         }
                     }
                 }

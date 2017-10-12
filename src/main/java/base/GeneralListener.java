@@ -48,7 +48,7 @@ public class GeneralListener {
                 String msg = event.getMessage().getContent().toLowerCase();
                 IChannel channel = event.getChannel();
                 if (msg.equalsIgnoreCase("!donate")) {
-                    Sender.sendMessage(channel, "Donate for server/development funds at: https://www.twitchalerts.com/donate/barkuto");
+                    Sender.sendMessage(channel, "Donate for server/development funds at: https://streamlabs.com/barkuto");
                 } else if (msg.equalsIgnoreCase("!maker")) {
                     Sender.sendMessage(channel, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
                 } else if (msg.equalsIgnoreCase("!ayy")) {
