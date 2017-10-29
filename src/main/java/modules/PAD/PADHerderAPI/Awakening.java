@@ -38,7 +38,9 @@ public enum Awakening {
 
     FOLLOWUPATTACK(45, "Follow Up Attack", "FUA", "FUA"),
 
-    HPPLUS(46, "Team HP+", "HP+", "TeamHP"), RCVPLUS(47, "Team RCV+", "RCV+", "TeamRCV"), VOIDPEN(48, "Void Penetration", "VoidPen", "VoidPen");
+    HPPLUS(46, "Team HP+", "HP+", "TeamHP"), RCVPLUS(47, "Team RCV+", "RCV+", "TeamRCV"), VOIDPEN(48, "Void Penetration", "VoidPen", "VoidPen"),
+
+    ASSIST(49, "Awoken Assist", "Assist", "Assist"), CHARGE(50, "Skill Charge", "Charge", "Charge"), SFUA(51, "Super Follow Up Attack", "SFUA", "SFUA");
 
     private int id;
     private String name;
