@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import javafx.util.Pair;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -125,10 +124,10 @@ public class PADHerderAPI {
 
                     int to = obj.get("evolves_to").getAsInt();
                     JsonArray mats = obj.get("materials").getAsJsonArray();
-                    ArrayList<Pair<Integer, Integer>> matArrayList = new ArrayList<>();
+                    ArrayList<int[]> matArrayList = new ArrayList<>();
                     for (JsonElement elem : mats) {
                         JsonArray ele = elem.getAsJsonArray();
-                        matArrayList.add(new Pair<>(ele.get(0).getAsInt(), ele.get(1).getAsInt()));
+                        matArrayList.add(new int[]{ele.get(0).getAsInt(), ele.get(1).getAsInt()});
                     }
 
                     pstm.setInt(1, id);
