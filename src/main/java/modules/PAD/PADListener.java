@@ -244,6 +244,7 @@ public class PADListener {
                             Sender.sendMessage(channel, found);
                         }
                     } else if (cmd.equalsIgnoreCase("updatedb") || cmd.equalsIgnoreCase("update")) {
+                        Sender.sendMessage(channel, "Updating DB. Might take a while.");
                         PADHerderAPI.updateDB();
                         Sender.sendMessage(channel, "DB updated.");
                     } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
