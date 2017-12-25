@@ -505,10 +505,10 @@ public class PADListener {
             desc += "No Awakenings.";
         eb.withDesc("**" + desc + "**");
 
-        String type = m.getType().equals("null") ? null : m.getType();
-        String type2 = m.getType2().equals("null") ? null : m.getType2();
-        String type3 = m.getType3().equals("null") ? null : m.getType3();
-        String typing = type + (type2 == null ? "" : "/" + type2) + (type3 == null ? "" : "/" + type3) + "\n";
+        Type type = m.getType();
+        Type type2 = m.getType2();
+        Type type3 = m.getType3();
+        String typing = type.getName() + (type2 == Type.NONE ? "" : "/" + type2.getName()) + (type3 == Type.NONE ? "" : "/" + type3.getName()) + "\n";
         String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d", m.getRarity(), m.getTeam_cost(), m.getMonster_points());
         eb.appendField(typing, info, true);
 

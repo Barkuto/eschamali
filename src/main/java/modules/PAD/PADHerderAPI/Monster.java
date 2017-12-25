@@ -11,9 +11,9 @@ public class Monster implements Serializable {
     private int monster_points;
     private Attribute att1;
     private Attribute att2;
-    private String type;
-    private String type2;
-    private String type3;
+    private Type type;
+    private Type type2;
+    private Type type3;
     private Active active;
     private Leader leader;
     private Awakening[] awakenings;
@@ -29,7 +29,7 @@ public class Monster implements Serializable {
     private double weighted;
 
     public Monster(int id, String name, String name_jp, int rarity, int team_cost, int monster_points, Attribute att1, Attribute att2,
-                   String type, String type2, String type3, Active active, Leader leader, Awakening[] awakenings,
+                   Type type, Type type2, Type type3, Active active, Leader leader, Awakening[] awakenings,
                    int hp_min, int hp_max, int atk_min, int atk_max, int rcv_min, int rcv_max, int max_level, int xp_curve, boolean jp_only) {
         this.id = id;
         this.name = name;
@@ -89,15 +89,15 @@ public class Monster implements Serializable {
         return att2;
     }
 
-    public String getType() {
+    public Type getType() {
         return type;
     }
 
-    public String getType2() {
+    public Type getType2() {
         return type2;
     }
 
-    public String getType3() {
+    public Type getType3() {
         return type3;
     }
 

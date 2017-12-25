@@ -194,9 +194,9 @@ public class PADHerderAPI {
                 Attribute att1 = Attribute.values()[obj.get("element").getAsInt()];
                 String element2 = obj.get("element2").toString();
                 Attribute att2 = element2.equalsIgnoreCase("null") ? Attribute.NONE : Attribute.values()[obj.get("element2").getAsInt()];
-                String type = obj.get("type").toString();
-                String type2 = obj.get("type2").toString();
-                String type3 = obj.get("type3").toString();
+                Type type = getType(obj.get("type").getAsInt());
+                Type type2 = obj.get("type2").toString().equals("null") ? Type.NONE : getType(obj.get("type2").getAsInt());
+                Type type3 = obj.get("type3").toString().equals("null") ? Type.NONE : getType(obj.get("type3").getAsInt());
                 Active active = getActive(obj.get("active_skill").toString().replace("\"", ""));
                 Leader leader = getLeader(obj.get("leader_skill").toString().replace("\"", ""));
                 JsonArray array = obj.get("awoken_skills").getAsJsonArray();
@@ -298,21 +298,20 @@ public class PADHerderAPI {
         return new Leader("", "");
     }
 
-    private static Awakening getAwakening(String name) {
-        for (Awakening a : Awakening.values()) {
-            if (a.getName().equalsIgnoreCase(name)) {
-                return a;
-            }
-        }
-        return Awakening.UNKNOWN;
-    }
-
     private static Awakening getAwakening(int id) {
         for (Awakening a : Awakening.values()) {
             if (a.getID() == id)
                 return a;
         }
         return Awakening.UNKNOWN;
+    }
+
+    private static Type getType(int id) {
+        for (Type t : Type.values()) {
+            if (t.getID() == id)
+                return t;
+        }
+        return Type.NONE;
     }
 
     public static ArrayList<Monster> getAllMonsters(String query) {
@@ -351,7 +350,7 @@ public class PADHerderAPI {
             PreparedStatement pstm = con.prepareStatement(finishedStmt);
 
             int startIndex = 1;
-            if (atts != null) {
+            if (atts != null && atts[0] != null) {
                 pstm.setString(startIndex++, atts[0].toString());
                 if (atts[1] != null)
                     pstm.setString(startIndex++, atts[1].toString());
@@ -521,7 +520,7 @@ public class PADHerderAPI {
     private static String removeAttFromKeyword(String keywords) {
         String strToLookFor = "";
         Attribute[] atts = parseAttribute(keywords);
-        if (atts == null)
+        if (atts == null || atts[0] == null)
             return keywords;
         switch (atts[0]) {
             case FIRE:
