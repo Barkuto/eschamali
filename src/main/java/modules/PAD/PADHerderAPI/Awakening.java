@@ -1,12 +1,10 @@
 package modules.PAD.PADHerderAPI;
 
-import com.koloboke.collect.impl.hash.Hash;
 import sx.blah.discord.handle.obj.IEmoji;
 import sx.blah.discord.handle.obj.IGuild;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by Iggie on 9/30/2016.
@@ -57,6 +55,10 @@ public enum Awakening {
         this.emote = emote;
     }
 
+    public int getID() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
@@ -67,15 +69,6 @@ public enum Awakening {
 
     public String getEmote() {
         return emote;
-    }
-
-    public static Awakening getAwakening(String name) {
-        for (Awakening a : Awakening.values()) {
-            if (a.getName().equalsIgnoreCase(name)) {
-                return a;
-            }
-        }
-        return UNKNOWN;
     }
 
     public static void loadShortNames() {

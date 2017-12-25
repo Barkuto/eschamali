@@ -4,431 +4,462 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
+import javafx.util.Pair;
+import org.apache.commons.io.IOUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
 
-/**
- * Created by Iggie on 10/11/2016.
- */
 public class PADHerderAPI {
     private static String path = "modules/PAD/PHAPI/";
+    private static String sqldriver = "jdbc:sqlite:";
+    private static String activesDB = "actives.db";
+    private static String awakeningsDB = "awakenings.db";
+    private static String evosDB = "evos.db";
+    private static String leadersDB = "leaders.db";
+    private static String monstersDB = "monsters.db";
 
-    public static void updateJSON() {
+    public static void updateDB() {
         try {
             ArrayList<URL> urls = new ArrayList<>();
-            URL actives = new URL("https://www.padherder.com/api/active_skills/");
-            URL awakenings = new URL("https://www.padherder.com/api/awakenings/");
-            URL events = new URL("https://www.padherder.com/api/events/");
-            URL evolutions = new URL("https://www.padherder.com/api/evolutions/");
-            URL food = new URL("https://www.padherder.com/api/food/");
-            URL leaders = new URL("https://www.padherder.com/api/leader_skills/");
-            URL materials = new URL("https://www.padherder.com/api/materials/");
-            URL monsters = new URL("https://www.padherder.com/api/monsters/");
-            urls.add(actives);
-            urls.add(awakenings);
-            urls.add(events);
-            urls.add(evolutions);
-            urls.add(food);
-            urls.add(leaders);
-            urls.add(materials);
-            urls.add(monsters);
+            urls.add(new URL("https://www.padherder.com/api/active_skills/"));
+            urls.add(new URL("https://www.padherder.com/api/awakenings/"));
+            urls.add(new URL("https://www.padherder.com/api/evolutions/"));
+            urls.add(new URL("https://www.padherder.com/api/leader_skills/"));
+            urls.add(new URL("https://www.padherder.com/api/monsters/"));
+
+            ArrayList<JsonElement> jsons = new ArrayList<>();
 
             for (URL u : urls) {
                 URLConnection conn = u.openConnection();
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:31.0) Gecko/20100101 Firefox/31.0");
                 conn.connect();
-                String p = u.getPath();
-                String info = p.substring(p.indexOf("api") + 3).replace("/", "");
-                FileUtils.copyInputStreamToFile(conn.getInputStream(), new File(path + info + ".json"));
+
+                JsonParser parser = new JsonParser();
+                jsons.add(parser.parse(IOUtils.toString(conn.getInputStream(), StandardCharsets.UTF_8)));
             }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
+
+            createActivesDB(jsons.get(0).getAsJsonArray());
+            createAwakeningsDB(jsons.get(1).getAsJsonArray());
+            createEvosDB(jsons.get(2).getAsJsonObject());
+            createLeadersDB(jsons.get(3).getAsJsonArray());
+            createMonstersDB(jsons.get(4).getAsJsonArray());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private static Monster getMonster(int id) {
-        JsonParser parser = new JsonParser();
+    private static void createActivesDB(JsonArray json) {
         try {
-            JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "monsters.json"));
-            for (Object o : jsonArray) {
-                JsonObject obj = (JsonObject) o;
-                if (obj.get("id").getAsInt() == id) {
-                    return new Monster(obj);
-                }
+            Connection con = DriverManager.getConnection(sqldriver + path + activesDB);
+            Statement stm = con.createStatement();
+
+            stm.execute("DROP TABLE IF EXISTS actives");
+            stm.execute("CREATE TABLE actives (name string, mincd int, maxcd int, effect string)");
+
+            for (int i = 0; i < json.size(); i++) {
+                PreparedStatement pstm = con.prepareStatement("INSERT INTO actives (name, mincd, maxcd, effect) VALUES (?, ?, ?, ?)");
+                JsonObject obj = json.get(i).getAsJsonObject();
+
+                pstm.setString(1, obj.get("name").getAsString());
+                pstm.setInt(2, obj.get("min_cooldown").getAsInt());
+                pstm.setInt(3, obj.get("max_cooldown").getAsInt());
+                pstm.setString(4, obj.get("effect").getAsString());
+                pstm.execute();
             }
-        } catch (FileNotFoundException e) {
+
+            stm.close();
+            con.close();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
-    public static Monster getMonster(String keywords) {
+    private static void createAwakeningsDB(JsonArray json) {
         try {
-            int id = Integer.parseInt(keywords.trim());
-            return getMonster(id);
-        } catch (NumberFormatException e) {
-            ArrayList<Monster> allSimilar = getAllMonsters(keywords);
-            int[] elements = parseAttribute(keywords);
-            int e1 = elements[0];
-            int e2 = elements[1];
-            boolean match1 = false;
-            boolean match2 = false;
-            if (e1 != -1)
-                match1 = true;
-            if (e2 != -1)
-                match2 = true;
+            Connection con = DriverManager.getConnection(sqldriver + path + awakeningsDB);
+            Statement stm = con.createStatement();
 
-            if (allSimilar.size() > 0) {
-                int fireCount = 0;
-                int waterCount = 0;
-                int woodCount = 0;
-                int lightCount = 0;
-                int darkCount = 0;
-                for (int i = 0; i < allSimilar.size(); i++) {
-                    Monster m = allSimilar.get(i);
-                    Attribute element = m.getElement().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement())];
-                    switch (element) {
-                        case FIRE:
-                            fireCount++;
-                            break;
-                        case WATER:
-                            waterCount++;
-                            break;
-                        case WOOD:
-                            woodCount++;
-                            break;
-                        case LIGHT:
-                            lightCount++;
-                            break;
-                        case DARK:
-                            darkCount++;
-                            break;
+            stm.execute("DROP TABLE IF EXISTS awakenings");
+            stm.execute("CREATE TABLE awakenings (id int, name string, desc string)");
 
-                    }
-                }
-                Attribute majorityAttr = Attribute.FIRE;
-                int majorityAttrCount = fireCount;
-                if (waterCount > majorityAttrCount) {
-                    majorityAttr = Attribute.WATER;
-                    majorityAttrCount = waterCount;
-                }
-                if (woodCount > majorityAttrCount) {
-                    majorityAttr = Attribute.WOOD;
-                    majorityAttrCount = woodCount;
-                }
-                if (lightCount > majorityAttrCount) {
-                    majorityAttr = Attribute.LIGHT;
-                    majorityAttrCount = lightCount;
-                }
-                if (darkCount > majorityAttrCount) {
-                    majorityAttr = Attribute.DARK;
-                    majorityAttrCount = darkCount;
-                }
+            for (int i = 0; i < json.size(); i++) {
+                PreparedStatement pstm = con.prepareStatement("INSERT INTO awakenings (id, name, desc) VALUES (?, ?, ?)");
+                JsonObject obj = json.get(i).getAsJsonObject();
 
-                ArrayList<Monster> majorityMonstersWithMajorityAttr = new ArrayList<>();
-                for (int i = 0; i < allSimilar.size(); i++) {
-                    Monster m = allSimilar.get(i);
-                    Attribute element = m.getElement().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement())];
-                    if (element == majorityAttr)
-                        majorityMonstersWithMajorityAttr.add(m);
-                }
-                majorityMonstersWithMajorityAttr.sort(new Comparator<Monster>() {
-                    @Override
-                    public int compare(Monster o1, Monster o2) {
-                        int id1 = o1.getId();
-                        int id2 = o2.getId();
-                        if (id1 > id2)
-                            return 1;
-                        else if (id1 == id2)
-                            return 0;
-                        else
-                            return -1;
-                    }
-                });
-                Monster biggestNumMon = majorityMonstersWithMajorityAttr.get(majorityMonstersWithMajorityAttr.size() - 1);
-                ArrayList<Integer> evos = getEvos(biggestNumMon.getId());
+                pstm.setInt(1, obj.get("id").getAsInt());
+                pstm.setString(2, obj.get("name").getAsString());
+                pstm.setString(3, obj.get("desc").getAsString());
+                pstm.execute();
+            }
+
+            stm.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createEvosDB(JsonObject json) {
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + evosDB);
+            Statement stm = con.createStatement();
+
+            stm.execute("DROP TABLE IF EXISTS evos");
+            stm.execute("CREATE TABLE evos (id int, evosto int, mats object)");
+
+            Set<Map.Entry<String, JsonElement>> set = json.entrySet();
+            for (Map.Entry e : set) {
+                PreparedStatement pstm = con.prepareStatement("INSERT INTO evos (id, evosto, mats) VALUES (?, ?, ?)");
+
+                int id = Integer.parseInt(e.getKey().toString());
+                JsonArray evos = (JsonArray) e.getValue();
                 for (int i = 0; i < evos.size(); i++) {
-                    Monster m = getMonster(evos.get(i));
-                    Attribute a = Attribute.values()[Integer.parseInt(m.getElement())];
-                    if (evos.get(i) > biggestNumMon.getId() && a.equals(majorityAttr)) {
-                        if (match1 && Integer.parseInt(m.getElement()) == e1) {
-                            if (match2 && Integer.parseInt(m.getElement2()) == e2) {
-                                biggestNumMon = m;
-                            } else if (!match2) {
-                                biggestNumMon = m;
-                            }
-                        }
+                    JsonObject obj = evos.get(i).getAsJsonObject();
+
+                    int to = obj.get("evolves_to").getAsInt();
+                    JsonArray mats = obj.get("materials").getAsJsonArray();
+                    ArrayList<Pair<Integer, Integer>> matArrayList = new ArrayList<>();
+                    for (JsonElement elem : mats) {
+                        JsonArray ele = elem.getAsJsonArray();
+                        matArrayList.add(new Pair<>(ele.get(0).getAsInt(), ele.get(1).getAsInt()));
                     }
+
+                    pstm.setInt(1, id);
+                    pstm.setInt(2, to);
+                    pstm.setObject(3, matArrayList.toArray());
+                    pstm.execute();
                 }
-                return biggestNumMon;
-            } else {
-                return null;
             }
+
+            stm.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    public static ArrayList<Monster> getAllMonsters(String keywords) {
-        int element1 = -1;
-        int element2 = -1;
-        boolean matchEle1 = false;
-        boolean matchEle2 = false;
-        int[] elements = parseAttribute(keywords);
-        element1 = elements[0];
-        element2 = elements[1];
-        if (element1 != -1)
-            matchEle1 = true;
-        if (element2 != -1)
-            matchEle2 = true;
+    private static void createLeadersDB(JsonArray json) {
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + leadersDB);
+            Statement stm = con.createStatement();
 
-        if (matchEle1 || matchEle2) {
-            keywords = removeAttFromKeyword(keywords);
+            stm.execute("DROP TABLE IF EXISTS leaders");
+            stm.execute("CREATE TABLE leaders (name string, effect string)");
+
+            for (int i = 0; i < json.size(); i++) {
+                PreparedStatement pstm = con.prepareStatement("INSERT INTO leaders (name, effect) VALUES (?, ?)");
+                JsonObject obj = json.get(i).getAsJsonObject();
+
+                pstm.setString(1, obj.get("name").getAsString());
+                pstm.setString(2, obj.get("effect").getAsString());
+                pstm.execute();
+            }
+
+            stm.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+    }
 
+    private static void createMonstersDB(JsonArray json) {
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + monstersDB);
+            Statement stm = con.createStatement();
+
+            stm.execute("DROP TABLE IF EXISTS monsters");
+            stm.execute("CREATE TABLE monsters (id int, name string, jpname string, att1 string, att2 string, monster blob)");
+
+            for (int i = 0; i < json.size(); i++) {
+                PreparedStatement pstm = con.prepareStatement("INSERT INTO monsters (id, name, jpname, att1, att2, monster) VALUES (?, ?, ?, ?, ?, ?)");
+                JsonObject obj = json.get(i).getAsJsonObject();
+
+                int id;
+                try {
+                    id = obj.get("pdx_id").getAsInt();
+                } catch (NullPointerException e) {
+                    id = obj.get("id").getAsInt();
+                }
+                String name = obj.get("name").toString().replace("\"", "");
+                String name_jp = obj.get("name_jp").toString().replace("\"", "");
+                int rarity = obj.get("rarity").getAsInt();
+                int team_cost = obj.get("team_cost").getAsInt();
+                int monster_points = obj.get("monster_points").getAsInt();
+                Attribute att1 = Attribute.values()[obj.get("element").getAsInt()];
+                String element2 = obj.get("element2").toString();
+                Attribute att2 = element2.equalsIgnoreCase("null") ? Attribute.NONE : Attribute.values()[obj.get("element2").getAsInt()];
+                String type = obj.get("type").toString();
+                String type2 = obj.get("type2").toString();
+                String type3 = obj.get("type3").toString();
+                Active active = getActive(obj.get("active_skill").toString().replace("\"", ""));
+                Leader leader = getLeader(obj.get("leader_skill").toString().replace("\"", ""));
+                JsonArray array = obj.get("awoken_skills").getAsJsonArray();
+//                int[] awakenings = new int[array.size()];
+//                for (int j = 0; j < array.size(); j++) {
+//                    awakenings[j] = array.get(j).getAsInt();
+//                }
+                Awakening[] awakenings = new Awakening[array.size()];
+                for (int j = 0; j < array.size(); j++) {
+                    awakenings[j] = getAwakening(array.get(j).getAsInt());
+                }
+                int hp_min = obj.get("hp_min").getAsInt();
+                int hp_max = obj.get("hp_max").getAsInt();
+                int atk_min = obj.get("atk_min").getAsInt();
+                int atk_max = obj.get("atk_max").getAsInt();
+                int rcv_min = obj.get("rcv_min").getAsInt();
+                int rcv_max = obj.get("rcv_max").getAsInt();
+
+                int max_level = obj.get("max_level").getAsInt();
+                int xp_curve = obj.get("xp_curve").getAsInt();
+
+                boolean jp_only = obj.get("jp_only").getAsBoolean();
+
+                Monster m = new Monster(id, name, name_jp, rarity, team_cost, monster_points, att1, att2,
+                        type, type2, type3, active, leader, awakenings,
+                        hp_min, hp_max, atk_min, atk_max, rcv_min, rcv_max, max_level, xp_curve, jp_only);
+                pstm.setInt(1, id);
+                pstm.setString(2, name);
+                pstm.setString(3, name_jp);
+                pstm.setString(4, att1.toString());
+                pstm.setString(5, att2.toString());
+                pstm.setBytes(6, monsterToBytes(m));
+                pstm.execute();
+            }
+
+            stm.close();
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static byte[] monsterToBytes(Monster object) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutput out = new ObjectOutputStream(bos)) {
+            out.writeObject(object);
+            return bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static Monster bytesToMonster(byte[] bytes) {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             ObjectInput in = new ObjectInputStream(bis)) {
+            return (Monster) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static Active getActive(String name) {
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + activesDB);
+            PreparedStatement pstm = con.prepareStatement("SELECT * FROM actives WHERE name=?");
+            pstm.setString(1, name);
+            ResultSet result = pstm.executeQuery();
+            if (result.next()) {
+                return new Active(
+                        result.getString("name"),
+                        result.getString("effect"),
+                        result.getInt("mincd"),
+                        result.getInt("maxcd"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new Active("", "", 0, 0);
+    }
+
+    private static Leader getLeader(String name) {
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + leadersDB);
+            PreparedStatement pstm = con.prepareStatement("SELECT * FROM leaders WHERE name=?");
+            pstm.setString(1, name);
+            ResultSet result = pstm.executeQuery();
+            if (result.next()) {
+                return new Leader(
+                        result.getString("name"),
+                        result.getString("effect"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new Leader("", "");
+    }
+
+    private static Awakening getAwakening(String name) {
+        for (Awakening a : Awakening.values()) {
+            if (a.getName().equalsIgnoreCase(name)) {
+                return a;
+            }
+        }
+        return Awakening.UNKNOWN;
+    }
+
+    private static Awakening getAwakening(int id) {
+        for (Awakening a : Awakening.values()) {
+            if (a.getID() == id)
+                return a;
+        }
+        return Awakening.UNKNOWN;
+    }
+
+    public static ArrayList<Monster> getAllMonsters(String query) {
         ArrayList<Monster> monsters = new ArrayList<>();
-        ArrayList<Monster> exactMonsters = new ArrayList<>();
-        ArrayList<Monster> superExactMonsters = new ArrayList<>();
         try {
-            int id = Integer.parseInt(keywords.trim());
-            monsters.add(getMonster(id));
+            int id = Integer.parseInt(query);
+            Monster m = getMonster(id);
+            if (m != null)
+                monsters.add(m);
             return monsters;
-        } catch (NumberFormatException e) {
-            JsonParser parser = new JsonParser();
-            try {
-                JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "monsters.json"));
-                for (Object o : jsonArray) {
-                    JsonObject obj = (JsonObject) o;
-                    if (stringContainsKeywords(obj.get("name").toString(), keywords) || stringContainsKeywords(obj.get("name_jp").toString(), keywords)) {
-                        if (!matchEle1) {
-                            monsters.add(new Monster(obj));
-                        } else if (matchEle1) {
-                            if (obj.get("element").getAsInt() == element1) {
-                                if (matchEle2) {
-                                    int tmpE2 = -1;
-                                    try {
-                                        tmpE2 = obj.get("element2").getAsInt();
-                                    } catch (UnsupportedOperationException ex) {
-                                    }
-                                    if (tmpE2 >= 0 && tmpE2 == element2) {
-                                        monsters.add(new Monster(obj));
-                                    }
-                                } else {
-                                    monsters.add(new Monster(obj));
-                                }
-                            }
-                        }
-                    }
+        } catch (NumberFormatException ignored) {
+        }
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + monstersDB);
+            Attribute[] atts = parseAttribute(query);
+            String[] split = removeAttFromKeyword(query).split(" ");
+            StringBuilder stmt = new StringBuilder("SELECT monster FROM monsters WHERE ");
+
+            if (split.length == 0)
+                return null;
+
+            if (atts != null) {
+                if (atts[0] != null) {
+                    stmt.append("att1=? AND ");
                 }
-                //Find monsters with an exact word match.
-                for (int i = 0; i < monsters.size(); i++) {
-                    String[] keywordSplit = normalizeString(keywords).split(" ");
-                    String[] nameSplit = normalizeString(monsters.get(i).getName()).split(" ");
-                    boolean[] found = new boolean[keywordSplit.length];
-                    for (int j = 0; j < nameSplit.length; j++) {
-                        for (int k = 0; k < keywordSplit.length; k++) {
-                            if (nameSplit[j].equalsIgnoreCase(keywordSplit[k])) {
-                                found[k] = true;
-                                nameSplit[j] = "";
-                                keywordSplit[k] = "";
-                            }
-                        }
-                    }
-                    int matches = 0;
-                    for (int j = 0; j < found.length; j++) {
-                        if (found[j])
-                            matches++;
-                    }
-                    if (matches == keywordSplit.length)
-                        superExactMonsters.add(monsters.get(i));
-                    else if (matches > 0)
-                        exactMonsters.add(monsters.get(i));
+                if (atts[1] != null) {
+                    stmt.append("att2=? AND ");
                 }
-            } catch (FileNotFoundException ex) {
-                ex.printStackTrace();
             }
-            if (superExactMonsters.size() > 0)
-                return superExactMonsters;
-            if (exactMonsters.size() > 0)
-                return exactMonsters;
+
+            for (String s : split) {
+                stmt.append("( name LIKE ? OR jpname LIKE ? ) AND ");
+            }
+            String finishedStmt = stmt.toString().substring(0, stmt.lastIndexOf("AND")).trim();
+
+            PreparedStatement pstm = con.prepareStatement(finishedStmt);
+
+            int startIndex = 1;
+            if (atts != null) {
+                pstm.setString(startIndex++, atts[0].toString());
+                if (atts[1] != null)
+                    pstm.setString(startIndex++, atts[1].toString());
+            }
+            for (String s : split) {
+                pstm.setString(startIndex++, "%" + s + "%");
+                pstm.setString(startIndex++, "%" + s + "%");
+            }
+            ResultSet result = pstm.executeQuery();
+            while (result.next()) {
+                monsters.add(bytesToMonster(result.getBytes("monster")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
             return monsters;
         }
+        return monsters;
     }
 
-    public static ActiveSkill getActive(String keywords) {
-        JsonParser parser = new JsonParser();
+    private static Monster getMonster(int id) {
         try {
-            JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "active_skills.json"));
-            for (Object o : jsonArray) {
-                JsonObject obj = (JsonObject) o;
-                String currentActiveName = StringEscapeUtils.unescapeJava(obj.get("name").toString()).replace("\"", "");
-                if (stringContainsKeywords(currentActiveName, keywords) || keywords.equalsIgnoreCase(currentActiveName)) {
-                    return new ActiveSkill(obj);
-                }
+            Connection con = DriverManager.getConnection(sqldriver + path + monstersDB);
+            PreparedStatement pstm = con.prepareStatement("SELECT * FROM monsters WHERE id=?");
+            pstm.setInt(1, id);
+            ResultSet result = pstm.executeQuery();
+            if (result.next()) {
+                return bytesToMonster(result.getBytes("monster"));
             }
-        } catch (FileNotFoundException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public static LeaderSkill getLeader(String keywords) {
-        JsonParser parser = new JsonParser();
-        try {
-            JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "leader_skills.json"));
-            int i = 0;
-            for (Object o : jsonArray) {
-                JsonObject obj = (JsonObject) o;
-                String currentLeaderName = StringEscapeUtils.unescapeJava(obj.get("name").toString()).replace("\"", "");
-                if (stringContainsKeywords(currentLeaderName, keywords) || keywords.equalsIgnoreCase(currentLeaderName)) {
-                    return new LeaderSkill(obj);
-                }
-                i++;
+    public static Monster getMonster(String query) {
+        ArrayList<Monster> monsters = getAllMonsters(query);
+        double bestWeight = -999.0;
+        Monster highestWeighted = null;
+        for (Monster m : monsters) {
+            if (m.getWeighted() > bestWeight) {
+                highestWeighted = m;
+                bestWeight = m.getWeighted();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         }
-        return null;
-    }
-
-    public static AwokenSkill getAwokenSkill(int id) {
-        JsonParser parser = new JsonParser();
-        try {
-            JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "awakenings.json"));
-            for (Object o : jsonArray) {
-                JsonObject obj = (JsonObject) o;
-                if (obj.get("id").getAsInt() == id) {
-                    return new AwokenSkill(obj);
-                }
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static AwokenSkill getAwokenSkill(String keywords) {
-        JsonParser parser = new JsonParser();
-        try {
-            JsonArray jsonArray = (JsonArray) parser.parse(new FileReader(path + "awakenings.json"));
-            for (Object o : jsonArray) {
-                JsonObject obj = (JsonObject) o;
-                if (stringContainsKeywords(obj.get("name").toString(), keywords)) {
-                    return new AwokenSkill(obj);
-                }
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return highestWeighted;
     }
 
     public static ArrayList<Integer> getEvos(int id) {
-        ArrayList<Integer> evos = getEvos_sub(id, new ArrayList<>());
-        evos.remove(new Integer(id));
-        evos.sort(Integer::compareTo);
-        return evos;
+        ArrayList<Integer> evos = getEvos(id, new ArrayList<>());
+        ArrayList<Integer> preEvos = getPreEvos(id, new ArrayList<>());
+        ArrayList<Integer> allEvos = new ArrayList<>();
+        for (Integer i : evos) {
+            if (!allEvos.contains(i))
+                allEvos.add(i);
+        }
+        for (Integer i : preEvos) {
+            if (!allEvos.contains(i))
+                allEvos.add(i);
+        }
+        allEvos.remove(new Integer(id));
+        allEvos.sort(Integer::compareTo);
+        return allEvos;
     }
 
-    private static ArrayList<Integer> getEvos_sub(int id, ArrayList<Integer> checked) {
-        JsonParser parser = new JsonParser();
+    private static ArrayList<Integer> getEvos(int id, ArrayList<Integer> checked) {
         try {
-            JsonObject jsonObject = (JsonObject) parser.parse(new FileReader(path + "evolutions.json"));
-            JsonElement jsonElement = jsonObject.get("" + id);
-            if (jsonElement != null) {
-                JsonArray jsonArray = jsonElement.getAsJsonArray();
-                for (Object o : jsonArray) {
-                    JsonObject obj = (JsonObject) o;
-                    int evoNum = obj.get("evolves_to").getAsInt();
-                    if (!checked.contains(evoNum)) {
-                        checked.add(evoNum);
-                        getEvos_sub(evoNum, checked);
-                    }
+            Connection con = DriverManager.getConnection(sqldriver + path + evosDB);
+
+            PreparedStatement pstm = con.prepareStatement("SELECT * FROM evos WHERE id=?");
+            pstm.setInt(1, id);
+            ResultSet result = pstm.executeQuery();
+            while (result.next()) {
+                int toID = result.getInt("evosto");
+                if (!checked.contains(toID)) {
+                    checked.add(toID);
+                    getEvos(toID, checked);
                 }
             }
-        } catch (FileNotFoundException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return checked;
     }
 
-    private static String normalizeString(String str) {
-        return str.replace("-", " ").toLowerCase().replaceAll("[^\\w\\s]", "").trim();
-    }
+    private static ArrayList<Integer> getPreEvos(int id, ArrayList<Integer> checked) {
+        try {
+            Connection con = DriverManager.getConnection(sqldriver + path + evosDB);
 
-    private static boolean stringContainsKeywords(String string, String keywords) {
-        if (string.equals(string.toLowerCase())) {
-            return false;
-        }
-        String basicString = normalizeString(string);
-        String basicKeywords = normalizeString(keywords);
-        if (basicString.contains("tamadra") && !(basicKeywords.contains("tamadra") || basicKeywords.contains("tama"))) {
-            return false;
-        }
-        if (basicString.length() == 0 || basicKeywords.length() == 0) {
-            return false;
-        }
-        if (basicString.toLowerCase().equalsIgnoreCase(basicKeywords.toLowerCase())) {
-            return true;
-        }
-        if (basicString.length() == 0) {
-            return false;
-        }
-        String[] split = basicString.split(" ");
-        String[] words = basicKeywords.split(" ");
-
-        ArrayList<String> stringWords = new ArrayList<>();
-        for (int i = 0; i < split.length; i++) {
-            stringWords.add(split[i]);
-        }
-        ArrayList<String> keywordWords = new ArrayList<>();
-        for (int i = 0; i < words.length; i++) {
-            keywordWords.add(words[i]);
-        }
-        keywordWords.sort(new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                if (o1.length() == o2.length())
-                    return 0;
-                else if (o1.length() > o2.length())
-                    return -1;
-                else return 1;
-            }
-        });
-
-        boolean[] found = new boolean[words.length];
-        for (int i = 0; i < split.length; i++) {
-            for (int j = 0; j < words.length; j++) {
-                if (stringWords.get(i).contains(keywordWords.get(j))
-                        && stringWords.get(i).length() > 0
-                        && keywordWords.get(j).length() > 0) {
-                    found[j] = true;
-                    stringWords.set(i, "");
-                    keywordWords.set(j, "");
+            PreparedStatement pstm = con.prepareStatement("SELECT * FROM evos WHERE evosto=?");
+            pstm.setInt(1, id);
+            ResultSet result = pstm.executeQuery();
+            while (result.next()) {
+                int fromID = result.getInt("id");
+                if (!checked.contains(fromID)) {
+                    checked.add(fromID);
+                    getPreEvos(fromID, checked);
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        for (int i = 0; i < found.length; i++) {
-            if (!found[i])
-                return false;
-        }
-        return true;
+        return checked;
     }
 
-    public static int[] parseAttribute(String keywords) {
-        int[] atts = new int[]{-1, -1};
-        int attIndex = 0;
-        String[] split = normalizeString(keywords).split(" ");
+    private static Attribute[] parseAttribute(String keywords) {
+        Attribute[] atts = new Attribute[]{null, null};
+        String[] split = keywords.trim().split(" ");
         for (int i = 0; i < split.length; i++) {
             String s = split[i];
             if (s.length() <= 2) {
@@ -440,90 +471,99 @@ public class PADHerderAPI {
                 }
                 switch (e1) {
                     case 'r':
-                        atts[0] = 0;
+                        atts[0] = Attribute.FIRE;
                         break;
                     case 'b':
-                        atts[0] = 1;
+                        atts[0] = Attribute.WATER;
                         break;
                     case 'g':
-                        atts[0] = 2;
+                        atts[0] = Attribute.WOOD;
                         break;
                     case 'l':
-                        atts[0] = 3;
+                        atts[0] = Attribute.LIGHT;
                         break;
                     case 'd':
-                        atts[0] = 4;
+                        atts[0] = Attribute.DARK;
                         break;
                     default:
                         return atts;
                 }
                 switch (e2) {
                     case 'r':
-                        atts[1] = 0;
+                        atts[1] = Attribute.FIRE;
                         break;
                     case 'b':
-                        atts[1] = 1;
+                        atts[1] = Attribute.WATER;
                         break;
                     case 'g':
-                        atts[1] = 2;
+                        atts[1] = Attribute.WOOD;
                         break;
                     case 'l':
-                        atts[1] = 3;
+                        atts[1] = Attribute.LIGHT;
                         break;
                     case 'd':
-                        atts[1] = 4;
+                        atts[1] = Attribute.DARK;
+                        break;
+                    case 'x':
+                        atts[1] = Attribute.NONE;
                         break;
                     default:
                         if (s.length() == 2)
-                            atts[0] = -1;
-                        atts[1] = -1;
+                            atts[0] = null;
+                        atts[1] = null;
                         break;
                 }
-                attIndex = i;
                 break;
             }
         }
-        return atts;
+        return atts[0] == null ? null : atts;
     }
 
-    public static String removeAttFromKeyword(String keywords) {
+    private static String removeAttFromKeyword(String keywords) {
         String strToLookFor = "";
-        int[] atts = parseAttribute(keywords);
+        Attribute[] atts = parseAttribute(keywords);
+        if (atts == null)
+            return keywords;
         switch (atts[0]) {
-            case 0:
+            case FIRE:
                 strToLookFor += 'r';
                 break;
-            case 1:
+            case WATER:
                 strToLookFor += 'b';
                 break;
-            case 2:
+            case WOOD:
                 strToLookFor += 'g';
                 break;
-            case 3:
+            case LIGHT:
                 strToLookFor += 'l';
                 break;
-            case 4:
+            case DARK:
                 strToLookFor += 'd';
                 break;
         }
-        switch (atts[1]) {
-            case 0:
-                strToLookFor += 'r';
-                break;
-            case 1:
-                strToLookFor += 'b';
-                break;
-            case 2:
-                strToLookFor += 'g';
-                break;
-            case 3:
-                strToLookFor += 'l';
-                break;
-            case 4:
-                strToLookFor += 'd';
-                break;
+        if (atts[1] != null) {
+            switch (atts[1]) {
+                case FIRE:
+                    strToLookFor += 'r';
+                    break;
+                case WATER:
+                    strToLookFor += 'b';
+                    break;
+                case WOOD:
+                    strToLookFor += 'g';
+                    break;
+                case LIGHT:
+                    strToLookFor += 'l';
+                    break;
+                case DARK:
+                    strToLookFor += 'd';
+                    break;
+                case NONE:
+                    strToLookFor += 'x';
+                    break;
+            }
         }
-        String[] split = normalizeString(keywords).split(" ");
+        String[] split = keywords.split(" ");
         int attIndex = 0;
         for (int i = 0; i < split.length; i++) {
             if (split[i].equals(strToLookFor)) {
@@ -531,12 +571,12 @@ public class PADHerderAPI {
                 break;
             }
         }
-        String newKeyword = "";
+        StringBuilder newKeyword = new StringBuilder();
         for (int i = 0; i < split.length; i++) {
             if (i != attIndex) {
-                newKeyword += split[i] + " ";
+                newKeyword.append(split[i]).append(" ");
             }
         }
-        return newKeyword.trim();
+        return newKeyword.toString().trim();
     }
 }

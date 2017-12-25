@@ -243,9 +243,9 @@ public class PADListener {
                         } else {
                             Sender.sendMessage(channel, found);
                         }
-                    } else if (cmd.equalsIgnoreCase("updatejson") || cmd.equalsIgnoreCase("update")) {
-                        PADHerderAPI.updateJSON();
-                        Sender.sendMessage(channel, "JSON updated.");
+                    } else if (cmd.equalsIgnoreCase("updatedb") || cmd.equalsIgnoreCase("update")) {
+                        PADHerderAPI.updateDB();
+                        Sender.sendMessage(channel, "DB updated.");
                     } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
 
                     } else if (cmd.equalsIgnoreCase("deletenickname") || cmd.equalsIgnoreCase("dn")) {
@@ -460,67 +460,38 @@ public class PADListener {
         return "Nothing could be found.";
     }
 
-    public String getInfo(Monster m) {
-        String output = "```\n";
-        output += "http://puzzledragonx.com/en/monster.asp?n=" + m.getId() + "\n";
-        output += "NAME: " + m.getName() + "\n";
-        output += "JP NAME: " + m.getName_jp() + "\n";
-
-        Type type = m.getType().equals("null") ? null : Type.getType(Integer.parseInt(m.getType()));
-        Type type2 = m.getType2().equals("null") ? null : Type.getType(Integer.parseInt(m.getType2()));
-        Type type3 = m.getType3().equals("null") ? null : Type.getType(Integer.parseInt(m.getType3()));
-        output += "TYPING: " + type.getName() + (type2 == null ? "" : "/" + type2.getName()) + (type3 == null ? "" : "/" + type3.getName()) + "\n";
-
-        Attribute element = m.getElement().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement())];
-        Attribute element2 = m.getElement2().equals("null") ? null : Attribute.values()[Integer.parseInt(m.getElement2())];
-        output += "ATTR: " + element.getName() + (element2 == null ? "" : "/" + element2.getName()) + "\n";
-
-        output += String.format("RARITY: %-8s COST: %-3s MP: %-6s", m.getRarity() + " stars", m.getTeam_cost(), m.getMonster_points()) + "\n";
-        ActiveSkill active = m.getActive_skill();
-        LeaderSkill leader = m.getLeader_skill();
-        output += "ACTIVE: " + (active == null ? "None.\n" : "(" + active.getMaxCD() + "->" + active.getMinCD() + "), " + active.getName() + ": " + active.getEffect() + "\n");
-        output += "LEADER: " + (leader == null ? "None.\n" : leader.getName() + ": " + leader.getEffect() + "\n");
-        output += "AWAKENINGS: ";
-        AwokenSkill[] awakenings = m.getAwoken_skills();
-        for (int i = 0; i < awakenings.length; i++) {
-            output += "[" + Awakening.getAwakening(PADHerderAPI.getAwokenSkill(awakenings[i].getId()).getName()).getShortName() + "]";
-        }
-        output += "\n```";
-        return output;
-    }
-
     public EmbedObject getInfoEmbed(Monster m, String query) {
         EmbedBuilder eb = new EmbedBuilder().setLenient(true);
 
         Color c = Color.GRAY;
-        switch (m.getElement()) {
-            case "0":
+        switch (m.getAtt1()) {
+            case FIRE:
                 c = new Color(0xff744b);
                 break;
-            case "1":
+            case WATER:
                 c = new Color(0x40ffff);
                 break;
-            case "2":
+            case WOOD:
                 c = new Color(0x4cd962);
                 break;
-            case "3":
+            case LIGHT:
                 c = new Color(0xf2e74c);
                 break;
-            case "4":
+            case DARK:
                 c = new Color(0xcc54c2);
                 break;
         }
         String desc = "";
-        AwokenSkill[] awakenings = m.getAwoken_skills();
+        Awakening[] awakenings = m.getAwakenings();
         for (int i = 0; i < awakenings.length; i++) {
             if (useEmotes) {
                 if (awakenings[i] != null)
-                    desc += Awakening.getEmoji(awakenings[i].getId());
+                    desc += Awakening.getEmoji(awakenings[i].getID());
                 else
                     desc += Awakening.UNKNOWN;
             } else {
                 if (awakenings[i] != null)
-                    desc += Awakening.getShortName(awakenings[i].getId());
+                    desc += Awakening.getShortName(awakenings[i].getID());
                 else
                     desc += Awakening.UNKNOWN.getShortName();
 
@@ -533,10 +504,10 @@ public class PADListener {
             desc += "No Awakenings.";
         eb.withDesc("**" + desc + "**");
 
-        Type type = m.getType().equals("null") ? null : Type.getType(Integer.parseInt(m.getType()));
-        Type type2 = m.getType2().equals("null") ? null : Type.getType(Integer.parseInt(m.getType2()));
-        Type type3 = m.getType3().equals("null") ? null : Type.getType(Integer.parseInt(m.getType3()));
-        String typing = type.getName() + (type2 == null ? "" : "/" + type2.getName()) + (type3 == null ? "" : "/" + type3.getName()) + "\n";
+        String type = m.getType().equals("null") ? null : m.getType();
+        String type2 = m.getType2().equals("null") ? null : m.getType2();
+        String type3 = m.getType3().equals("null") ? null : m.getType3();
+        String typing = type + (type2 == null ? "" : "/" + type2) + (type3 == null ? "" : "/" + type3) + "\n";
         String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d", m.getRarity(), m.getTeam_cost(), m.getMonster_points());
         eb.appendField(typing, info, true);
 
@@ -546,13 +517,13 @@ public class PADListener {
         double wghtd = (hp / 10) + (atk / 5) + (rcv / 3);
         eb.appendField("**Weighted** " + wghtd, String.format("**HP**    %-4d\n**ATK** %-4d\n**RCV** %-4d", hp, atk, rcv), true);
 
-        ActiveSkill active = m.getActive_skill();
+        Active active = m.getActive();
         String activeName = "Active: " + (active == null ? "None." : active.getName() + " (" + active.getMaxCD() + "->" + active.getMinCD() + ")");
         eb.appendField(activeName, active == null ? "" : active.getEffect(), false);
 
-        LeaderSkill leader = m.getLeader_skill();
+        Leader leader = m.getLeader();
         String leaderName = "Leader: " + (leader == null ? "None." : leader.getName());
-        eb.appendField(leaderName, leader == null ? "" : leader.getEffect(), false);
+        eb.appendField(leaderName, leader == null ? "" : leader.getDesc(), false);
 
         ArrayList<Integer> evos = PADHerderAPI.getEvos(m.getId());
         String otherEvos = "";
@@ -575,7 +546,7 @@ public class PADListener {
             if (similar.contains(",")) {
                 similar = similar.substring(0, similar.lastIndexOf(","));
             }
-        } else if (similarNames.size() > 10) {
+        } else {
             similar += "Too many to show.";
         }
 
