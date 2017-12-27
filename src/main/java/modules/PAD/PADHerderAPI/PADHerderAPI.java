@@ -327,7 +327,7 @@ public class PADHerderAPI {
         try {
             Connection con = DriverManager.getConnection(sqldriver + path + monstersDB);
             Attribute[] atts = parseAttribute(query);
-            String[] split = removeAttFromKeyword(query).split(" ");
+            String[] split = removeAttFromKeyword(query.toLowerCase()).split(" ");
             StringBuilder stmt = new StringBuilder("SELECT monster FROM monsters WHERE ");
 
             if (split.length == 0)
