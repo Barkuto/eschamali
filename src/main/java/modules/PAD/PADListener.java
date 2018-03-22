@@ -108,6 +108,10 @@ public class PADListener {
         perms.close();
     }
 
+    // With PADX no longer updating guerillas, this is just using up valuable resources
+    // Someday rework so it's not as intensive.
+
+    /**
     @EventSubscriber
     public void startPADThread(GuildCreateEvent event) {
         LocalTime targetTime = LocalTime.of(8, 0);
@@ -156,6 +160,7 @@ public class PADListener {
         };
         t.start();
     }
+     */
 
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
