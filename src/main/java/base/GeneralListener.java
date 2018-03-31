@@ -11,12 +11,17 @@ import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.EmbedBuilder;
 
 import java.awt.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -90,14 +95,20 @@ public class GeneralListener {
                     }
                 } else if (msg.equalsIgnoreCase("!serverinfo") || msg.startsWith("!sinfo")) {
                     IGuild guild = event.getMessage().getGuild();
-                    LocalDateTime creationDate = guild.getCreationDate();
+//                    LocalDateTime creationDate = guild.getCreationDate();
+                    Instant creationDate = guild.getCreationDate();
+                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                            .appendPattern("MMM dd, yyyy hh:mm a")
+                            .toFormatter()
+                            .withLocale(Locale.US)
+                            .withZone(ZoneId.systemDefault());
 
                     EmbedBuilder eb = new EmbedBuilder();
                     eb.withTitle(guild.getName());
                     eb.withThumbnail(guild.getIconURL());
                     eb.withDesc("ID: " + guild.getLongID());
-                    eb.appendField("Created", creationDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")), true);
-                    eb.appendField("Server Age", DAYS.between(creationDate, LocalDateTime.now()) + " days", true);
+                    eb.appendField("Created", dtf.format(creationDate), true);
+                    eb.appendField("Server Age", DAYS.between(creationDate, Instant.now()) + " days", true);
                     eb.appendField("Region", guild.getRegion().getName(), true);
                     eb.appendField("Owner", guild.getOwner().mention(), true);
                     eb.appendField("Users", guild.getUsers().size() + "", true);
@@ -140,8 +151,13 @@ public class GeneralListener {
                     String nick = user.getNicknameForGuild(guild) != null ? user.getNicknameForGuild(guild) : "";
                     long id = user.getLongID();
                     String avatar = user.getAvatarURL();
-                    LocalDateTime accCreated = user.getCreationDate();
-                    LocalDateTime guildJoinDate = null;
+                    Instant accCreated = user.getCreationDate();
+                    Instant guildJoinDate = null;
+                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                            .appendPattern("MMM dd, yyyy hh:mm a")
+                            .toFormatter()
+                            .withLocale(Locale.US)
+                            .withZone(ZoneId.systemDefault());
                     List<IRole> roles = user.getRolesForGuild(guild);
                     EmbedBuilder eb = new EmbedBuilder();
 
@@ -165,16 +181,16 @@ public class GeneralListener {
                         case DND:
                             statusType = "Do Not Disturb";
                             break;
-                        case STREAMING:
-                            statusType = "Streaming ";
-                            break;
+//                        case STREAMING:
+//                            statusType = "Streaming ";
+//                            break;
                         case UNKNOWN:
                             statusType = "Unknown";
                             break;
                     }
 
                     eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
-                    eb.withDesc("Status: " + (user.getPresence().getPlayingText().isPresent() ? "Playing " + user.getPresence().getPlayingText().get() : statusType));
+                    eb.withDesc("Status: " + (user.getPresence().getText().isPresent() ? "Playing " + user.getPresence().getText().get() : statusType));
                     eb.withThumbnail(avatar.replace(".jpg", ".gif"));
                     List<IUser> usersSortedByJoin = guild.getUsers();
                     usersSortedByJoin.sort((o1, o2) -> {
@@ -186,8 +202,8 @@ public class GeneralListener {
                         return -2;
                     });
                     eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
-                    eb.appendField("Account Created", accCreated.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(accCreated, LocalDateTime.now()) + " days ago", true);
-                    eb.appendField("Guild Joined", guildJoinDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")) + "\n" + DAYS.between(guildJoinDate, LocalDateTime.now()) + " days ago", true);
+                    eb.appendField("Account Created", dtf.format(accCreated) + "\n" + DAYS.between(accCreated, Instant.now()) + " days ago", true);
+                    eb.appendField("Guild Joined", dtf.format(guildJoinDate) + "\n" + DAYS.between(guildJoinDate, Instant.now()) + " days ago", true);
                     String rolesString = roles.toString().replace("[", "").replace("]", "");
                     int count = 0;
                     for (IRole r : roles) {

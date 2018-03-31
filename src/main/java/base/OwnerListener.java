@@ -3,10 +3,7 @@ package base;
 import modules.BufferedMessage.Sender;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPrivateChannel;
-import sx.blah.discord.handle.obj.IVoiceChannel;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.Image;
 
 import java.io.File;
@@ -46,9 +43,9 @@ public class OwnerListener {
                 argsconcat = argsconcat.trim();
                 if (cmd.equalsIgnoreCase("changestatus") || cmd.equalsIgnoreCase("status") || cmd.equalsIgnoreCase("cs")) {
                     if (args.length > 1) {
-                        Eschamali.client.changePlayingText(argsconcat);
+                        Eschamali.client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, argsconcat);
                     } else {
-                        Eschamali.client.changePlayingText(null);
+                        Eschamali.client.changePresence(StatusType.ONLINE);
                     }
                 } else if (cmd.equalsIgnoreCase("changedefaultstatus") || cmd.equalsIgnoreCase("cds")) {
                     Properties props = new Properties();
@@ -65,9 +62,9 @@ public class OwnerListener {
                         Sender.sendMessage(channel, "Default status has been changed to `" + argsconcat + "`.");
 
                         if (args.length > 1) {
-                            Eschamali.client.changePlayingText(argsconcat);
+                            Eschamali.client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, argsconcat);
                         } else {
-                            Eschamali.client.changePlayingText(null);
+                            Eschamali.client.changePresence(StatusType.ONLINE);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

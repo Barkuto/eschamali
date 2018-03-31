@@ -16,6 +16,8 @@ import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.obj.ActivityType;
+import sx.blah.discord.handle.obj.StatusType;
 import sx.blah.discord.modules.IModule;
 
 import java.io.FileReader;
@@ -123,7 +125,7 @@ public class Eschamali {
     @EventSubscriber
     public void onReady(ReadyEvent event) {
         if (status.length() > 0) {
-            client.changePlayingText(status);
+            client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, status);
         }
     }
 
