@@ -86,8 +86,8 @@ public class GeneralListener {
                     Sender.sendMessage(channel, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
                 } else if (msg.equalsIgnoreCase("!ping")) {
                     Sender.sendMessage(channel, "pong!");
-                } else if (msg.equalsIgnoreCase("!alert")) {
-                    Sender.sendMessage(channel, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
+//                } else if (msg.equalsIgnoreCase("!alert")) {
+//                    Sender.sendMessage(channel, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
                 } else if (msg.startsWith("!say")) {
                     if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
                         event.getMessage().delete();
