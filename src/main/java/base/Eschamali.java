@@ -10,6 +10,7 @@ import modules.Parrot.ParrotModule;
 import modules.Permissions.PermissionsListener;
 import modules.Profiles.ProfilesModule;
 import modules.Reactions.ReactionsModule;
+import modules.Required.RequiredModule;
 import modules.Roles.RolesModule;
 import modules.Yugioh.YGOModule;
 import sx.blah.discord.api.ClientBuilder;
@@ -63,6 +64,7 @@ public class Eschamali {
         ReactionsModule reactions = new ReactionsModule();
         YGOModule ygo = new YGOModule();
         ProfilesModule profiles = new ProfilesModule();
+        RequiredModule required = new RequiredModule();
 
         defaultmodules.put(roles, true);
         defaultmodules.put(games, true);
@@ -75,6 +77,7 @@ public class Eschamali {
         defaultmodules.put(reactions, true);
         defaultmodules.put(ygo, true);
         defaultmodules.put(profiles, true);
+        defaultmodules.put(required, false);
 
         modules = new ArrayList<>();
         modules.add(roles);
@@ -88,6 +91,7 @@ public class Eschamali {
         modules.add(reactions);
         modules.add(ygo);
         modules.add(profiles);
+        modules.add(required);
         modules.sort(Comparator.comparing(IModule::getName));
 
         Properties props = new Properties();
