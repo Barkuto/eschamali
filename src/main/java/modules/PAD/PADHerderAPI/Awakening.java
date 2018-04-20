@@ -38,7 +38,11 @@ public enum Awakening {
 
     HPPLUS(46, "Team HP+", "HP+", "TeamHP"), RCVPLUS(47, "Team RCV+", "RCV+", "TeamRCV"), VOIDPEN(48, "Void Penetration", "VoidPen", "VoidPen"),
 
-    ASSIST(49, "Awoken Assist", "Assist", "Assist"), CHARGE(51, "Skill Charge", "Charge", "Charge"), SFUA(52, "Super Follow Up Attack", "SFUA", "SFUA");
+    ASSIST(49, "Awoken Assist", "Assist", "Assist"), SFUA(50, "Super Follow Up Attack", "SFUA", "SFUA"), CHARGE(51, "Skill Charge", "Charge", "Charge"),
+
+    BINDRESPLUS(52, "Bind Res Plus", "BindRes+", "BindResPlus"), TEPLUS(53, "TE Plus", "TE+", "TEPlus"), CLOUDRES(54, "Cloud Resist", "CloudRes", "CloudRes"),
+    RIBBONRES(55, "Ribbon Resist", "RibbonRes", "RibbonRes"), SBPLUS(56, "SB Plus", "SB+", "SBPlus"), HP80BOOST(57, "HP > 80 Boost", "80Boost", "80Boost"),
+    HP50BOOST(58, "HP < 50 Boost", "50Boost", "50Boost"), LSHIELD(59, "L Shield", "LShield", "LShield"), LUNLOCK(60, "L Unlock", "LUnlock", "LUnlock");
 
     private int id;
     private String name;

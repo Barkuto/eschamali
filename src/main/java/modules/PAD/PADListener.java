@@ -22,9 +22,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -108,10 +106,7 @@ public class PADListener {
         perms.close();
     }
 
-    // With PADX no longer updating guerillas, this is just using up valuable resources
-    // Someday rework so it's not as intensive.
-
-    /**
+/** Need to refactor PADX guerilla parsing. I think some things changed in html.
     @EventSubscriber
     public void startPADThread(GuildCreateEvent event) {
         LocalTime targetTime = LocalTime.of(8, 0);
@@ -132,7 +127,7 @@ public class PADListener {
                             channel = guild.getChannelByID(Long.parseLong(s));
                             if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
                                     && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
-                                LocalDateTime today = LocalDateTime.now();
+                                LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
                                 IMessage lastMessage = null;
                                 for (IMessage m : channel.getMessageHistory(50)) {
                                     if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
@@ -141,7 +136,7 @@ public class PADListener {
                                     }
                                 }
                                 if (lastMessage != null) {
-                                    LocalDateTime mDate = lastMessage.getTimestamp();
+                                    LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
                                     if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
                                         outputAllGuerillaImgs(channel);
                                 } else
@@ -160,8 +155,7 @@ public class PADListener {
         };
         t.start();
     }
-     */
-
+*/
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
