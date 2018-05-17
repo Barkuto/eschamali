@@ -373,7 +373,7 @@ public class PADHerderAPI {
     private static Monster getMonster(int id) {
         try {
             Connection con = DriverManager.getConnection(sqldriver + path + monstersDB);
-            PreparedStatement pstm = con.prepareStatement("SELECT * FROM monsters WHERE id=?");
+            PreparedStatement pstm = con.prepareStatement("SELECT monster FROM monsters WHERE id=?");
             pstm.setInt(1, id);
             ResultSet result = pstm.executeQuery();
             if (result.next()) {
@@ -387,10 +387,17 @@ public class PADHerderAPI {
 
     public static Monster getMonster(String query) {
         ArrayList<Monster> monsters = getAllMonsters(query);
-        double bestWeight = -999.0;
+        double bestWeight = -9999.0;
         Monster highestWeighted = null;
         for (Monster m : monsters) {
-            if (m.getWeighted() > bestWeight) {
+            double weightToCheck = m.getWeighted();
+            if (m.getWeighted() < 0) {
+                int newHP = Math.abs(m.getHp_max());
+                int newATK = Math.abs(m.getAtk_max());
+                int newRCV = Math.abs(m.getRcv_max());
+                weightToCheck = newHP / 10 + newATK / 5 + newRCV / 3;
+            }
+            if (weightToCheck > bestWeight) {
                 highestWeighted = m;
                 bestWeight = m.getWeighted();
             }
