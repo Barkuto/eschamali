@@ -387,7 +387,7 @@ public class PADHerderAPI {
 
     public static Monster getMonster(String query) {
         ArrayList<Monster> monsters = getAllMonsters(query);
-        double bestWeight = -9999.0;
+        double bestWeight = -999.0;
         Monster highestWeighted = null;
         for (Monster m : monsters) {
             double weightToCheck = m.getWeighted();
