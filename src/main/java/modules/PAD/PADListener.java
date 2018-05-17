@@ -34,7 +34,7 @@ public class PADListener {
     public static String prefix = "&";
     private TreeMap<String, String> abbrMon = new TreeMap<>();
     private TreeMap<String, String> abbrDun = new TreeMap<>();
-    private int maxMonNum = 4000;
+    private int maxMonNum = 5000;
     private String guerillaOutput = "modules/PAD/";
 
     private String tableName = "pad";
