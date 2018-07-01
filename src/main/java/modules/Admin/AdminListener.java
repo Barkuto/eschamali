@@ -288,28 +288,32 @@ public class AdminListener {
                             || cmd.equalsIgnoreCase("filter") || cmd.equalsIgnoreCase("abw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
                                 || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
-                            perms.addPerms(tableName, col1, bannedField, col2, argsconcat);
-                            Sender.sendMessage(channel, "Banned word/phrase was added.");
+                            if (args.length > 1) {
+                                perms.addPerms(tableName, col1, bannedField, col2, argsconcat);
+                                Sender.sendMessage(channel, "Banned word/phrase was added.");
+                            }
                         }
                     } else if (cmd.equalsIgnoreCase("deletebannedword") || cmd.equalsIgnoreCase("delbanword")
                             || cmd.equalsIgnoreCase("unfilter") || cmd.equalsIgnoreCase("dbw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
                                 || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
-                            String wordToDelete = argsconcat;
-                            String[] bannedWords = perms.getPerms(tableName, col1, bannedField, col2).split(";");
-                            for (int i = 0; i < bannedWords.length; i++) {
-                                if (bannedWords[i].equalsIgnoreCase(wordToDelete)) {
-                                    bannedWords[i] = "";
-                                    break;
+                            if (args.length > 1) {
+                                String wordToDelete = argsconcat;
+                                String[] bannedWords = perms.getPerms(tableName, col1, bannedField, col2).split(";");
+                                for (int i = 0; i < bannedWords.length; i++) {
+                                    if (bannedWords[i].equalsIgnoreCase(wordToDelete)) {
+                                        bannedWords[i] = "";
+                                        break;
+                                    }
                                 }
-                            }
-                            perms.deletePerms(tableName, col1, bannedField);
-                            for (int i = 0; i < bannedWords.length; i++) {
-                                if (bannedWords[i].length() > 0) {
-                                    perms.addPerms(tableName, col1, bannedField, col2, bannedWords[i]);
+                                perms.deletePerms(tableName, col1, bannedField);
+                                for (int i = 0; i < bannedWords.length; i++) {
+                                    if (bannedWords[i].length() > 0) {
+                                        perms.addPerms(tableName, col1, bannedField, col2, bannedWords[i]);
+                                    }
                                 }
+                                Sender.sendMessage(channel, "Banned word/phrase was deleted.");
                             }
-                            Sender.sendMessage(channel, "Banned word/phrase was deleted.");
                         }
                     } else if (cmd.equalsIgnoreCase("bannedwords") || cmd.equalsIgnoreCase("bw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
@@ -345,7 +349,8 @@ public class AdminListener {
                     String[] bannedWords = perms.getPerms(tableName, col1, "bannedwords", col2).split(";");
                     for (int i = 0; i < split.length; i++) {
                         for (int j = 0; j < bannedWords.length; j++) {
-                            if (split[i].equalsIgnoreCase(bannedWords[j].trim())) {
+                            String word = bannedWords[j].trim();
+                            if (word.length() > 0 && split[i].equalsIgnoreCase(word)) {
                                 event.getMessage().delete();
                             }
                         }
@@ -369,8 +374,9 @@ public class AdminListener {
                 String[] bannedWords = perms.getPerms(tableName, col1, "bannedwords", col2).split(";");
                 for (int i = 0; i < split.length; i++) {
                     for (int j = 0; j < bannedWords.length; j++) {
-                        if (split[i].equalsIgnoreCase(bannedWords[j].trim())) {
-                            event.getNewMessage().delete();
+                        String word = bannedWords[j].trim();
+                        if (word.length() > 0 && split[i].equalsIgnoreCase(word)) {
+                            event.getMessage().delete();
                         }
                     }
                 }

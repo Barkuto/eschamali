@@ -42,7 +42,9 @@ public enum Awakening {
 
     BINDRESPLUS(52, "Bind Res Plus", "BindRes+", "BindResPlus"), TEPLUS(53, "TE Plus", "TE+", "TEPlus"), CLOUDRES(54, "Cloud Resist", "CloudRes", "CloudRes"),
     RIBBONRES(55, "Ribbon Resist", "RibbonRes", "RibbonRes"), SBPLUS(56, "SB Plus", "SB+", "SBPlus"), HP80BOOST(57, "HP > 80 Boost", "80Boost", "80Boost"),
-    HP50BOOST(58, "HP < 50 Boost", "50Boost", "50Boost"), LSHIELD(59, "L Shield", "LShield", "LShield"), LUNLOCK(60, "L Unlock", "LUnlock", "LUnlock");
+    HP50BOOST(58, "HP < 50 Boost", "50Boost", "50Boost"), LSHIELD(59, "L Shield", "LShield", "LShield"), LUNLOCK(60, "L Unlock", "LUnlock", "LUnlock"),
+	
+	TENC(61, "Greatly Enhanced Combo", "10cBoost", "10c");
 
     private int id;
     private String name;
