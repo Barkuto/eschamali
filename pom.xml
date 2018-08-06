@@ -57,7 +57,7 @@
             <artifactId>PADData</artifactId>
             <version>1.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/PADData-1.0.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/PADData-1.0.jar</systemPath>
         </dependency>
     </dependencies>
 
