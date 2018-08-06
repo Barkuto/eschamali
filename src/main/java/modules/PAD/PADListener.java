@@ -1,12 +1,13 @@
 package modules.PAD;
 
 import modules.BufferedMessage.Sender;
-import modules.PAD.PADHerderAPI.*;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import pad.data.PADData;
+import pad.data.structure.card.*;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
@@ -22,7 +23,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.time.*;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +35,7 @@ public class PADListener {
     public static String prefix = "&";
     private TreeMap<String, String> abbrMon = new TreeMap<>();
     private TreeMap<String, String> abbrDun = new TreeMap<>();
-    private int maxMonNum = 4500;
+    private int maxMonNum = 4790;
     private String guerillaOutput = "modules/PAD/";
 
     private String tableName = "pad";
@@ -89,8 +90,7 @@ public class PADListener {
 
             s.close();
 
-            Awakening.loadEmojis(emoteServers);
-            Awakening.loadShortNames();
+            AwakeningEmoji.loadEmojis(emoteServers);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -106,56 +106,56 @@ public class PADListener {
         perms.close();
     }
 
-/** Need to refactor PADX guerilla parsing. I think some things changed in html.
-    @EventSubscriber
-    public void startPADThread(GuildCreateEvent event) {
-        LocalTime targetTime = LocalTime.of(8, 0);
-        Thread t = new Thread("guerilla") {
-            @Override
-            public void run() {
-                while (true) {
-                    LocalTime current = LocalTime.now();
-                    if (current.equals(targetTime) || current.isAfter(targetTime)) {
-                        IGuild guild = event.getGuild();
-                        Permission perms = PermissionsListener.getPermissionDB(guild);
-
-                        ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
-                        for (String s : channels) {
-                            if (s.length() == 0)
-                                break;
-                            IChannel channel = null;
-                            channel = guild.getChannelByID(Long.parseLong(s));
-                            if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
-                                    && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
-                                LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
-                                IMessage lastMessage = null;
-                                for (IMessage m : channel.getMessageHistory(50)) {
-                                    if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
-                                        lastMessage = m;
-                                        break;
-                                    }
-                                }
-                                if (lastMessage != null) {
-                                    LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
-                                    if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
-                                        outputAllGuerillaImgs(channel);
-                                } else
-                                    outputAllGuerillaImgs(channel);
-                                try {
-                                    sleep(1000 * 60 * 20);//1000 millis = 1s; "Roughly" 20min sleep
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                        perms.close();
-                    }
-                }
-            }
-        };
-        t.start();
-    }
-*/
+    /**
+     * Need to refactor PADX guerilla parsing. I think some things changed in html.
+     *
+     * @EventSubscriber public void startPADThread(GuildCreateEvent event) {
+     * LocalTime targetTime = LocalTime.of(8, 0);
+     * Thread t = new Thread("guerilla") {
+     * @Override public void run() {
+     * while (true) {
+     * LocalTime current = LocalTime.now();
+     * if (current.equals(targetTime) || current.isAfter(targetTime)) {
+     * IGuild guild = event.getGuild();
+     * Permission perms = PermissionsListener.getPermissionDB(guild);
+     * <p>
+     * ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
+     * for (String s : channels) {
+     * if (s.length() == 0)
+     * break;
+     * IChannel channel = null;
+     * channel = guild.getChannelByID(Long.parseLong(s));
+     * if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
+     * && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
+     * LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+     * IMessage lastMessage = null;
+     * for (IMessage m : channel.getMessageHistory(50)) {
+     * if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
+     * lastMessage = m;
+     * break;
+     * }
+     * }
+     * if (lastMessage != null) {
+     * LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
+     * if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
+     * outputAllGuerillaImgs(channel);
+     * } else
+     * outputAllGuerillaImgs(channel);
+     * try {
+     * sleep(1000 * 60 * 20);//1000 millis = 1s; "Roughly" 20min sleep
+     * } catch (InterruptedException e) {
+     * e.printStackTrace();
+     * }
+     * }
+     * }
+     * perms.close();
+     * }
+     * }
+     * }
+     * };
+     * t.start();
+     * }
+     */
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
@@ -169,18 +169,16 @@ public class PADListener {
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
 
-                    if (cmd.equalsIgnoreCase("monster") || cmd.equalsIgnoreCase("mon") || cmd.equalsIgnoreCase("m")) {
-                        Sender.sendMessage(channel, searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
-                    } else if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
+                    if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
                         if (split.length == 1) {
-                            Monster m = PADHerderAPI.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
+                            Monster m = PADData.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
                             if (m != null)
-                                Sender.sendEmbed(channel, getInfoEmbed(m, m.getId() + ""));
+                                Sender.sendEmbed(channel, getInfoEmbed(m, m.getCard_id() + ""));
                             else
                                 Sender.sendMessage(channel, "Bad Number rolled.");
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
-                            Monster m = PADHerderAPI.getMonster(query);
+                            Monster m = PADData.getMonster(query);
                             if (m != null) {
                                 Sender.sendEmbed(channel, getInfoEmbed(m, query));
                             } else {
@@ -230,22 +228,20 @@ public class PADListener {
                                 return;
                             }
                         }
-                        String found = "";
-                        if (split.length == 1) {
-                            found = searchMonster((new Random().nextInt(maxMonNum) + 1) + "");
-                        } else {
-                            found = searchMonster(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
-                        }
-                        if (found.contains("n=")) {
-                            found = found.substring(found.indexOf("=") + 1);
-                            Sender.sendMessage(channel, "http://puzzledragonx.com/en/img/monster/MONS_" + found + ".jpg");
-                        } else {
-                            Sender.sendMessage(channel, found);
-                        }
+                        String url;
+                        if (split.length == 1)
+                            url = PADData.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "");
+                        else url = PADData.getFullPictureURL(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
+
+                        if (url != null)
+                            Sender.sendEmbed(channel, new EmbedBuilder().withImage(url).build());
+                        else Sender.sendMessage(channel, "Nothing was found.");
                     } else if (cmd.equalsIgnoreCase("updatedb") || cmd.equalsIgnoreCase("update")) {
                         Sender.sendMessage(channel, "Updating DB. Might take a while.");
-                        PADHerderAPI.updateDB();
-                        Sender.sendMessage(channel, "DB updated.");
+                        new Thread(() -> {
+                            PADData.updateMonsters();
+                            Sender.sendMessage(channel, "DB updated.");
+                        }).start();
                     } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
 
                     } else if (cmd.equalsIgnoreCase("deletenickname") || cmd.equalsIgnoreCase("dn")) {
@@ -422,15 +418,6 @@ public class PADListener {
         }
     }
 
-    public String searchMonster(String keyword) {
-        Monster m = PADHerderAPI.getMonster(keyword);
-        if (m != null) {
-            return "http://puzzledragonx.com/en/monster.asp?n=" + m.getId();
-        } else {
-            return "Nothing was found.";
-        }
-    }
-
     public String searchDungeon(String keyword) {
         if (abbrDun.containsKey(keyword)) {
             keyword = abbrDun.get(keyword);
@@ -464,7 +451,7 @@ public class PADListener {
         EmbedBuilder eb = new EmbedBuilder().setLenient(true);
 
         Color c = Color.GRAY;
-        switch (m.getAtt1()) {
+        switch (Attribute.idToAttribute(m.getAttr_id())) {
             case FIRE:
                 c = new Color(0xff744b);
                 break;
@@ -482,19 +469,12 @@ public class PADListener {
                 break;
         }
         String desc = "";
-        Awakening[] awakenings = m.getAwakenings();
+        int[] awakenings = m.getAwakenings();
         for (int i = 0; i < awakenings.length; i++) {
             if (useEmotes) {
-                if (awakenings[i] != null)
-                    desc += Awakening.getEmoji(awakenings[i].getID());
-                else
-                    desc += Awakening.UNKNOWN;
+                desc += AwakeningEmoji.getEmoji(awakenings[i]);
             } else {
-                if (awakenings[i] != null)
-                    desc += Awakening.getShortName(awakenings[i].getID());
-                else
-                    desc += Awakening.UNKNOWN.getShortName();
-
+                desc += Awakening.values()[awakenings[i]].getShortName();
                 if (i != awakenings.length - 1) {
                     desc += "║";
                 }
@@ -502,45 +482,67 @@ public class PADListener {
         }
         if (desc.length() == 0)
             desc += "No Awakenings.";
+
+        int[] superAwakenings = m.getSuper_awakenings();
+        if (superAwakenings.length > 0)
+            desc += "\n";
+        for (int i = 0; i < superAwakenings.length; i++) {
+            if (useEmotes) {
+                desc += AwakeningEmoji.getEmoji(superAwakenings[i]);
+            } else {
+                desc += Awakening.values()[superAwakenings[i]].getShortName();
+                if (i != superAwakenings.length - 1) {
+                    desc += "║";
+                }
+            }
+        }
         eb.withDesc("**" + desc + "**");
 
-        Type type = m.getType();
-        Type type2 = m.getType2();
-        Type type3 = m.getType3();
+        Type type = Type.values()[m.getType_1_id()];
+        Type type2 = m.getType_2_id() == -1 ? Type.NONE : Type.values()[m.getType_2_id()];
+        Type type3 = m.getType_3_id() == -1 ? Type.NONE : Type.values()[m.getType_3_id()];
         String typing = type.getName() + (type2 == Type.NONE ? "" : "/" + type2.getName()) + (type3 == Type.NONE ? "" : "/" + type3.getName()) + "\n";
-        String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d", m.getRarity(), m.getTeam_cost(), m.getMonster_points());
+        String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d", m.getRarity(), m.getCost(), m.getSell_mp());
         eb.appendField(typing, info, true);
 
-        int hp = m.getHp_max();
-        int atk = m.getAtk_max();
-        int rcv = m.getRcv_max();
+        int hp = m.getMax_hp();
+        int atk = m.getMax_atk();
+        int rcv = m.getMax_rcv();
         double wghtd = (hp / 10) + (atk / 5) + (rcv / 3);
         eb.appendField("**Weighted** " + wghtd, String.format("**HP**    %-4d\n**ATK** %-4d\n**RCV** %-4d", hp, atk, rcv), true);
 
-        Active active = m.getActive();
-        String activeName = "Active: " + (active == null ? "None." : active.getName() + " (" + active.getMaxCD() + "->" + active.getMinCD() + ")");
-        eb.appendField(activeName, active == null ? "" : active.getEffect(), false);
+        ActiveSkill active = m.getActive_Skill();
+        String activeName = "Active: " + (active == null ? "None." : active.getName() + " (" + active.getTurn_max() + "->" + active.getTurn_min() + ")");
+        eb.appendField(activeName, active == null ? "" : active.getClean_description(), false);
 
-        Leader leader = m.getLeader();
+        LeaderSkill leader = m.getLeader_Skill();
         String leaderName = "Leader: " + (leader == null ? "None." : leader.getName());
-        eb.appendField(leaderName, leader == null ? "" : leader.getDesc(), false);
+        eb.appendField(leaderName, leader == null ? "" : leader.getClean_description().replace("^p", ""), false);
 
-        ArrayList<Integer> evos = PADHerderAPI.getEvos(m.getId());
+        int[] evos = m.getEvolutions();
         String otherEvos = "";
-        for (int i = 0; i < evos.size(); i++) {
-            if (i != evos.size() - 1)
-                otherEvos += evos.get(i) + ", ";
+        for (int i = 0; i < evos.length; i++) {
+            if (i != evos.length - 1)
+                otherEvos += evos[i] + ", ";
             else
-                otherEvos += evos.get(i);
+                otherEvos += evos[i];
         }
 
-        ArrayList<Monster> similarNames = PADHerderAPI.getAllMonsters(query);
+        ArrayList<Monster> similarNames = PADData.getAllMonsters(query);
         String similar = "";
         if (similarNames.size() <= 10) {
             for (int i = 0; i < similarNames.size(); i++) {
-                int currentID = similarNames.get(i).getId();
-                if (currentID != m.getId() && !evos.contains(currentID)) {
-                    similar += similarNames.get(i).getId() + ", ";
+                int currentID = similarNames.get(i).getCard_id();
+                if (currentID != m.getCard_id()) {
+                    boolean contains = false;
+                    for (int j = 0; j < evos.length; j++) {
+                        if (evos[j] == currentID) {
+                            contains = true;
+                            break;
+                        }
+                    }
+                    if (!contains)
+                        similar += similarNames.get(i).getCard_id() + ", ";
                 }
             }
             if (similar.contains(",")) {
@@ -553,9 +555,9 @@ public class PADListener {
         eb.appendField("Other Evos", otherEvos, true);
         eb.appendField("Similar Names", similar, true);
 
-        eb.withThumbnail("http://puzzledragonx.com/en/img/book/" + m.getId() + ".png");
-        eb.withTitle("No." + m.getId() + " " + m.getName());
-        eb.withUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getId());
+        eb.withThumbnail(PADData.getPortraitPictureURL(m.getCard_id() + ""));
+        eb.withTitle("No." + m.getCard_id() + " " + m.getName());
+        eb.withUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getCard_id());
         eb.withColor(c);
         return eb.build();
     }

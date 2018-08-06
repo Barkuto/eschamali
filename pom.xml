@@ -51,6 +51,14 @@
             <artifactId>gson</artifactId>
             <version>1.7.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>pad.data</groupId>
+            <artifactId>PADData</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/PADData-1.0.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <properties>
