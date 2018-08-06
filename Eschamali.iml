@@ -63,14 +63,6 @@
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.9.2" level="project" />
     <orderEntry type="library" name="Maven: org.xerial:sqlite-jdbc:3.8.11.2" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:1.7.1" level="project" />
-    <orderEntry type="module-library">
-      <library name="Maven: pad.data:PADData:1.0">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/src/main/resources/PADData-1.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="Maven: pad.data:PADData:1.0" level="project" />
   </component>
 </module>
