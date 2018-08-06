@@ -451,7 +451,7 @@ public class PADListener {
         EmbedBuilder eb = new EmbedBuilder().setLenient(true);
 
         Color c = Color.GRAY;
-        switch (Attribute.idToAttribute(m.getAttr_id())) {
+        switch (Attribute.fromID(m.getAttr_id())) {
             case FIRE:
                 c = new Color(0xff744b);
                 break;
@@ -498,9 +498,9 @@ public class PADListener {
         }
         eb.withDesc("**" + desc + "**");
 
-        Type type = Type.values()[m.getType_1_id()];
-        Type type2 = m.getType_2_id() == -1 ? Type.NONE : Type.values()[m.getType_2_id()];
-        Type type3 = m.getType_3_id() == -1 ? Type.NONE : Type.values()[m.getType_3_id()];
+        Type type = Type.fromID(m.getType_1_id());
+        Type type2 = Type.fromID(m.getType_2_id());
+        Type type3 = Type.fromID(m.getType_3_id());
         String typing = type.getName() + (type2 == Type.NONE ? "" : "/" + type2.getName()) + (type3 == Type.NONE ? "" : "/" + type3.getName()) + "\n";
         String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d", m.getRarity(), m.getCost(), m.getSell_mp());
         eb.appendField(typing, info, true);
