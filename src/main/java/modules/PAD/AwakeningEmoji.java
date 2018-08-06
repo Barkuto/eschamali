@@ -17,7 +17,7 @@ public enum AwakeningEmoji {
     LIGHTRES(7, "LightRes"),
     DARKRES(8, "DarkRes"),
     AUTORCV(9, "AutoRCV"),
-    BINDRES(10, "BindRCV"),
+    BINDRES(10, "BindRes"),
     BLINDRES(11, "BlindRes"),
     JAMRES(12, "JamRes"),
     POIRES(13, "PoiRes"),
