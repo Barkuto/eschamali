@@ -520,13 +520,13 @@ public class PADListener {
         eb.appendField(leaderName, leader == null ? "" : leader.getClean_description().replace("^p", ""), false);
 
         int[] evos = m.getEvolutions();
-        String otherEvos = "";
+        TreeSet<Integer> otherEvoes = new TreeSet<>(Integer::compareTo);
         for (int i = 0; i < evos.length; i++) {
-            if (i != evos.length - 1)
-                otherEvos += evos[i] + ", ";
-            else
-                otherEvos += evos[i];
+            if (evos[i] != m.getCard_id())
+                otherEvoes.add(evos[i]);
         }
+
+        String otherEvos = otherEvoes.toString().replace("[", "").replace("]", "");
 
         ArrayList<Monster> similarNames = PADData.getAllMonsters(query);
         String similar = "";
