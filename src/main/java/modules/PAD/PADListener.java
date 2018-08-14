@@ -496,20 +496,46 @@ public class PADListener {
                 }
             }
         }
+
+        TreeSet<Type> validKillers = m.getValidKillerLatents();
+        if (validKillers.size() > 0) {
+            desc += "\nKillers: ";
+            if (validKillers.size() == 8)
+                desc += "Any";
+            else {
+                StringBuilder sb = new StringBuilder();
+                for (Type t : m.getValidKillerLatents()) {
+                    sb.append(t.getName()).append(" ");
+                }
+                desc += sb.toString();
+            }
+        }
         eb.withDesc("**" + desc + "**");
 
         Type type = Type.fromID(m.getType_1_id());
         Type type2 = Type.fromID(m.getType_2_id());
         Type type3 = Type.fromID(m.getType_3_id());
+        String inheritable = m.isInheritable() ? "Yes" : "No";
         String typing = type.getName() + (type2 == Type.NONE ? "" : "/" + type2.getName()) + (type3 == Type.NONE ? "" : "/" + type3.getName()) + "\n";
-        String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d", m.getRarity(), m.getCost(), m.getSell_mp());
+        String info = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d" + "\n**Inheritable** %-5s", m.getRarity(), m.getCost(), m.getSell_mp(), inheritable);
         eb.appendField(typing, info, true);
 
         int hp = m.getMax_hp();
         int atk = m.getMax_atk();
         int rcv = m.getMax_rcv();
-        double wghtd = (hp / 10) + (atk / 5) + (rcv / 3);
-        eb.appendField("**Weighted** " + wghtd, String.format("**HP**    %-4d\n**ATK** %-4d\n**RCV** %-4d", hp, atk, rcv), true);
+        int weighted = m.getWeighted();
+
+        if (m.getLimit_mult() == 0)
+            eb.appendField("**Weighted** " + weighted, String.format("**HP**    %-4d\n**ATK** %-4d\n**RCV** %-4d", hp, atk, rcv), true);
+        else {
+            int lbhp = m.getLB_hp();
+            int lbatk = m.getLB_atk();
+            int lbrcv = m.getLB_rcv();
+            int lbweighted = m.getLB_weighted();
+            eb.appendField("**Weighted** " + weighted + " | " + "**LB** " + lbweighted,
+                    String.format("**HP**    %-4d | %-4d\n**ATK** %-4d | %-4d\n**RCV** %-4d | %-4d", hp, lbhp, atk, lbatk, rcv, lbrcv), true);
+        }
+
 
         ActiveSkill active = m.getActive_Skill();
         String activeName = "Active: " + (active == null ? "None." : active.getName() + " (" + active.getTurn_max() + "->" + active.getTurn_min() + ")");
@@ -517,7 +543,7 @@ public class PADListener {
 
         LeaderSkill leader = m.getLeader_Skill();
         String leaderName = "Leader: " + (leader == null ? "None." : leader.getName());
-        eb.appendField(leaderName, leader == null ? "" : leader.getClean_description().replace("^p", ""), false);
+        eb.appendField(leaderName, leader == null ? "" : leader.getClean_description().replace("^p", "").replace(";", ""), false);
 
         int[] evos = m.getEvolutions();
         TreeSet<Integer> otherEvoes = new TreeSet<>(Integer::compareTo);
