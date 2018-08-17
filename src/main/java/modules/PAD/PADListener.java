@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import pad.data.PADData;
 import pad.data.structure.card.*;
+import pad.data.structure.guerilla.Guerilla;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
@@ -23,8 +24,9 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
+import java.time.*;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,7 +38,6 @@ public class PADListener {
     private TreeMap<String, String> abbrMon = new TreeMap<>();
     private TreeMap<String, String> abbrDun = new TreeMap<>();
     private int maxMonNum = 4790;
-    private String guerillaOutput = "modules/PAD/";
 
     private String tableName = "pad";
     private String col1 = "field";
@@ -52,6 +53,8 @@ public class PADListener {
     private Pattern p1 = Pattern.compile("^&(buttoncalc|bc) (\\d+)\\s*(\\d+)?\\s*(\\d+)?\\s*(\\d+)?\\s*([TtYyFfNn])?\\s*(\\d+)?\\s*(\\d+)?\\s*$");
     private Pattern p2 = Pattern.compile("\\d+");
     private Pattern p3 = Pattern.compile(" [TtYyFfNn]");
+
+    private boolean threadRunning = false;
 
     public PADListener() {
         super();
@@ -106,56 +109,60 @@ public class PADListener {
         perms.close();
     }
 
-    /**
-     * Need to refactor PADX guerilla parsing. I think some things changed in html.
-     *
-     * @EventSubscriber public void startPADThread(GuildCreateEvent event) {
-     * LocalTime targetTime = LocalTime.of(8, 0);
-     * Thread t = new Thread("guerilla") {
-     * @Override public void run() {
-     * while (true) {
-     * LocalTime current = LocalTime.now();
-     * if (current.equals(targetTime) || current.isAfter(targetTime)) {
-     * IGuild guild = event.getGuild();
-     * Permission perms = PermissionsListener.getPermissionDB(guild);
-     * <p>
-     * ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
-     * for (String s : channels) {
-     * if (s.length() == 0)
-     * break;
-     * IChannel channel = null;
-     * channel = guild.getChannelByID(Long.parseLong(s));
-     * if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
-     * && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
-     * LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
-     * IMessage lastMessage = null;
-     * for (IMessage m : channel.getMessageHistory(50)) {
-     * if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
-     * lastMessage = m;
-     * break;
-     * }
-     * }
-     * if (lastMessage != null) {
-     * LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
-     * if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
-     * outputAllGuerillaImgs(channel);
-     * } else
-     * outputAllGuerillaImgs(channel);
-     * try {
-     * sleep(1000 * 60 * 20);//1000 millis = 1s; "Roughly" 20min sleep
-     * } catch (InterruptedException e) {
-     * e.printStackTrace();
-     * }
-     * }
-     * }
-     * perms.close();
-     * }
-     * }
-     * }
-     * };
-     * t.start();
-     * }
-     */
+
+    @EventSubscriber
+    public void startPADThread(GuildCreateEvent event) {
+        if (!threadRunning) {
+            LocalTime targetTime = LocalTime.of(5, 0);
+            Thread t = new Thread("guerilla") {
+                @Override
+                public void run() {
+                    threadRunning = true;
+                    while (true) {
+                        LocalTime current = LocalTime.now();
+                        if (current.equals(targetTime) || current.isAfter(targetTime)) {
+                            List<IGuild> allGuilds = PADModule.client.getGuilds();
+                            for (IGuild guild : allGuilds) {
+                                Permission perms = PermissionsListener.getPermissionDB(guild);
+                                ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
+                                for (String s : channels) {
+                                    if (s.length() == 0)
+                                        break;
+                                    IChannel channel;
+                                    channel = guild.getChannelByID(Long.parseLong(s));
+                                    if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
+                                            && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
+                                        LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+                                        IMessage lastMessage = null;
+                                        for (IMessage m : channel.getMessageHistory(50)) {
+                                            if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
+                                                lastMessage = m;
+                                                break;
+                                            }
+                                        }
+                                        if (lastMessage != null) {
+                                            LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
+                                            if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
+                                                outputAllGuerillaImgs(channel);
+                                        } else
+                                            outputAllGuerillaImgs(channel);
+                                        try {
+                                            sleep(1000 * 60 * 30);//1000 millis = 1s; "Roughly" 30min sleep
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
+                                perms.close();
+                            }
+                        }
+                    }
+                }
+            };
+            t.start();
+        }
+    }
+
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
@@ -192,11 +199,11 @@ public class PADListener {
                         //List monsters with that active "type"?
                     } else if (cmd.equalsIgnoreCase("guerilla") || cmd.equalsIgnoreCase("g")) {
                         LocalDate ld = LocalDate.now();
-                        Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
+                        Guerilla g = PADData.getTodayGuerilla();
                         if (split.length == 1) {
                             try {
                                 ByteArrayOutputStream os = new ByteArrayOutputStream();
-                                ImageIO.write(g.getTodayGuerillaImage("pst"), "png", os);
+                                ImageIO.write(PADData.guerillaToImage(g, "pst"), "png", os);
                                 InputStream is = new ByteArrayInputStream(os.toByteArray());
                                 channel.sendFile("", false, is, "img.png");
                             } catch (IOException e) {
@@ -205,7 +212,7 @@ public class PADListener {
                         } else if (split.length == 2) {
                             try {
                                 ByteArrayOutputStream os = new ByteArrayOutputStream();
-                                ImageIO.write(g.getTodayGuerillaImage(split[1].trim()), "png", os);
+                                ImageIO.write(PADData.guerillaToImage(g, split[1].trim()), "png", os);
                                 InputStream is = new ByteArrayInputStream(os.toByteArray());
                                 channel.sendFile("", false, is, "img.png");
                             } catch (IOException e) {
@@ -215,10 +222,9 @@ public class PADListener {
                     } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
                         event.getMessage().delete();
                         outputAllGuerillaImgs(channel);
-                    } else if (cmd.equalsIgnoreCase("updateguerilla") || cmd.equalsIgnoreCase("ug") || cmd.equalsIgnoreCase("gu")) {
-                        if (Guerilla.updateGuerilla(guerillaOutput)) {
-                            Sender.sendMessage(channel, "Guerillas have been updated for today.");
-                        }
+                    } else if (cmd.equalsIgnoreCase("forceupdateguerilla") || cmd.equalsIgnoreCase("fug") || cmd.equalsIgnoreCase("fgu")) {
+                        PADData.updateGuerillas();
+                        Sender.sendMessage(channel, "Guerillas have been updated for today.");
                     } else if (cmd.equalsIgnoreCase("pic")) {
                         if (split.length > 1 && split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);
@@ -383,12 +389,12 @@ public class PADListener {
     }
 
     public void outputAllGuerillaImgs(IChannel channel) {
-        Guerilla g = Guerilla.getTodayGuerilla(guerillaOutput);
+        Guerilla g = PADData.getTodayGuerilla();
 
-        BufferedImage pstImg = g.getTodayGuerillaImage("pst");
-        BufferedImage mstImg = g.getTodayGuerillaImage("mst");
-        BufferedImage cstImg = g.getTodayGuerillaImage("cst");
-        BufferedImage estImg = g.getTodayGuerillaImage("est");
+        BufferedImage pstImg = PADData.guerillaToImage(g, "pst");
+        BufferedImage mstImg = PADData.guerillaToImage(g, "mst");
+        BufferedImage cstImg = PADData.guerillaToImage(g, "cst");
+        BufferedImage estImg = PADData.guerillaToImage(g, "est");
         ArrayList<BufferedImage> images = new ArrayList<>();
         images.add(pstImg);
         images.add(mstImg);
