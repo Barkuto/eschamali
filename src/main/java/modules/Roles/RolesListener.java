@@ -12,7 +12,10 @@ import sx.blah.discord.util.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Created by Iggie on 8/14/2016.
@@ -59,7 +62,7 @@ public class RolesListener {
     @EventSubscriber
     public void messageReceived(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            String message = event.getMessage().getContent();
+            String message = event.getMessage().getContent().toLowerCase().trim();
             IUser author = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
             IChannel channel = event.getMessage().getChannel();
@@ -70,18 +73,18 @@ public class RolesListener {
                     String cmd = args[0];
                     String argsconcat;
                     try {
-                        argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
+                        argsconcat = message.substring(cmd.length() + 2).trim();
                     } catch (StringIndexOutOfBoundsException e) {
                         argsconcat = "";
                     }
 
                     Permission perms = PermissionsListener.getPermissionDB(guild);
 
-                    if (cmd.equalsIgnoreCase("db")) {
+                    if (cmd.equals("db")) {
                         if (userHasPerm(event.getMessage().getAuthor(), event.getMessage().getGuild(), Permissions.MANAGE_SERVER) || event.getMessage().getAuthor().getStringID().equals(ownerID)) {
                             Sender.sendMessage(channel, databaseString(guild));
                         }
-                    } else if (cmd.equalsIgnoreCase("autorole")) {
+                    } else if (cmd.equals("autorole")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getStringID().equals(ownerID)) {
                             if (args.length == 1) {
                                 String output = "The current autorole is: ";
@@ -100,12 +103,12 @@ public class RolesListener {
                                 }
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("removeautorole")) {
+                    } else if (cmd.equals("removeautorole")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_SERVER) || userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getStringID().equals(ownerID)) {
                             perms.setPerms(miscTableName, miscCol1, "autorole", miscCol2, "");
                             Sender.sendMessage(channel, "The auto-role has been removed.");
                         }
-                    } else if (cmd.equalsIgnoreCase("ar")) {//Add role to person
+                    } else if (cmd.equals("ar")) {//Add role to person
                         if (args.length > 2) {
                             if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getStringID().equals(ownerID) && args.length > 2) {
                                 String user = args[1];
@@ -132,7 +135,7 @@ public class RolesListener {
                                 Sender.sendMessage(channel, "You do not have permissions to manage roles.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("rr")) {//Remove role from person
+                    } else if (cmd.equals("rr")) {//Remove role from person
                         if (args.length > 2) {
                             if (userHasPerm(author, guild, Permissions.MANAGE_ROLES) || author.getStringID().equals(ownerID)) {
                                 String user = args[1];
@@ -159,7 +162,7 @@ public class RolesListener {
                                 Sender.sendMessage(channel, "You do not have permissions to manage roles.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("iam")) {//Add role to self, if self assignable
+                    } else if (cmd.equals("iam")) {//Add role to self, if self assignable
                         if (args.length >= 1) {
                             IRole role = null;
                             for (IRole r : guild.getRoles()) {
@@ -200,7 +203,7 @@ public class RolesListener {
                             }
                             Sender.sendMessage(channel, "That is not a role!");
                         }
-                    } else if (cmd.equalsIgnoreCase("iamn") || cmd.equalsIgnoreCase("iamnot")) {//Remove role from self, if self assignable
+                    } else if (cmd.equals("iamn") || cmd.equals("iamnot")) {//Remove role from self, if self assignable
                         if (args.length > 1) {
                             //check if role is a role
                             //check if user has role
@@ -256,7 +259,7 @@ public class RolesListener {
                             }
                             Sender.sendMessage(channel, "That is not a role!");
                         }
-                    } else if (cmd.equalsIgnoreCase("inrole")) {//Check people with given role
+                    } else if (cmd.equals("inrole")) {//Check people with given role
                         if (args.length > 1) {
                             String role = "";
                             for (int i = 1; i < args.length; i++) {
@@ -285,7 +288,7 @@ public class RolesListener {
                                 Sender.sendMessage(channel, output);
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("myroles")) {
+                    } else if (cmd.equals("myroles")) {
                         fixRoles(author, guild, channel);
                         IUser user = event.getMessage().getAuthor();
                         List<IRole> userRoles = user.getRolesForGuild(guild);
@@ -298,7 +301,7 @@ public class RolesListener {
                             }
                         }
                         Sender.sendMessage(channel, output);
-                    } else if (cmd.equalsIgnoreCase("roles")) {
+                    } else if (cmd.equals("roles")) {
                         String output = "`List of roles:`";
                         List<IRole> roles = guild.getRoles();
                         for (IRole r : roles) {
@@ -309,7 +312,7 @@ public class RolesListener {
                             }
                         }
                         Sender.sendMessage(channel, output);
-                    } else if (cmd.equalsIgnoreCase("rolesof") && args.length > 1) {
+                    } else if (cmd.equals("rolesof") && args.length > 1) {
                         IUser user = guild.getUserByID(Long.parseLong(parseUserID(args[1])));
                         if (user != null) {
                             fixRoles(user, guild, channel);
@@ -326,7 +329,7 @@ public class RolesListener {
                         } else {
                             Sender.sendMessage(channel, "Invalid parameter, please @ the user to see their roles.");
                         }
-                    } else if (cmd.equalsIgnoreCase("lsar")) {
+                    } else if (cmd.equals("lsar")) {
                         String selfroles = perms.getPerms(miscTableName, miscCol1, "selfroles", miscCol2);
                         int count = 0;
                         String output = "";
@@ -351,7 +354,7 @@ public class RolesListener {
                             thingy2 = "role";
                         }
                         Sender.sendMessage(channel, "There " + thingy1 + " `" + count + "` self assignable " + thingy2 + ":\n" + output);
-                    } else if (cmd.equalsIgnoreCase("asar")) {
+                    } else if (cmd.equals("asar")) {
                         if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getStringID().equals(ownerID)) {
                             if (args.length > 1 && !message.contains(";")) {
                                 IRole role = roleFromGuild(guild, argsconcat.trim());
@@ -392,7 +395,7 @@ public class RolesListener {
                         } else {
                             Sender.sendMessage(channel, "You do not have permissions to manage roles.");
                         }
-                    } else if (cmd.equalsIgnoreCase("rsar")) {
+                    } else if (cmd.equals("rsar")) {
                         if (userHasPerm(event.getMessage().getAuthor(), guild, Permissions.MANAGE_ROLES) || event.getMessage().getAuthor().getStringID().equals(ownerID)) {
                             if (args.length > 1 && !message.contains(";")) {
                                 IRole role = roleFromGuild(guild, argsconcat.trim());
@@ -459,7 +462,7 @@ public class RolesListener {
                         } else {
                             Sender.sendMessage(channel, "You do not have permissions to manage roles.");
                         }
-                    } else if (cmd.equalsIgnoreCase("servertree")) {
+                    } else if (cmd.equals("servertree")) {
                         if (author.getStringID().equalsIgnoreCase(ownerID)) {
                             List<IRole> roles = RolesModule.client.getGuildByID(guild.getLongID()).getRoles();
                             roles.sort((o1, o2) -> Integer.compare(o2.getPosition(), o1.getPosition()));

@@ -31,7 +31,7 @@ public class OwnerListener {
     public void onMessage(MessageReceivedEvent event) {
         if (event.getMessage().getChannel() instanceof IPrivateChannel) {
             if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID()) && event.getMessage().getContent().startsWith(prefix)) {
-                String message = event.getMessage().getContent();
+                String message = event.getMessage().getContent().toLowerCase().trim();
                 IChannel channel = event.getChannel();
                 String[] args = message.split(" ");
                 String argsconcat = "";
@@ -41,13 +41,13 @@ public class OwnerListener {
                     argsconcat += args[i] + " ";
                 }
                 argsconcat = argsconcat.trim();
-                if (cmd.equalsIgnoreCase("changestatus") || cmd.equalsIgnoreCase("status") || cmd.equalsIgnoreCase("cs")) {
+                if (cmd.equals("changestatus") || cmd.equals("status") || cmd.equals("cs")) {
                     if (args.length > 1) {
                         Eschamali.client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, argsconcat);
                     } else {
                         Eschamali.client.changePresence(StatusType.ONLINE);
                     }
-                } else if (cmd.equalsIgnoreCase("changedefaultstatus") || cmd.equalsIgnoreCase("cds")) {
+                } else if (cmd.equals("changedefaultstatus") || cmd.equals("cds")) {
                     Properties props = new Properties();
                     try {
                         props.load(new FileReader(Eschamali.configFileName));
@@ -69,7 +69,7 @@ public class OwnerListener {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                } else if (cmd.equalsIgnoreCase("guilds") || cmd.equalsIgnoreCase("servers")) {
+                } else if (cmd.equals("guilds") || cmd.equals("servers")) {
                     List<IGuild> guilds = Eschamali.client.getGuilds();
                     String output = "Connected to `" + guilds.size() + "` guilds.\n";
                     output += "```xl\n";
@@ -80,7 +80,7 @@ public class OwnerListener {
                     }
                     output += "```";
                     Sender.sendMessage(channel, output);
-                } else if (cmd.equalsIgnoreCase("leave")) {
+                } else if (cmd.equals("leave")) {
                     if (args.length > 1) {
                         String id = message.substring(message.indexOf(" "));
                         IGuild g = Eschamali.client.getGuildByID(Long.parseLong(id));
@@ -89,24 +89,24 @@ public class OwnerListener {
                             Sender.sendMessage(channel, "Left server `" + g.getName() + "`");
                         }
                     }
-                } else if (cmd.equalsIgnoreCase("setavatar")) {
+                } else if (cmd.equals("setavatar")) {
                     String url = message.substring(message.indexOf(" "));
                     String imgtype = url.substring(url.lastIndexOf(".") + 1);
                     Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
                     Sender.sendMessage(channel, "Avatar changed.");
-                } else if (cmd.equalsIgnoreCase("changename")) {
+                } else if (cmd.equals("changename")) {
                     Eschamali.client.changeUsername(message.substring(message.indexOf(" ") + 1));
                     Sender.sendMessage(channel, "Username changed.");
-                } else if (cmd.equalsIgnoreCase("uptime") || cmd.equalsIgnoreCase("up")) {
+                } else if (cmd.equals("uptime") || cmd.equals("up")) {
                     Sender.sendMessage(channel, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
-                } else if (cmd.equalsIgnoreCase("shutdown") || cmd.equalsIgnoreCase("sd")) {
+                } else if (cmd.equals("shutdown") || cmd.equals("sd")) {
                     Sender.sendMessage(channel, "Shutting down...");
                     List<IVoiceChannel> connectedVoice = Eschamali.client.getConnectedVoiceChannels();
                     for (IVoiceChannel v : connectedVoice) {
                         v.leave();
                     }
                     System.exit(0);
-                } else if (cmd.equalsIgnoreCase("version") || cmd.equalsIgnoreCase("v")) {
+                } else if (cmd.equals("version") || cmd.equals("v")) {
                     Path file = FileSystems.getDefault().getPath("", "Eschamali-1.0-SNAPSHOT-shaded.jar");
                     try {
                         BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);

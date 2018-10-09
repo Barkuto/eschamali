@@ -44,7 +44,7 @@ public class MusicListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            String message = event.getMessage().getContent();
+            String message = event.getMessage().getContent().toLowerCase().trim();
             IUser user = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
             IChannel channel = event.getMessage().getChannel();
@@ -62,11 +62,11 @@ public class MusicListener {
                     }
 
                     GuildMusicManager guildManager = getGuildManager(guild);
-                    if (cmd.equalsIgnoreCase("join") || cmd.equalsIgnoreCase("j")) {
+                    if (cmd.equals("join") || cmd.equals("j")) {
                         joinVoiceChannel(user, guild, channel);
-                    } else if (cmd.equalsIgnoreCase("leave") || cmd.equalsIgnoreCase("l")) {
+                    } else if (cmd.equals("leave") || cmd.equals("l")) {
                         leaveVoiceChannel(guild);
-                    } else if (cmd.equalsIgnoreCase("queue") || cmd.equalsIgnoreCase("q")) {
+                    } else if (cmd.equals("queue") || cmd.equals("q")) {
                         if (args.length > 1) {
                             if (!argsconcat.contains("www.") || !argsconcat.contains(".com")
                                     || !argsconcat.contains("youtu.be") || !argsconcat.contains("/")) {
@@ -115,7 +115,7 @@ public class MusicListener {
                             }
                             Sender.sendMessage(channel, out + "```");
                         }
-                    } else if (cmd.equalsIgnoreCase("queuerelated") || cmd.equalsIgnoreCase("qr")) {
+                    } else if (cmd.equals("queuerelated") || cmd.equals("qr")) {
                         BlockingQueue<AudioTrack> queue = guildManager.scheduler.getQueue();
                         AudioTrack lastInQueue = guildManager.player.getPlayingTrack();
                         for (AudioTrack t : queue) {
@@ -149,31 +149,31 @@ public class MusicListener {
                                 });
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("skip") || cmd.equalsIgnoreCase("s")) {
+                    } else if (cmd.equals("skip") || cmd.equals("s")) {
                         if (guildManager.scheduler.isPlaying()) {
                             guildManager.scheduler.nextTrack();
                             Sender.sendMessage(channel, "Current track was skipped.");
                         }
-                    } else if (cmd.equalsIgnoreCase("pause") || cmd.equalsIgnoreCase("p")) {
+                    } else if (cmd.equals("pause") || cmd.equals("p")) {
                         if (guildManager.scheduler.isPlaying()) {
                             guildManager.player.setPaused(true);
                             Sender.sendMessage(channel, "Player was paused.");
                         }
-                    } else if (cmd.equalsIgnoreCase("unpause") || cmd.equalsIgnoreCase("up")
-                            || cmd.equalsIgnoreCase("resume") || cmd.equalsIgnoreCase("r")) {
+                    } else if (cmd.equals("unpause") || cmd.equals("up")
+                            || cmd.equals("resume") || cmd.equals("r")) {
                         if (guildManager.player.isPaused()) {
                             guildManager.player.setPaused(false);
                             Sender.sendMessage(channel, "Player was unpaused.");
                         }
-                    } else if (cmd.equalsIgnoreCase("nowplaying") || cmd.equalsIgnoreCase("np")
-                            || cmd.equalsIgnoreCase("currenttrack") || cmd.equalsIgnoreCase("ct")) {
+                    } else if (cmd.equals("nowplaying") || cmd.equals("np")
+                            || cmd.equals("currenttrack") || cmd.equals("ct")) {
                         AudioTrack currentTrack = guildManager.player.getPlayingTrack();
                         int[] currentTime = parseLength(currentTrack.getPosition());
                         int[] totalLength = parseLength(currentTrack.getDuration());
                         String current = String.format("%02d:%02d:%02d", currentTime[0], currentTime[1], currentTime[2]);
                         String end = String.format("%02d:%02d:%02d", totalLength[0], totalLength[1], totalLength[2]);
                         Sender.sendMessage(channel, "Now Playing: **" + currentTrack.getInfo().title + "** `" + current + "/" + end + "`");
-                    } else if (cmd.equalsIgnoreCase("stop")) {
+                    } else if (cmd.equals("stop")) {
                         while (guildManager.player.getPlayingTrack() != null) {
                             guildManager.scheduler.nextTrack();
                         }

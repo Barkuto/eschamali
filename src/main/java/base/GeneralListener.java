@@ -50,13 +50,13 @@ public class GeneralListener {
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
-                String msg = event.getMessage().getContent().toLowerCase();
+                String msg = event.getMessage().getContent().toLowerCase().trim();
                 IChannel channel = event.getChannel();
-                if (msg.equalsIgnoreCase("!donate")) {
+                if (msg.equals("!donate")) {
                     Sender.sendMessage(channel, "Donate for server/development funds at: https://streamlabs.com/barkuto");
-                } else if (msg.equalsIgnoreCase("!maker")) {
+                } else if (msg.equals("!maker")) {
                     Sender.sendMessage(channel, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
-                } else if (msg.equalsIgnoreCase("!ayy")) {
+                } else if (msg.equals("!ayy")) {
                     List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
                     if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
                         ayy = !ayy;
@@ -78,13 +78,13 @@ public class GeneralListener {
                             }
                         }
                     }
-                } else if (msg.equalsIgnoreCase("ayy") && ayy) {
+                } else if (msg.equals("ayy") && ayy) {
                     Sender.sendMessage(channel, "lmao");
-                } else if (msg.equalsIgnoreCase("!tilt")) {
+                } else if (msg.equals("!tilt")) {
                     Sender.sendMessage(channel, "*T* *I* *L* *T* *E* *D*");
-                } else if (msg.equalsIgnoreCase("!riot")) {
+                } else if (msg.equals("!riot")) {
                     Sender.sendMessage(channel, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
-                } else if (msg.equalsIgnoreCase("!ping")) {
+                } else if (msg.equals("!ping")) {
                     Sender.sendMessage(channel, "pong!");
 //                } else if (msg.equalsIgnoreCase("!alert")) {
 //                    Sender.sendMessage(channel, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
@@ -93,7 +93,7 @@ public class GeneralListener {
                         event.getMessage().delete();
                         Sender.sendMessage(channel, msg.substring(msg.indexOf(" ")));
                     }
-                } else if (msg.equalsIgnoreCase("!serverinfo") || msg.startsWith("!sinfo")) {
+                } else if (msg.equals("!serverinfo") || msg.equals("!sinfo")) {
                     IGuild guild = event.getMessage().getGuild();
 //                    LocalDateTime creationDate = guild.getCreationDate();
                     Instant creationDate = guild.getCreationDate();
@@ -117,7 +117,7 @@ public class GeneralListener {
                     EmbedObject embed = eb.build();
 
                     Sender.sendEmbed(channel, embed);
-                } else if (msg.startsWith("!userinfo") || msg.startsWith("!uinfo")) {
+                } else if (msg.equals("!userinfo") || msg.equals("!uinfo")) {
                     IGuild guild = event.getMessage().getGuild();
                     IUser user = null;
                     if (msg.contains(" ")) {

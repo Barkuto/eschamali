@@ -14,8 +14,6 @@ import sx.blah.discord.util.RequestBuilder;
 import java.util.ArrayList;
 import java.util.Random;
 
-import static java.lang.Thread.sleep;
-
 /**
  * Created by Iggie on 8/17/2016.
  */
@@ -63,8 +61,8 @@ public class GamesListener {
                 if (msg.startsWith(prefix)) {
                     String[] args = msg.split(" ");
                     args[0] = args[0].replace(prefix, "");
-                    String cmd = args[0];
-                    if (cmd.equalsIgnoreCase("8") || cmd.equalsIgnoreCase("8ball")) {
+                    String cmd = args[0].toLowerCase();
+                    if (cmd.equals("8") || cmd.equals("8ball")) {
                         if (args.length > 1) {
                             int num = new Random().nextInt(answers.size());
                             String question = "";
@@ -74,7 +72,7 @@ public class GamesListener {
                             question = question.trim();
                             Sender.sendMessage(channel, "\n" + ":question: `Question` " + question + "\n:8ball: `8ball answers` " + answers.get(num));
                         }
-                    } else if (cmd.equalsIgnoreCase("choose")) {
+                    } else if (cmd.equals("choose")) {
                         if (args.length > 1) {
                             String wholeArgs = "";
                             for (int i = 1; i < args.length; i++) {
@@ -90,7 +88,7 @@ public class GamesListener {
                             }
                             Sender.sendMessage(channel, choices[new Random().nextInt(choices.length)]);
                         }
-                    } else if (cmd.equalsIgnoreCase("rps")) {
+                    } else if (cmd.equals("rps")) {
                         if (args.length > 1) {
                             int pick;
                             switch (args[1].toLowerCase()) {
@@ -123,9 +121,9 @@ public class GamesListener {
                                 output = user.mention() + " won! :" + rpsPick(pick) + ": beats :" + rpsPick(botPick) + ":";
                             Sender.sendMessage(channel, output);
                         }
-                    } else if (cmd.equalsIgnoreCase("roll")) {
+                    } else if (cmd.equals("roll")) {
                         Sender.sendMessage(channel, "You rolled a `" + (new Random().nextInt(100) + 1) + "`!");
-                    } else if (cmd.equalsIgnoreCase("poll")) {
+                    } else if (cmd.equals("poll")) {
                         String[] params = msg.substring(msg.indexOf(" ")).split(";");
                         if (params.length > 1 && params.length <= 27) {
                             EmbedBuilder eb = new EmbedBuilder();

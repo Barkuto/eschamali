@@ -171,12 +171,12 @@ public class PADListener {
             if (PermissionsListener.isModuleOn(guild, PADModule.name)
                     && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
-                    String msg = event.getMessage().getContent();
+                    String msg = event.getMessage().getContent().toLowerCase().trim();
                     String[] split = msg.split(" ");
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
 
-                    if (cmd.equalsIgnoreCase("info") || cmd.equalsIgnoreCase("i")) {
+                    if (cmd.equals("info") || cmd.equals("i")) {
                         if (split.length == 1) {
                             Monster m = PADData.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
                             if (m != null)
@@ -192,12 +192,12 @@ public class PADListener {
                                 Sender.sendMessage(channel, "Monster not found.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("dungeon") || cmd.equalsIgnoreCase("dun") || cmd.equalsIgnoreCase("d")) {
+                    } else if (cmd.equals("dungeon") || cmd.equals("dun") || cmd.equals("d")) {
                         Sender.sendMessage(channel, searchDungeon(msg.substring(msg.indexOf(cmd) + cmd.length() + 1)));
-                    } else if (cmd.equalsIgnoreCase("as")) {
+                    } else if (cmd.equals("as")) {
                         //List monsters with keyword in active?
                         //List monsters with that active "type"?
-                    } else if (cmd.equalsIgnoreCase("guerilla") || cmd.equalsIgnoreCase("g")) {
+                    } else if (cmd.equals("guerilla") || cmd.equals("g")) {
                         LocalDate ld = LocalDate.now();
                         Guerilla g = PADData.getTodayGuerilla();
                         if (split.length == 1) {
@@ -219,13 +219,13 @@ public class PADListener {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("ga") || cmd.equalsIgnoreCase("guerillaall")) {
+                    } else if (cmd.equals("ga") || cmd.equals("guerillaall")) {
                         event.getMessage().delete();
                         outputAllGuerillaImgs(channel);
-                    } else if (cmd.equalsIgnoreCase("forceupdateguerilla") || cmd.equalsIgnoreCase("fug") || cmd.equalsIgnoreCase("fgu")) {
+                    } else if (cmd.equals("forceupdateguerilla") || cmd.equals("fug") || cmd.equals("fgu")) {
                         PADData.updateGuerillas();
                         Sender.sendMessage(channel, "Guerillas have been updated for today.");
-                    } else if (cmd.equalsIgnoreCase("pic")) {
+                    } else if (cmd.equals("pic")) {
                         if (split.length > 1 && split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);
                             System.out.println(roll);
@@ -242,17 +242,17 @@ public class PADListener {
                         if (url != null)
                             Sender.sendEmbed(channel, new EmbedBuilder().withImage(url).build());
                         else Sender.sendMessage(channel, "Nothing was found.");
-                    } else if (cmd.equalsIgnoreCase("updatedb") || cmd.equalsIgnoreCase("update")) {
+                    } else if (cmd.equals("updatedb") || cmd.equals("update")) {
                         Sender.sendMessage(channel, "Updating DB. Might take a while.");
                         new Thread(() -> {
                             PADData.updateMonsters();
                             Sender.sendMessage(channel, "DB updated.");
                         }).start();
-                    } else if (cmd.equalsIgnoreCase("addnickname") || cmd.equalsIgnoreCase("an")) {
+                    } else if (cmd.equals("addnickname") || cmd.equals("an")) {
 
-                    } else if (cmd.equalsIgnoreCase("deletenickname") || cmd.equalsIgnoreCase("dn")) {
+                    } else if (cmd.equals("deletenickname") || cmd.equals("dn")) {
 
-                    } else if (cmd.equalsIgnoreCase("addguerillachannel") || cmd.equalsIgnoreCase("agc")) {
+                    } else if (cmd.equals("addguerillachannel") || cmd.equals("agc")) {
                         if (userHasPerm(user, guild, Permissions.MANAGE_SERVER) || userHasPerm(user, guild, Permissions.MANAGE_CHANNEL)
                                 || userHasPerm(user, guild, Permissions.MANAGE_MESSAGES)) {
                             if (split.length > 1) {
@@ -284,7 +284,7 @@ public class PADListener {
                                 perms.close();
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("deleteguerillachannel") || cmd.equalsIgnoreCase("dgc")) {
+                    } else if (cmd.equals("deleteguerillachannel") || cmd.equals("dgc")) {
                         if (userHasPerm(user, guild, Permissions.MANAGE_SERVER) || userHasPerm(user, guild, Permissions.MANAGE_CHANNEL)
                                 || userHasPerm(user, guild, Permissions.MANAGE_MESSAGES)) {
                             if (split.length > 1) {
@@ -327,7 +327,7 @@ public class PADListener {
                                 perms.close();
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("guerillachannels") || cmd.equalsIgnoreCase("gc")) {
+                    } else if (cmd.equals("guerillachannels") || cmd.equals("gc")) {
                         if (userHasPerm(user, guild, Permissions.MANAGE_SERVER) || userHasPerm(user, guild, Permissions.MANAGE_CHANNEL)
                                 || userHasPerm(user, guild, Permissions.MANAGE_MESSAGES)) {
                             Permission perms = PermissionsListener.getPermissionDB(guild);
@@ -343,7 +343,7 @@ public class PADListener {
                             Sender.sendMessage(channel, output);
                             perms.close();
                         }
-                    } else if (cmd.equalsIgnoreCase("buttoncalc") || cmd.equalsIgnoreCase("bc")) {
+                    } else if (cmd.equals("buttoncalc") || cmd.equals("bc")) {
                         double attack = 0.0;
                         double plusses = 0.0;
                         int atkL = 0;

@@ -46,7 +46,7 @@ public class CustomCommandsListener {
                 if (message.startsWith(prefix)) {
                     String[] args = message.split(" ");
                     args[0] = args[0].replace(prefix, "").trim();
-                    String cmd = args[0];
+                    String cmd = args[0].toLowerCase();
                     String argsconcat;
                     try {
                         argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
@@ -78,7 +78,7 @@ public class CustomCommandsListener {
                                 commandText = argsconcat.substring(argsconcat.indexOf(" ")).trim();
                             }
                             if (commandName.length() > 0) {
-                                if (cmd.equals("addcustomcommand") || cmd.equalsIgnoreCase("acc")) {
+                                if (cmd.equals("addcustomcommand") || cmd.equals("acc")) {
                                     if (perms.getPerms(tableName, col1, commandName, col2).equals("")) {
                                         perms.setPerms(tableName, col1, commandName, col2, commandText);
                                         Sender.sendMessage(channel, "Added custom command \"" + commandName + "\"");
@@ -102,7 +102,7 @@ public class CustomCommandsListener {
                                 }
                             }
                         }
-                        if (cmd.equalsIgnoreCase("customcommands") || cmd.equalsIgnoreCase("cc")) {
+                        if (cmd.equals("customcommands") || cmd.equals("cc")) {
                             ResultSet rs = perms.selectAllFrom(tableName);
                             String output = "`Custom commands " + prefix + ":` ";
                             try {

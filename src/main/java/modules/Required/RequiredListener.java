@@ -20,7 +20,7 @@ public class RequiredListener {
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             IMessage m = event.getMessage();
-            String message = event.getMessage().getContent();
+            String message = event.getMessage().getContent().toLowerCase().trim();
             IUser author = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
             IChannel channel = event.getMessage().getChannel();
@@ -32,22 +32,21 @@ public class RequiredListener {
                     String cmd = args[0];
                     String argsconcat;
                     try {
-                        argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
+                        argsconcat = message.substring(cmd.length() + 2).trim();
                     } catch (StringIndexOutOfBoundsException e) {
                         argsconcat = "";
                     }
 
                     if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
-                        if (cmd.equalsIgnoreCase("arw")) {
+                        if (cmd.equals("arw")) {
                             for (int i = 1; i < args.length; i++) {
-                                if (!words.contains(args[i].toLowerCase()))
+                                if (!words.contains(args[i]))
                                     words.add(args[i]);
                                 Sender.sendMessage(channel, "Added: " + argsconcat);
                             }
-                        } else if (cmd.equalsIgnoreCase("drw")) {
+                        } else if (cmd.equals("drw")) {
                             for (int i = 1; i < args.length; i++) {
-                                if (words.contains(args[i].toLowerCase()))
-                                    words.remove(args[i]);
+                                words.remove(args[i]);
                                 Sender.sendMessage(channel, "Removed: " + argsconcat);
                             }
                         }

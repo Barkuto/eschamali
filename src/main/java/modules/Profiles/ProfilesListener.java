@@ -57,7 +57,7 @@ public class ProfilesListener {
             if (PermissionsListener.isModuleOn(guild, ProfilesModule.name)
                     && PermissionsListener.canModuleInChannel(guild, ProfilesModule.name, channel)) {
                 if (event.getMessage().getContent().startsWith(prefix)) {
-                    String msg = event.getMessage().getContent();
+                    String msg = event.getMessage().getContent().toLowerCase().trim();
                     String[] split = msg.split(" ");
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
@@ -68,14 +68,14 @@ public class ProfilesListener {
                     if (cmd.startsWith("p"))
                         profile = getProfile(user, db);
 
-                    if (cmd.equalsIgnoreCase("profilereset")) {
+                    if (cmd.equals("profilereset")) {
                         profile = Profile.getDefaultProfile(user);
                         if (saveProfile(user, profile, db))
                             Sender.sendMessage(channel, "Your profile has been reset.");
                         else
                             Sender.sendMessage(channel, profileSaveErrorMessage);
-                    } else if (cmd.equalsIgnoreCase("profile")
-                            || cmd.equalsIgnoreCase("p")) {
+                    } else if (cmd.equals("profile")
+                            || cmd.equals("p")) {
                         if (split.length == 1) {
                             if (profile != null)
                                 Sender.sendEmbed(channel, profile.getAsEmbed());
@@ -116,40 +116,40 @@ public class ProfilesListener {
                         }
                     } else if (profile != null) {
                         /* Profile Set Commands */
-                        if (cmd.equalsIgnoreCase("profilesetname")
-                                || cmd.equalsIgnoreCase("psn")) {
+                        if (cmd.equals("profilesetname")
+                                || cmd.equals("psn")) {
                             String newName = msg.substring(cmd.length() + 1).trim();
                             profile.setName(newName);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile name has been set to \"" + newName + "\".");
                             else
                                 Sender.sendMessage(channel, "Something went wrong when saving your profile.");
-                        } else if (cmd.equalsIgnoreCase("profilesetnickname") || cmd.equalsIgnoreCase("profilesetnick")
-                                || cmd.equalsIgnoreCase("psnn")) {
+                        } else if (cmd.equals("profilesetnickname") || cmd.equals("profilesetnick")
+                                || cmd.equals("psnn")) {
                             String newNick = msg.substring(cmd.length() + 1).trim();
                             profile.setNickname(newNick);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile nickname has been set to \"" + newNick + "\".");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profilesetbio")
-                                || cmd.equalsIgnoreCase("psb")) {
+                        } else if (cmd.equals("profilesetbio")
+                                || cmd.equals("psb")) {
                             String newBio = msg.substring(cmd.length() + 1).trim();
                             profile.setBio(newBio);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile bio has been set.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profilesetpicture")
-                                || cmd.equalsIgnoreCase("psp")) {
+                        } else if (cmd.equals("profilesetpicture")
+                                || cmd.equals("psp")) {
                             String newPic = msg.substring(cmd.length() + 1).trim();
                             profile.setPictureURL(newPic);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile picture has been set.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profilesetcolor")
-                                || cmd.equalsIgnoreCase("psc")) {
+                        } else if (cmd.equals("profilesetcolor")
+                                || cmd.equals("psc")) {
                             Color newColor = null;
                             if (split.length == 2) {
                                 String s = msg.substring(cmd.length() + 1).trim();
@@ -177,24 +177,24 @@ public class ProfilesListener {
                                 else
                                     Sender.sendMessage(channel, profileSaveErrorMessage);
                             }
-                        } else if (cmd.equalsIgnoreCase("profilesetfootericon")
-                                || cmd.equalsIgnoreCase("psfi")) {
+                        } else if (cmd.equals("profilesetfootericon")
+                                || cmd.equals("psfi")) {
                             String newFooterIcon = msg.substring(cmd.length() + 1).trim();
                             profile.setFooterIcon(newFooterIcon);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile footer icon has been set.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profilesetfooter")
-                                || cmd.equalsIgnoreCase("psf")) {
+                        } else if (cmd.equals("profilesetfooter")
+                                || cmd.equals("psf")) {
                             String newFooter = msg.substring(cmd.length() + 1).trim();
                             profile.setFooterText(newFooter);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile footer has been set.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileaddfield")
-                                || cmd.equalsIgnoreCase("paf")) {
+                        } else if (cmd.equals("profileaddfield")
+                                || cmd.equals("paf")) {
                             if (split.length > 1) {
                                 String title = msg.substring(cmd.length() + 1, msg.indexOf(';')).trim();
                                 String content = msg.substring(msg.indexOf(';') + 1).trim();
@@ -206,8 +206,8 @@ public class ProfilesListener {
                             } else {
                                 Sender.sendMessage(channel, "Invalid command format. Use: &" + cmd + " title;content");
                             }
-                        } else if (cmd.equalsIgnoreCase("profileremovefield")
-                                || cmd.equalsIgnoreCase("prf") || cmd.equalsIgnoreCase("pdf")) {
+                        } else if (cmd.equals("profileremovefield")
+                                || cmd.equals("prf") || cmd.equals("pdf")) {
                             String title = msg.substring(cmd.length() + 1).trim();
                             if (profile.removeField(title) != null) {
                                 if (saveProfile(user, profile, db))
@@ -219,43 +219,43 @@ public class ProfilesListener {
                             }
                         }
                         /* Profile Reset Commands */
-                        else if (cmd.equalsIgnoreCase("profileresetname")) {
+                        else if (cmd.equals("profileresetname")) {
                             profile.setName(user.getName());
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile name has been reset.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetnickname") || cmd.equalsIgnoreCase("profileresetnick")) {
+                        } else if (cmd.equals("profileresetnickname") || cmd.equals("profileresetnick")) {
                             profile.setNickname("");
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile nickname has been reset.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetbio")) {
+                        } else if (cmd.equals("profileresetbio")) {
                             profile.setBio("");
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile bio has been reset.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetpicture")) {
+                        } else if (cmd.equals("profileresetpicture")) {
                             profile.setPictureURL(user.getAvatarURL());
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile picture has been reset.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetcolor")) {
+                        } else if (cmd.equals("profileresetcolor")) {
                             profile.setColor(Color.GRAY);
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile color has been reset.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetfootericon")) {
+                        } else if (cmd.equals("profileresetfootericon")) {
                             profile.setFooterIcon("");
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile footer icon has been reset.");
                             else
                                 Sender.sendMessage(channel, profileSaveErrorMessage);
-                        } else if (cmd.equalsIgnoreCase("profileresetfooter")) {
+                        } else if (cmd.equals("profileresetfooter")) {
                             profile.setFooterText("");
                             if (saveProfile(user, profile, db))
                                 Sender.sendMessage(channel, "Your profile footer has been reset.");

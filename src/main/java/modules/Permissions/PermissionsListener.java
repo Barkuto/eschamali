@@ -50,7 +50,7 @@ public class PermissionsListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            String message = event.getMessage().getContent();
+            String message = event.getMessage().getContent().toLowerCase().trim();
             IChannel channel = event.getChannel();
             IUser author = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
@@ -68,13 +68,13 @@ public class PermissionsListener {
 
                     Permission perms = getPermissionDB(guild);
 
-                    if (cmd.equalsIgnoreCase("db")) {
+                    if (cmd.equals("db")) {
                         Sender.sendMessage(channel, databaseString(guild));
                     }
                     ////////////////
                     //CHANNEL PERMS
                     //////////////
-                    else if (cmd.equalsIgnoreCase("atc") || cmd.equalsIgnoreCase("addtalkchannel")) {
+                    else if (cmd.equals("atc") || cmd.equals("addtalkchannel")) {
                         if (args.length >= 2) {
                             if (argsconcat.trim().equalsIgnoreCase("all")) {
                                 perms.setPerms("channels", "module", "General", "channels", "all");
@@ -110,7 +110,7 @@ public class PermissionsListener {
                                 Sender.sendMessage(channel, "No new talk channels added.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("dtc") || cmd.equalsIgnoreCase("deletetalkchannel")) {
+                    } else if (cmd.equals("dtc") || cmd.equals("deletetalkchannel")) {
                         if (args.length >= 2) {
                             String channels = message.substring(message.indexOf(cmd) + cmd.length() + 1);
                             String[] split = channels.split(" ");
@@ -166,10 +166,10 @@ public class PermissionsListener {
                             }
                             Sender.sendMessage(channel, output.trim());
                         }
-                    } else if (cmd.equalsIgnoreCase("rtc") || cmd.equalsIgnoreCase("resettalkchannels")) {
+                    } else if (cmd.equals("rtc") || cmd.equals("resettalkchannels")) {
                         perms.setPerms("channels", "module", "General", "channels", "");
                         Sender.sendMessage(channel, "General talk channels have been reset.");
-                    } else if (cmd.equalsIgnoreCase("tc") || cmd.equalsIgnoreCase("talkchannels")) {
+                    } else if (cmd.equals("tc") || cmd.equals("talkchannels")) {
                         List<String> channels = Arrays.asList(perms.getPerms("channels", "module", "General", "channels").split(";"));
                         if (channels.get(0).equalsIgnoreCase("all")) {
                             Sender.sendMessage(channel, "I can talk in all channels.");
@@ -187,7 +187,7 @@ public class PermissionsListener {
                     ///////////////
                     //MODULE PERMS
                     /////////////
-                    else if (cmd.equalsIgnoreCase("m") || cmd.equalsIgnoreCase("mods") || cmd.equalsIgnoreCase("modules")) {
+                    else if (cmd.equals("m") || cmd.equals("mods") || cmd.equals("modules")) {
                         String output = "`List of modules: `\n";
                         for (IModule m : Eschamali.modules) {
                             String value = perms.getPerms("modules", "module", m.getName(), "enabled");
@@ -197,28 +197,28 @@ public class PermissionsListener {
                             }
                         }
                         Sender.sendMessage(channel, output);
-                    } else if (cmd.equalsIgnoreCase("dam") || cmd.equalsIgnoreCase("disableallmodules")) {
+                    } else if (cmd.equals("dam") || cmd.equals("disableallmodules")) {
                         perms.deleteTable("modules");
                         perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (IModule m : Eschamali.modules) {
                             perms.addPerms("modules", "module", m.getName(), "enabled", "false");
                         }
                         Sender.sendMessage(channel, "All Modules have been __disabled__.");
-                    } else if (cmd.equalsIgnoreCase("edm") || cmd.equalsIgnoreCase("enabledefaultmodules")) {
+                    } else if (cmd.equals("edm") || cmd.equals("enabledefaultmodules")) {
                         perms.deleteTable("modules");
                         perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (Map.Entry<IModule, Boolean> entry : Eschamali.defaultmodules.entrySet()) {
                             perms.addPerms("modules", "module", entry.getKey().getName(), "enabled", entry.getValue().toString());
                         }
                         Sender.sendMessage(channel, "Default Modules have been __enabled__.");
-                    } else if (cmd.equalsIgnoreCase("eam") || cmd.equalsIgnoreCase("enableallmodules")) {
+                    } else if (cmd.equals("eam") || cmd.equals("enableallmodules")) {
                         perms.deleteTable("modules");
                         perms.createTable("modules", modulesCols, new String[]{"string", "string"}, false);
                         for (IModule m : Eschamali.modules) {
                             perms.addPerms("modules", "module", m.getName(), "enabled", "true");
                         }
                         Sender.sendMessage(channel, "All Modules have been __enabled__.");
-                    } else if (cmd.equalsIgnoreCase("em") || cmd.equalsIgnoreCase("enablemodule")) {
+                    } else if (cmd.equals("em") || cmd.equals("enablemodule")) {
                         if (args.length >= 2) {
                             IModule module = null;
                             for (IModule m : Eschamali.modules) {
@@ -234,7 +234,7 @@ public class PermissionsListener {
                                 Sender.sendMessage(channel, "That is not a valid module.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("dm") || cmd.equalsIgnoreCase("disablemodule")) {
+                    } else if (cmd.equals("dm") || cmd.equals("disablemodule")) {
                         if (args.length >= 2) {
                             IModule module = null;
                             for (IModule m : Eschamali.modules) {
@@ -254,7 +254,7 @@ public class PermissionsListener {
                     //////////////////////
                     //MODULE CHANNEL PERMS
                     /////////////////////
-                    else if (cmd.equalsIgnoreCase("amc") || cmd.equalsIgnoreCase("addmodulechannel")) {
+                    else if (cmd.equals("amc") || cmd.equals("addmodulechannel")) {
                         if (args.length >= 3) {
                             String moduleName = args[1];
                             IModule module = null;
@@ -297,7 +297,7 @@ public class PermissionsListener {
                                 Sender.sendMessage(channel, "\"" + moduleName + "\" is a not a valid module.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("dmc") || cmd.equalsIgnoreCase("deletemodulechannel")) {
+                    } else if (cmd.equals("dmc") || cmd.equals("deletemodulechannel")) {
                         if (args.length >= 3) {
                             String moduleName = args[1];
                             IModule module = null;
@@ -366,7 +366,7 @@ public class PermissionsListener {
                                 Sender.sendMessage(channel, "\"" + moduleName + "\" is a not a valid module.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("rmc") || cmd.equalsIgnoreCase("resetmodulechannels")) {
+                    } else if (cmd.equals("rmc") || cmd.equals("resetmodulechannels")) {
                         if (args.length >= 2) {
                             String output = "The following modules channels have been reset: ";
                             String[] moduleNames = argsconcat.split(";");
@@ -389,7 +389,7 @@ public class PermissionsListener {
                             }
                             Sender.sendMessage(channel, output);
                         }
-                    } else if (cmd.equalsIgnoreCase("mc") || cmd.equalsIgnoreCase("modulechannels")) {
+                    } else if (cmd.equals("mc") || cmd.equals("modulechannels")) {
                         IModule module = null;
                         for (IModule m : Eschamali.modules) {
                             if (m.getName().equalsIgnoreCase(argsconcat)) {

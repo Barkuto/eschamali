@@ -51,7 +51,7 @@ public class AdminListener {
     @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            String message = event.getMessage().getContent();
+            String message = event.getMessage().getContent().toLowerCase().trim();
             IUser author = event.getMessage().getAuthor();
             IGuild guild = event.getMessage().getGuild();
             IChannel channel = event.getMessage().getChannel();
@@ -62,13 +62,13 @@ public class AdminListener {
                     String cmd = args[0];
                     String argsconcat;
                     try {
-                        argsconcat = message.substring(cmd.length() + 2, message.length()).trim();
+                        argsconcat = message.substring(cmd.length() + 2).trim();
                     } catch (StringIndexOutOfBoundsException e) {
                         argsconcat = "";
                     }
 
                     Permission perms = PermissionsListener.getPermissionDB(guild);
-                    if (cmd.equalsIgnoreCase("kick")) {
+                    if (cmd.equals("kick")) {
                         if (userHasPerm(author, guild, Permissions.KICK)) {
                             //Kick from server
                             ArrayList<IUser> usersToKick = new ArrayList<>();
@@ -91,7 +91,7 @@ public class AdminListener {
 //                                    BufferedMessage.sendMessage(AdminModule.client, AdminModule.client.getOrCreatePMChannel(usersToKick.get(i)), "`You have been kicked because: `" + reason);
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("ban")) {
+                    } else if (cmd.equals("ban")) {
                         if (userHasPerm(author, guild, Permissions.BAN)) {
                             //Ban from server
                             ArrayList<IUser> usersToBan = new ArrayList<>();
@@ -114,7 +114,7 @@ public class AdminListener {
 //                                    BufferedMessage.sendMessage(AdminModule.client, AdminModule.client.getOrCreatePMChannel(usersToBan.get(i)), "`You have been banned because: `" + reason);
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("prune")) {
+                    } else if (cmd.equals("prune")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
@@ -153,7 +153,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("mute")) {
+                    } else if (cmd.equals("mute")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
@@ -175,7 +175,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("unmute")) {
+                    } else if (cmd.equals("unmute")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length >= 2) {
                                 IUser user = guild.getUserByID(parseUserID(args[1]));
@@ -192,7 +192,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("muterole")) {
+                    } else if (cmd.equals("muterole")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             if (args.length == 1) {
                                 Sender.sendMessage(channel, "The current mute role is: " + guild.getRoleByID(Long.parseLong(perms.getPerms(tableName, col1, "muterole", col2))));
@@ -223,12 +223,12 @@ public class AdminListener {
                                 Sender.sendMessage(channel, "The mute role has been set to the role: " + newMuteRole.getName());
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("lock")) {
+                    } else if (cmd.equals("lock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             Sender.sendMessage(channel, "Channel locked.");
                             channel.overrideRolePermissions(guild.getEveryoneRole(), null, EnumSet.of(Permissions.SEND_MESSAGES));
                         }
-                    } else if (cmd.equalsIgnoreCase("unlock")) {
+                    } else if (cmd.equals("unlock")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES)) {
                             channel.overrideRolePermissions(guild.getEveryoneRole(), EnumSet.of(Permissions.SEND_MESSAGES), null);
                             try {
@@ -238,7 +238,7 @@ public class AdminListener {
                             }
                             Sender.sendMessage(channel, "Channel unlocked.");
                         }
-                    } else if (cmd.equalsIgnoreCase("warn") || cmd.equalsIgnoreCase("strike")) {
+                    } else if (cmd.equals("warn") || cmd.equals("strike")) {
                         if (userHasPerm(author, guild, Permissions.BAN) || userHasPerm(author, guild, Permissions.KICK)) {
                             if (args.length > 1) {
                                 int strikesToAdd = 1;
@@ -263,7 +263,7 @@ public class AdminListener {
                                 }
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("warnings")) {
+                    } else if (cmd.equals("warnings")) {
                         if (args.length == 1) {
                             String userID = author.getStringID();
                             String strikes = perms.getPerms(table2Name, table2col1, userID, table2col2);
@@ -284,8 +284,8 @@ public class AdminListener {
                                 Sender.sendMessage(channel, "__" + user.getName() + "__ has `" + numStrikes + "` strike(s).");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("addbannedword") || cmd.equalsIgnoreCase("addbanword")
-                            || cmd.equalsIgnoreCase("filter") || cmd.equalsIgnoreCase("abw")) {
+                    } else if (cmd.equals("addbannedword") || cmd.equals("addbanword")
+                            || cmd.equals("filter") || cmd.equals("abw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
                                 || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
                             if (args.length > 1) {
@@ -293,8 +293,8 @@ public class AdminListener {
                                 Sender.sendMessage(channel, "Banned word/phrase was added.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("deletebannedword") || cmd.equalsIgnoreCase("delbanword")
-                            || cmd.equalsIgnoreCase("unfilter") || cmd.equalsIgnoreCase("dbw")) {
+                    } else if (cmd.equals("deletebannedword") || cmd.equals("delbanword")
+                            || cmd.equals("unfilter") || cmd.equals("dbw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
                                 || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
                             if (args.length > 1) {
@@ -315,7 +315,7 @@ public class AdminListener {
                                 Sender.sendMessage(channel, "Banned word/phrase was deleted.");
                             }
                         }
-                    } else if (cmd.equalsIgnoreCase("bannedwords") || cmd.equalsIgnoreCase("bw")) {
+                    } else if (cmd.equals("bannedwords") || cmd.equals("bw")) {
                         if (userHasPerm(author, guild, Permissions.MANAGE_MESSAGES) || userHasPerm(author, guild, Permissions.MANAGE_ROLES)
                                 || userHasPerm(author, guild, Permissions.MANAGE_CHANNEL) || userHasPerm(author, guild, Permissions.MANAGE_SERVER)) {
                             String[] bannedWords = perms.getPerms(tableName, col1, bannedField, col2).split(";");
