@@ -55,6 +55,7 @@ public class PADListener {
     private Pattern p3 = Pattern.compile(" [TtYyFfNn]");
 
     private boolean threadRunning = false;
+    private boolean updatingDB = false;
 
     public PADListener() {
         super();
@@ -243,11 +244,15 @@ public class PADListener {
                             Sender.sendEmbed(channel, new EmbedBuilder().withImage(url).build());
                         else Sender.sendMessage(channel, "Nothing was found.");
                     } else if (cmd.equals("updatedb") || cmd.equals("update")) {
-                        Sender.sendMessage(channel, "Updating DB. Might take a while.");
-                        new Thread(() -> {
-                            PADData.updateMonsters();
-                            Sender.sendMessage(channel, "DB updated.");
-                        }).start();
+                        if (!updatingDB) {
+                            updatingDB = true;
+                            Sender.sendMessage(channel, "Updating DB. Might take a while.");
+                            new Thread(() -> {
+                                PADData.updateMonsters();
+                                Sender.sendMessage(channel, "DB updated.");
+                                updatingDB = false;
+                            }).start();
+                        } else Sender.sendMessage(channel, "Already updating, please wait.");
                     } else if (cmd.equals("addnickname") || cmd.equals("an")) {
 
                     } else if (cmd.equals("deletenickname") || cmd.equals("dn")) {

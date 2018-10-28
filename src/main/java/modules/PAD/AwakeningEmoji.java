@@ -68,7 +68,11 @@ public enum AwakeningEmoji {
     HP50BOOST(58, "50Boost"),
     LSHIELD(59, "LShield"),
     LUNLOCK(60, "LUnlock"),
-    TENC(61, "10c");
+    TENC(61, "10c"),
+
+    COMBOORB(62, "ComboOrb"),
+    VOICE(63, "Voice"),
+    DUNGEONBOOST(64, "DungeonBoost");
 
     private int id;
     private String emote;
