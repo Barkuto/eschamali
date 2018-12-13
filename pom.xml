@@ -55,7 +55,7 @@
         <dependency>
             <groupId>pad.data</groupId>
             <artifactId>PADData</artifactId>
-            <version>1.0</version>
+            <version>1.5</version>
         </dependency>
     </dependencies>
 
