@@ -12,7 +12,13 @@ import java.util.ArrayList;
 public class PADModule implements IModule, ICommands {
     static IDiscordClient client;
     public static final String name = "PAD";
+    public static String credentials;
     private PADListener pl;
+
+    public PADModule(String credentials) {
+        super();
+        this.credentials = credentials;
+    }
 
     @Override
     public boolean enable(IDiscordClient iDiscordClient) {

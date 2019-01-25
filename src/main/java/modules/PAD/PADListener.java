@@ -25,8 +25,8 @@ import java.io.*;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,7 +37,7 @@ public class PADListener {
     public static String prefix = "&";
     private TreeMap<String, String> abbrMon = new TreeMap<>();
     private TreeMap<String, String> abbrDun = new TreeMap<>();
-    private int maxMonNum = 4790;
+    private int maxMonNum = 5044;
 
     private String tableName = "pad";
     private String col1 = "field";
@@ -56,6 +56,8 @@ public class PADListener {
 
     private boolean threadRunning = false;
     private boolean updatingDB = false;
+
+    private PADData paddata = new PADData(PADModule.credentials);
 
     public PADListener() {
         super();
@@ -114,7 +116,7 @@ public class PADListener {
     @EventSubscriber
     public void startPADThread(GuildCreateEvent event) {
         if (!threadRunning) {
-            LocalTime targetTime = LocalTime.of(5, 0);
+            LocalTime targetTime = LocalTime.of(7, 0);
             Thread t = new Thread("guerilla") {
                 @Override
                 public void run() {
@@ -179,14 +181,14 @@ public class PADListener {
 
                     if (cmd.equals("info") || cmd.equals("i")) {
                         if (split.length == 1) {
-                            Monster m = PADData.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
+                            Monster m = paddata.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
                             if (m != null)
                                 Sender.sendEmbed(channel, getInfoEmbed(m, m.getCard_id() + ""));
                             else
                                 Sender.sendMessage(channel, "Bad Number rolled.");
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
-                            Monster m = PADData.getMonster(query);
+                            Monster m = paddata.getMonster(query);
                             if (m != null) {
                                 Sender.sendEmbed(channel, getInfoEmbed(m, query));
                             } else {
@@ -200,11 +202,11 @@ public class PADListener {
                         //List monsters with that active "type"?
                     } else if (cmd.equals("guerilla") || cmd.equals("g")) {
                         LocalDate ld = LocalDate.now();
-                        Guerilla g = PADData.getTodayGuerilla();
+                        Guerilla g = paddata.getTodayGuerilla();
                         if (split.length == 1) {
                             try {
                                 ByteArrayOutputStream os = new ByteArrayOutputStream();
-                                ImageIO.write(PADData.guerillaToImage(g, "pst"), "png", os);
+                                ImageIO.write(paddata.guerillaToImage(g, "pst"), "png", os);
                                 InputStream is = new ByteArrayInputStream(os.toByteArray());
                                 channel.sendFile("", false, is, "img.png");
                             } catch (IOException e) {
@@ -213,7 +215,7 @@ public class PADListener {
                         } else if (split.length == 2) {
                             try {
                                 ByteArrayOutputStream os = new ByteArrayOutputStream();
-                                ImageIO.write(PADData.guerillaToImage(g, split[1].trim()), "png", os);
+                                ImageIO.write(paddata.guerillaToImage(g, split[1].trim()), "png", os);
                                 InputStream is = new ByteArrayInputStream(os.toByteArray());
                                 channel.sendFile("", false, is, "img.png");
                             } catch (IOException e) {
@@ -224,7 +226,7 @@ public class PADListener {
                         event.getMessage().delete();
                         outputAllGuerillaImgs(channel);
                     } else if (cmd.equals("forceupdateguerilla") || cmd.equals("fug") || cmd.equals("fgu")) {
-                        PADData.updateGuerillas();
+                        paddata.updateGuerillas();
                         Sender.sendMessage(channel, "Guerillas have been updated for today.");
                     } else if (cmd.equals("pic")) {
                         if (split.length > 1 && split[1].contains("sheen")) {
@@ -237,8 +239,8 @@ public class PADListener {
                         }
                         String url;
                         if (split.length == 1)
-                            url = PADData.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "");
-                        else url = PADData.getFullPictureURL(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
+                            url = paddata.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "");
+                        else url = paddata.getFullPictureURL(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
 
                         if (url != null)
                             Sender.sendEmbed(channel, new EmbedBuilder().withImage(url).build());
@@ -248,7 +250,7 @@ public class PADListener {
                             updatingDB = true;
                             Sender.sendMessage(channel, "Updating DB. Might take a while.");
                             new Thread(() -> {
-                                PADData.updateMonsters();
+                                paddata.updateMonsters();
                                 Sender.sendMessage(channel, "DB updated.");
                                 updatingDB = false;
                             }).start();
@@ -394,12 +396,12 @@ public class PADListener {
     }
 
     public void outputAllGuerillaImgs(IChannel channel) {
-        Guerilla g = PADData.getTodayGuerilla();
+        Guerilla g = paddata.getTodayGuerilla();
 
-        BufferedImage pstImg = PADData.guerillaToImage(g, "pst");
-        BufferedImage mstImg = PADData.guerillaToImage(g, "mst");
-        BufferedImage cstImg = PADData.guerillaToImage(g, "cst");
-        BufferedImage estImg = PADData.guerillaToImage(g, "est");
+        BufferedImage pstImg = paddata.guerillaToImage(g, "pst");
+        BufferedImage mstImg = paddata.guerillaToImage(g, "mst");
+        BufferedImage cstImg = paddata.guerillaToImage(g, "cst");
+        BufferedImage estImg = paddata.guerillaToImage(g, "est");
         ArrayList<BufferedImage> images = new ArrayList<>();
         images.add(pstImg);
         images.add(mstImg);
@@ -565,7 +567,7 @@ public class PADListener {
 
         String otherEvos = otherEvoes.toString().replace("[", "").replace("]", "");
 
-        ArrayList<Monster> similarNames = PADData.getAllMonsters(query);
+        ArrayList<Monster> similarNames = paddata.getAllMonsters(query);
         String similar = "";
         if (similarNames.size() <= 10) {
             for (int i = 0; i < similarNames.size(); i++) {
@@ -592,7 +594,7 @@ public class PADListener {
         eb.appendField("Other Evos", otherEvos, true);
         eb.appendField("Similar Names", similar, true);
 
-        eb.withThumbnail(PADData.getPortraitPictureURL(m.getCard_id() + ""));
+        eb.withThumbnail(paddata.getPortraitPictureURL(m.getCard_id() + ""));
         eb.withTitle("No." + m.getCard_id() + " " + m.getName());
         eb.withUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getCard_id());
         eb.withColor(c);
