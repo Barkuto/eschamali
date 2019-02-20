@@ -1,5 +1,7 @@
 package modules.PAD;
 
+import base.Eschamali;
+import com.vdurmont.emoji.EmojiManager;
 import modules.BufferedMessage.Sender;
 import modules.Permissions.Permission;
 import modules.Permissions.PermissionsListener;
@@ -14,9 +16,11 @@ import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.guild.GuildCreateEvent;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.reaction.ReactionAddEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.EmbedBuilder;
 import sx.blah.discord.util.RateLimitException;
+import sx.blah.discord.util.RequestBuffer;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -167,6 +171,23 @@ public class PADListener {
     }
 
     @EventSubscriber
+    public void onReaction(ReactionAddEvent event) {
+        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+            IMessage message = event.getMessage();
+            if (message.getAuthor().equals(Eschamali.client.getOurUser())) {
+                List<IReaction> reactions = message.getReactions();
+                if (reactions.size() > 0) {
+                    List<IUser> firstUsers = reactions.get(0).getUsers();
+                    if (firstUsers.size() >= 2 && firstUsers.contains(Eschamali.client.getOurUser())) {
+                        RequestBuffer.request(() -> message.delete());
+                    }
+                }
+            }
+
+        }
+    }
+
+    @EventSubscriber
     public void onMessage(MessageReceivedEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             IGuild guild = event.getMessage().getGuild();
@@ -182,15 +203,21 @@ public class PADListener {
                     if (cmd.equals("info") || cmd.equals("i")) {
                         if (split.length == 1) {
                             Monster m = paddata.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
-                            if (m != null)
-                                Sender.sendEmbed(channel, getInfoEmbed(m, m.getCard_id() + ""));
-                            else
+                            if (m != null) {
+                                RequestBuffer.request(() -> {
+                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, m.getCard_id() + ""));
+                                    sentMsg.addReaction(EmojiManager.getForAlias("x"));
+                                });
+                            } else
                                 Sender.sendMessage(channel, "Bad Number rolled.");
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
                             Monster m = paddata.getMonster(query);
                             if (m != null) {
-                                Sender.sendEmbed(channel, getInfoEmbed(m, query));
+                                RequestBuffer.request(() -> {
+                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, query));
+                                    sentMsg.addReaction(EmojiManager.getForAlias("x"));
+                                });
                             } else {
                                 Sender.sendMessage(channel, "Monster not found.");
                             }
