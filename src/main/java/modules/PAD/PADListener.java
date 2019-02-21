@@ -200,22 +200,27 @@ public class PADListener {
                     String cmd = split[0].replace(prefix, "");
                     IUser user = event.getMessage().getAuthor();
 
-                    if (cmd.equals("info") || cmd.equals("i")) {
+                    if (cmd.equals("info") || cmd.equals("i") || cmd.equals("infojp") || cmd.equals("ij")) {
+                        String region = "NA";
+                        if (cmd.equalsIgnoreCase("infojp") || cmd.equalsIgnoreCase("ij"))
+                            region = "JP";
                         if (split.length == 1) {
-                            Monster m = paddata.getMonster(new Random().nextInt(maxMonNum) + 1 + "");
+                            Monster m = paddata.getMonster(new Random().nextInt(maxMonNum) + 1 + "", region);
                             if (m != null) {
+                                final String fRegion = region;
                                 RequestBuffer.request(() -> {
-                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, m.getCard_id() + ""));
+                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, m.getCard_id() + "", fRegion));
                                     sentMsg.addReaction(EmojiManager.getForAlias("x"));
                                 });
                             } else
                                 Sender.sendMessage(channel, "Bad Number rolled.");
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
-                            Monster m = paddata.getMonster(query);
+                            Monster m = paddata.getMonster(query, region);
                             if (m != null) {
+                                final String fRegion = region;
                                 RequestBuffer.request(() -> {
-                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, query));
+                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, query, fRegion));
                                     sentMsg.addReaction(EmojiManager.getForAlias("x"));
                                 });
                             } else {
@@ -228,7 +233,6 @@ public class PADListener {
                         //List monsters with keyword in active?
                         //List monsters with that active "type"?
                     } else if (cmd.equals("guerilla") || cmd.equals("g")) {
-                        LocalDate ld = LocalDate.now();
                         Guerilla g = paddata.getTodayGuerilla();
                         if (split.length == 1) {
                             try {
@@ -255,7 +259,9 @@ public class PADListener {
                     } else if (cmd.equals("forceupdateguerilla") || cmd.equals("fug") || cmd.equals("fgu")) {
                         paddata.updateGuerillas();
                         Sender.sendMessage(channel, "Guerillas have been updated for today.");
-                    } else if (cmd.equals("pic")) {
+                    } else if (cmd.equals("pic") || cmd.equals("picjp")) {
+                        String region = "NA";
+                        if (cmd.equalsIgnoreCase("picjp")) region = "JP";
                         if (split.length > 1 && split[1].contains("sheen")) {
                             int roll = new Random().nextInt(100);
                             System.out.println(roll);
@@ -266,8 +272,9 @@ public class PADListener {
                         }
                         String url;
                         if (split.length == 1)
-                            url = paddata.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "");
-                        else url = paddata.getFullPictureURL(msg.substring(msg.indexOf(cmd) + cmd.length() + 1));
+                            url = paddata.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "", region);
+                        else
+                            url = paddata.getFullPictureURL(msg.substring(msg.indexOf(cmd) + cmd.length() + 1), region);
 
                         if (url != null)
                             Sender.sendEmbed(channel, new EmbedBuilder().withImage(url).build());
@@ -487,7 +494,7 @@ public class PADListener {
         return "Nothing could be found.";
     }
 
-    public EmbedObject getInfoEmbed(Monster m, String query) {
+    public EmbedObject getInfoEmbed(Monster m, String query, String region) {
         EmbedBuilder eb = new EmbedBuilder().setLenient(true);
 
         Color c = Color.GRAY;
@@ -594,7 +601,7 @@ public class PADListener {
 
         String otherEvos = otherEvoes.toString().replace("[", "").replace("]", "");
 
-        ArrayList<Monster> similarNames = paddata.getAllMonsters(query);
+        ArrayList<Monster> similarNames = paddata.getAllMonsters(query, region);
         String similar = "";
         if (similarNames.size() <= 10) {
             for (int i = 0; i < similarNames.size(); i++) {
@@ -621,7 +628,7 @@ public class PADListener {
         eb.appendField("Other Evos", otherEvos, true);
         eb.appendField("Similar Names", similar, true);
 
-        eb.withThumbnail(paddata.getPortraitPictureURL(m.getCard_id() + ""));
+        eb.withThumbnail(paddata.getPortraitPictureURL(m.getCard_id() + "", region));
         eb.withTitle("No." + m.getCard_id() + " " + m.getName());
         eb.withUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getCard_id());
         eb.withColor(c);
