@@ -28,7 +28,10 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -170,16 +173,145 @@ public class PADListener {
         }
     }
 
+    private void addMonsterEmbedReactions(IMessage message, String region) {
+        RequestBuffer.request(() -> {
+            message.addReaction(EmojiManager.getForAlias("arrow_left"));
+
+            RequestBuffer.request(() -> {
+                message.addReaction(EmojiManager.getForAlias("arrow_right"));
+
+                RequestBuffer.request(() -> {
+                    if (region.equals("JP"))
+                        message.addReaction(EmojiManager.getForAlias("regional_indicator_symbol_n"));
+                    else message.addReaction(EmojiManager.getForAlias("regional_indicator_symbol_j"));
+
+                    RequestBuffer.request(() -> message.addReaction(EmojiManager.getForAlias("x")));
+                });
+            });
+        });
+    }
+
     @EventSubscriber
     public void onReaction(ReactionAddEvent event) {
         if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
             IMessage message = event.getMessage();
             if (message.getAuthor().equals(Eschamali.client.getOurUser())) {
                 List<IReaction> reactions = message.getReactions();
-                if (reactions.size() > 0) {
-                    List<IUser> firstUsers = reactions.get(0).getUsers();
-                    if (firstUsers.size() >= 2 && firstUsers.contains(Eschamali.client.getOurUser())) {
-                        RequestBuffer.request(() -> message.delete());
+                if (reactions.size() >= 4) {
+                    // For Monster Embeds:
+                    // 0 = Left Arrow : ⬅
+                    // 1 = Right Arrow : ➡
+                    // 2 = NA/JP : 🇳 / 🇯
+                    // 3 = X : ❌
+                    final long REQUESTLIMITDELAY = 2000;
+                    int usersReacted = event.getReaction().getUsers().size();
+                    List<IUser> users = event.getReaction().getUsers();
+                    boolean containsBot = users.contains(Eschamali.client.getOurUser());
+                    if (containsBot && usersReacted >= 2) {
+                        String reactionName = event.getReaction().getEmoji().getName();
+                        if (reactionName.equals("❌")) { // Delete Embed
+                            RequestBuffer.request(() -> message.delete());
+                        } else {
+                            IEmbed embed = event.getMessage().getEmbeds().get(0);
+                            int number = Integer.parseInt(embed.getTitle().split("\\.")[1].split(" ")[0]);
+                            List<IEmbed.IEmbedField> fields = embed.getEmbedFields();
+                            String evos = "";
+                            for (int i = 0; i < fields.size(); i++) {
+                                if (fields.get(i).getName().equals("Other Evos"))
+                                    evos = fields.get(i).getValue();
+                            }
+
+                            String[] evosArray = {};
+                            int prevIndex = -1;
+                            if (evos.length() > 0) {
+                                evosArray = evos.split(", ");
+                                for (int i = 0; i < evosArray.length; i++) {
+                                    int current = Integer.parseInt(evosArray[i]);
+                                    if (number > current) prevIndex = i;
+                                }
+                            }
+
+                            switch (reactionName) {
+                                case "⬅": // Decrement Evo
+                                    if (prevIndex != -1) {
+                                        Monster m_dec = paddata.getMonster(evosArray[prevIndex], "NA");
+                                        RequestBuffer.request(() -> message.edit(getInfoEmbed(m_dec, m_dec.getCard_id() + "", "NA")));
+                                    }
+                                    reactions.forEach(r -> {
+                                        String name = r.getEmoji().getName();
+                                        if (name.equals("⬅")) {
+                                            List<IUser> rUsers = r.getUsers();
+                                            rUsers.forEach(u -> {
+                                                if (!u.equals(Eschamali.client.getOurUser()))
+                                                    RequestBuffer.request(() -> message.removeReaction(u, r));
+                                                try {
+                                                    Thread.sleep(REQUESTLIMITDELAY);
+                                                } catch (InterruptedException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            });
+                                        }
+                                    });
+                                    break;
+                                case "➡": // Increment Evo
+                                    if (prevIndex + 1 < evosArray.length) {
+                                        Monster m_dec = paddata.getMonster(evosArray[prevIndex + 1], "NA");
+                                        RequestBuffer.request(() -> message.edit(getInfoEmbed(m_dec, m_dec.getCard_id() + "", "NA")));
+                                    }
+                                    reactions.forEach(r -> {
+                                        String name = r.getEmoji().getName();
+                                        if (name.equals("➡")) {
+                                            List<IUser> rUsers = r.getUsers();
+                                            rUsers.forEach(u -> {
+                                                if (!u.equals(Eschamali.client.getOurUser()))
+                                                    RequestBuffer.request(() -> message.removeReaction(u, r));
+                                                try {
+                                                    Thread.sleep(REQUESTLIMITDELAY);
+                                                } catch (InterruptedException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            });
+                                        }
+                                    });
+                                    break;
+                                case "\uD83C\uDDF3": // Switch to NA
+                                    Monster m_na = paddata.getMonster(number + "", "NA");
+                                    RequestBuffer.request(() -> message.edit(getInfoEmbed(m_na, number + "", "NA")));
+                                    RequestBuffer.request(() -> {
+                                        try {
+                                            Thread.sleep(REQUESTLIMITDELAY);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        message.removeAllReactions();
+                                        try {
+                                            Thread.sleep(REQUESTLIMITDELAY);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        RequestBuffer.request(() -> addMonsterEmbedReactions(message, "NA"));
+                                    });
+                                    break;
+                                case "\uD83C\uDDEF": // Switch to JP
+                                    Monster m_jp = paddata.getMonster(number + "", "JP");
+                                    RequestBuffer.request(() -> message.edit(getInfoEmbed(m_jp, number + "", "JP")));
+                                    RequestBuffer.request(() -> {
+                                        try {
+                                            Thread.sleep(REQUESTLIMITDELAY);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        message.removeAllReactions();
+                                        try {
+                                            Thread.sleep(REQUESTLIMITDELAY);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                        RequestBuffer.request(() -> addMonsterEmbedReactions(message, "JP"));
+                                    });
+                                    break;
+                            }
+                        }
                     }
                 }
             }
@@ -210,7 +342,7 @@ public class PADListener {
                                 final String fRegion = region;
                                 RequestBuffer.request(() -> {
                                     IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, m.getCard_id() + "", fRegion));
-                                    sentMsg.addReaction(EmojiManager.getForAlias("x"));
+                                    addMonsterEmbedReactions(sentMsg, fRegion);
                                 });
                             } else
                                 Sender.sendMessage(channel, "Bad Number rolled.");
@@ -221,7 +353,7 @@ public class PADListener {
                                 final String fRegion = region;
                                 RequestBuffer.request(() -> {
                                     IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, query, fRegion));
-                                    sentMsg.addReaction(EmojiManager.getForAlias("x"));
+                                    addMonsterEmbedReactions(sentMsg, fRegion);
                                 });
                             } else {
                                 Sender.sendMessage(channel, "Monster not found.");
