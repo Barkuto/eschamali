@@ -234,8 +234,15 @@ public class PADListener {
                             switch (reactionName) {
                                 case "⬅": // Decrement Evo
                                     if (prevIndex != -1) {
-                                        Monster m_dec = paddata.getMonster(evosArray[prevIndex], "NA");
-                                        RequestBuffer.request(() -> message.edit(getInfoEmbed(m_dec, m_dec.getCard_id() + "", "NA")));
+                                        String region = "NA";
+                                        for (int i = 0; i < reactions.size(); i++) {
+                                            if (reactions.get(i).getEmoji().getName().equals("\uD83C\uDDF3"))
+                                                region = "JP";
+                                        }
+                                        Monster m_dec = paddata.getMonster(evosArray[prevIndex], region);
+                                        final String fRegion = region;
+                                        if (m_dec != null)
+                                            RequestBuffer.request(() -> message.edit(getInfoEmbed(m_dec, m_dec.getCard_id() + "", fRegion)));
                                     }
                                     reactions.forEach(r -> {
                                         String name = r.getEmoji().getName();
@@ -255,8 +262,15 @@ public class PADListener {
                                     break;
                                 case "➡": // Increment Evo
                                     if (prevIndex + 1 < evosArray.length) {
-                                        Monster m_dec = paddata.getMonster(evosArray[prevIndex + 1], "NA");
-                                        RequestBuffer.request(() -> message.edit(getInfoEmbed(m_dec, m_dec.getCard_id() + "", "NA")));
+                                        String region = "NA";
+                                        for (int i = 0; i < reactions.size(); i++) {
+                                            if (reactions.get(i).getEmoji().getName().equals("\uD83C\uDDF3"))
+                                                region = "JP";
+                                        }
+                                        Monster m_dec = paddata.getMonster(evosArray[prevIndex + 1], region);
+                                        final String fRegion = region;
+                                        if (m_dec != null)
+                                            RequestBuffer.request(() -> message.edit(getInfoEmbed(m_dec, m_dec.getCard_id() + "", fRegion)));
                                     }
                                     reactions.forEach(r -> {
                                         String name = r.getEmoji().getName();
