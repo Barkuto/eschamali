@@ -72,7 +72,12 @@ public enum AwakeningEmoji {
 
     COMBOORB(62, "ComboOrb"),
     VOICE(63, "Voice"),
-    DUNGEONBOOST(64, "DungeonBoost");
+    DUNGEONBOOST(64, "DungeonBoost"),
+
+    MINUSHP(65, "MinusHP"),
+    MINUSATK(66, "MinusATK"),
+    MINUSRCV(67, "MinusRCV"),
+    ;
 
     private int id;
     private String emote;
