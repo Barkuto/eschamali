@@ -77,6 +77,13 @@ public enum AwakeningEmoji {
     MINUSHP(65, "MinusHP"),
     MINUSATK(66, "MinusATK"),
     MINUSRCV(67, "MinusRCV"),
+
+    BLINDRESPLUS(68, "BlindResPlus"),
+    JAMMERRESPLUS(69, "JammerResPlus"),
+    POISONRESPLUS(70, "PoisonResPlus"),
+
+    JAMMERBLESSING(71, "JammerBlessing"),
+    POISONBLESSING(72, "PoisonBlessing"),
     ;
 
     private int id;

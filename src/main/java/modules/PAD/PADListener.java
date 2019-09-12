@@ -44,7 +44,7 @@ public class PADListener {
     public static String prefix = "&";
     private TreeMap<String, String> abbrMon = new TreeMap<>();
     private TreeMap<String, String> abbrDun = new TreeMap<>();
-    private int maxMonNum = 5044;
+    private int maxMonNum = 5500;
 
     private String tableName = "pad";
     private String col1 = "field";
@@ -122,55 +122,56 @@ public class PADListener {
 
     @EventSubscriber
     public void startPADThread(GuildCreateEvent event) {
-        if (!threadRunning) {
-            LocalTime targetTime = LocalTime.of(7, 0);
-            Thread t = new Thread("guerilla") {
-                @Override
-                public void run() {
-                    threadRunning = true;
-                    while (true) {
-                        LocalTime current = LocalTime.now();
-                        if (current.equals(targetTime) || current.isAfter(targetTime)) {
-                            List<IGuild> allGuilds = PADModule.client.getGuilds();
-                            for (IGuild guild : allGuilds) {
-                                Permission perms = PermissionsListener.getPermissionDB(guild);
-                                ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
-                                for (String s : channels) {
-                                    if (s.length() == 0)
-                                        break;
-                                    IChannel channel;
-                                    channel = guild.getChannelByID(Long.parseLong(s));
-                                    if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
-                                            && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
-                                        LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
-                                        IMessage lastMessage = null;
-                                        for (IMessage m : channel.getMessageHistory(50)) {
-                                            if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
-                                                lastMessage = m;
-                                                break;
+        if (false) // TODO temp while guerilla_data.json is not being updated.
+            if (!threadRunning) {
+                LocalTime targetTime = LocalTime.of(7, 0);
+                Thread t = new Thread("guerilla") {
+                    @Override
+                    public void run() {
+                        threadRunning = true;
+                        while (true) {
+                            LocalTime current = LocalTime.now();
+                            if (current.equals(targetTime) || current.isAfter(targetTime)) {
+                                List<IGuild> allGuilds = PADModule.client.getGuilds();
+                                for (IGuild guild : allGuilds) {
+                                    Permission perms = PermissionsListener.getPermissionDB(guild);
+                                    ArrayList<String> channels = new ArrayList<>(Arrays.asList(perms.getPerms(tableName, col1, guerillasField, col2).split(";")));
+                                    for (String s : channels) {
+                                        if (s.length() == 0)
+                                            break;
+                                        IChannel channel;
+                                        channel = guild.getChannelByID(Long.parseLong(s));
+                                        if (channel != null && PermissionsListener.isModuleOn(guild, PADModule.name)
+                                                && PermissionsListener.canModuleInChannel(guild, PADModule.name, channel)) {
+                                            LocalDateTime today = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+                                            IMessage lastMessage = null;
+                                            for (IMessage m : channel.getMessageHistory(50)) {
+                                                if (m.getAuthor().getLongID() == PADModule.client.getOurUser().getLongID()) {
+                                                    lastMessage = m;
+                                                    break;
+                                                }
+                                            }
+                                            if (lastMessage != null) {
+                                                LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
+                                                if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
+                                                    outputAllGuerillaImgs(channel);
+                                            } else
+                                                outputAllGuerillaImgs(channel);
+                                            try {
+                                                sleep(1000 * 60 * 30);//1000 millis = 1s; "Roughly" 30min sleep
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
                                             }
                                         }
-                                        if (lastMessage != null) {
-                                            LocalDateTime mDate = LocalDateTime.ofInstant(lastMessage.getTimestamp(), ZoneId.systemDefault());
-                                            if (!(today.getYear() == mDate.getYear() && today.getMonth() == mDate.getMonth() && today.getDayOfMonth() == mDate.getDayOfMonth()))
-                                                outputAllGuerillaImgs(channel);
-                                        } else
-                                            outputAllGuerillaImgs(channel);
-                                        try {
-                                            sleep(1000 * 60 * 30);//1000 millis = 1s; "Roughly" 30min sleep
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        }
                                     }
+                                    perms.close();
                                 }
-                                perms.close();
                             }
                         }
                     }
-                }
-            };
-            t.start();
-        }
+                };
+                t.start();
+            }
     }
 
     private void addMonsterEmbedReactions(IMessage message, String region) {
@@ -363,10 +364,17 @@ public class PADListener {
                         } else {
                             String query = msg.substring(msg.indexOf(cmd) + cmd.length() + 1);
                             Monster m = paddata.getMonster(query, region);
+
+                            if (region.equals("NA") && m == null) {
+                                m = paddata.getMonster(query, "JP");
+                                region = "JP";
+                            }
+
                             if (m != null) {
                                 final String fRegion = region;
+                                final Monster fMonster = m;
                                 RequestBuffer.request(() -> {
-                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(m, query, fRegion));
+                                    IMessage sentMsg = channel.sendMessage(getInfoEmbed(fMonster, query, fRegion));
                                     addMonsterEmbedReactions(sentMsg, fRegion);
                                 });
                             } else {
