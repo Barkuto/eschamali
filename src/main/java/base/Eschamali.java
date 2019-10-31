@@ -100,8 +100,8 @@ public class Eschamali {
                 .flatMap(event -> client.updatePresence(Presence.online(Activity.playing(this.status))))
                 .subscribe();
 
-        new GeneralListener(client);
-        new OwnerListener(client);
+        new General(client);
+        new Owner(client);
         new ChannelPerms(client);
 
         client.login().block();

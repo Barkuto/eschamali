@@ -11,10 +11,10 @@ import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-public class GeneralListener extends Module {
+public class General extends Module {
     private boolean ayy = false;
 
-    public GeneralListener(DiscordClient client) {
+    public General(DiscordClient client) {
         super(client, "");
     }
 

@@ -22,10 +22,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class OwnerListener extends Module {
+public class Owner extends Module {
     Map<String, Command> privateCommands;
 
-    public OwnerListener(DiscordClient client) {
+    public Owner(DiscordClient client) {
         super(client, "~");
         privateCommands = new HashMap<>();
 
