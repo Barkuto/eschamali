@@ -15,7 +15,7 @@ public class General extends Module {
     private boolean ayy = false;
 
     public General(DiscordClient client) {
-        super(client, "");
+        super(client, "!");
     }
 
     @Override
@@ -49,15 +49,15 @@ public class General extends Module {
             }
         };
 
-        commands.put("!donate", EschaUtil.createMessageCommandGen("Donate for server/development funds at: https://streamlabs.com/barkuto"));
-        commands.put("!maker", EschaUtil.createMessageCommandGen("Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali"));
-        commands.put("!tilt", EschaUtil.createMessageCommandGen("*T* *I* *L* *T* *E* *D*"));
-        commands.put("!riot", EschaUtil.createMessageCommandGen("ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ"));
-        commands.put("!ping", EschaUtil.createMessageCommandGen("Pong!"));
+        commands.put("donate", EschaUtil.createMessageCommandGen("Donate for server/development funds at: https://streamlabs.com/barkuto"));
+        commands.put("maker", EschaUtil.createMessageCommandGen("Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali"));
+        commands.put("tilt", EschaUtil.createMessageCommandGen("*T* *I* *L* *T* *E* *D*"));
+        commands.put("riot", EschaUtil.createMessageCommandGen("ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ"));
+        commands.put("ping", EschaUtil.createMessageCommandGen("Pong!"));
 
-        commands.put("?eval", eval);
-        commands.put("?g", google);
-        commands.put("?google", google);
+        commands.put("eval", eval);
+        commands.put("g", google);
+        commands.put("google", google);
 
         return commands;
     }

@@ -80,7 +80,9 @@ public class Admin extends Module {
         } else return Mono.empty();
 
         if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
+            if (!message.getContent().isPresent()) return Mono.empty();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
+
             String msg = message.getContent().get();
             String[] bannedWords = driver.getPerms(tableName, col1, bannedField, col2).split(";");
             for (int i = 0; i < bannedWords.length; i++) {

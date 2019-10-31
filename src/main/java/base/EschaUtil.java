@@ -4,12 +4,10 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.*;
 import discord4j.core.object.util.Permission;
 import discord4j.core.object.util.PermissionSet;
-import discord4j.core.spec.EmbedCreateSpec;
 import modules.ChannelPerms;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 public class EschaUtil {
     public static Command createMessageCommand(String text) {
