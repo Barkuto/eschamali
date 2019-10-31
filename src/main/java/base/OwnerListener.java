@@ -1,10 +1,13 @@
 package base;
 
-import modules.BufferedMessage.Sender;
-import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.Image;
+import discord4j.core.DiscordClient;
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.PrivateChannel;
+import discord4j.core.object.presence.Activity;
+import discord4j.core.object.presence.Presence;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.io.FileReader;
@@ -17,107 +20,125 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Properties;
-import java.util.Scanner;
+import java.util.*;
 
-/**
- * Created by Iggie on 8/23/2016.
- */
-public class OwnerListener {
-    public static String prefix = "~";
+public class OwnerListener extends Module {
+    Map<String, Command> privateCommands;
 
-    @EventSubscriber
-    public void onMessage(MessageReceivedEvent event) {
-        if (event.getMessage().getChannel() instanceof IPrivateChannel) {
-            if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID()) && event.getMessage().getContent().startsWith(prefix)) {
-                String message = event.getMessage().getContent().toLowerCase().trim();
-                IChannel channel = event.getChannel();
-                String[] args = message.split(" ");
-                String argsconcat = "";
-                String cmd = args[0].replace(prefix, "");
+    public OwnerListener(DiscordClient client) {
+        super(client, "~");
+        privateCommands = new HashMap<>();
 
-                for (int i = 1; i < args.length; i++) {
-                    argsconcat += args[i] + " ";
-                }
-                argsconcat = argsconcat.trim();
-                if (cmd.equals("changestatus") || cmd.equals("status") || cmd.equals("cs")) {
-                    if (args.length > 1) {
-                        Eschamali.client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, argsconcat);
-                    } else {
-                        Eschamali.client.changePresence(StatusType.ONLINE);
-                    }
-                } else if (cmd.equals("changedefaultstatus") || cmd.equals("cds")) {
-                    Properties props = new Properties();
-                    try {
-                        props.load(new FileReader(Eschamali.configFileName));
-                        props.setProperty("status", argsconcat);
+        Command changestatus = event -> {
+            String argsconcat = EschaUtil.getArgsConcat(event);
 
-                        String comments = "";
-                        Scanner s = new Scanner(new File(Eschamali.configFileName));
-                        String str = s.nextLine();
-                        if (str.startsWith("#"))
-                            comments += str.replaceFirst("#", "");
-                        props.store(new FileWriter(Eschamali.configFileName), comments);
-                        Sender.sendMessage(channel, "Default status has been changed to `" + argsconcat + "`.");
+            return argsconcat.length() > 0 ?
+                    client.updatePresence(Presence.online(Activity.playing(argsconcat))) :
+                    client.updatePresence(Presence.online());
+        };
 
-                        if (args.length > 1) {
-                            Eschamali.client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, argsconcat);
-                        } else {
-                            Eschamali.client.changePresence(StatusType.ONLINE);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else if (cmd.equals("guilds") || cmd.equals("servers")) {
-                    List<IGuild> guilds = Eschamali.client.getGuilds();
-                    String output = "Connected to `" + guilds.size() + "` guilds.\n";
-                    output += "```xl\n";
-                    output += String.format("%-50s | %-20s | %-10s", centerString("Server Name", 50), centerString("Server ID", 20), centerString("Users", 10)) + "\n";
-                    output += String.format("%-50s-|-%-20s-|-%-10s", repeatString("-", 50), repeatString("-", 20), repeatString("-", 10)) + "\n";
-                    for (IGuild g : guilds) {
-                        output += String.format("%50s | %s | %s", g.getName(), centerString(g.getLongID() + "", 20), centerString(g.getUsers().size() + "", 10)) + "\n";
-                    }
-                    output += "```";
-                    Sender.sendMessage(channel, output);
-                } else if (cmd.equals("leave")) {
-                    if (args.length > 1) {
-                        String id = message.substring(message.indexOf(" "));
-                        IGuild g = Eschamali.client.getGuildByID(Long.parseLong(id));
-                        if (g != null) {
-                            g.leave();
-                            Sender.sendMessage(channel, "Left server `" + g.getName() + "`");
-                        }
-                    }
-                } else if (cmd.equals("setavatar")) {
-                    String url = message.substring(message.indexOf(" "));
-                    String imgtype = url.substring(url.lastIndexOf(".") + 1);
-                    Eschamali.client.changeAvatar(Image.forUrl(imgtype, url));
-                    Sender.sendMessage(channel, "Avatar changed.");
-                } else if (cmd.equals("changename")) {
-                    Eschamali.client.changeUsername(message.substring(message.indexOf(" ") + 1));
-                    Sender.sendMessage(channel, "Username changed.");
-                } else if (cmd.equals("uptime") || cmd.equals("up")) {
-                    Sender.sendMessage(channel, "`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
-                } else if (cmd.equals("shutdown") || cmd.equals("sd")) {
-                    Sender.sendMessage(channel, "Shutting down...");
-                    List<IVoiceChannel> connectedVoice = Eschamali.client.getConnectedVoiceChannels();
-                    for (IVoiceChannel v : connectedVoice) {
-                        v.leave();
-                    }
-                    System.exit(0);
-                } else if (cmd.equals("version") || cmd.equals("v")) {
-                    Path file = FileSystems.getDefault().getPath("", "Eschamali-1.0-SNAPSHOT-shaded.jar");
-                    try {
-                        BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
-                        Sender.sendMessage(channel,
-                                "Last Modified: " + new SimpleDateFormat().format(attr.lastModifiedTime().toMillis()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+        Command changedefaultstatus = event -> {
+            String argsconcat = EschaUtil.getArgsConcat(event);
+            Properties props = new Properties();
+            try {
+                props.load(new FileReader(Eschamali.configFileName));
+                props.setProperty("status", argsconcat);
+
+                String comments = "";
+                Scanner s = new Scanner(new File(Eschamali.configFileName));
+                String str = s.nextLine();
+                if (str.startsWith("#"))
+                    comments += str.replaceFirst("#", "");
+                props.store(new FileWriter(Eschamali.configFileName), comments);
+
+                return EschaUtil.sendMessage(event, "Default status has been changed to `" + argsconcat + "`.")
+                        .then(argsconcat.length() > 0 ?
+                                client.updatePresence(Presence.online(Activity.playing(argsconcat))) :
+                                client.updatePresence(Presence.online()));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }
+            return Mono.empty();
+        };
+
+        Command servers = event -> {
+            List<Guild> guilds = client.getGuilds().collectList().block();
+            String output = "Connected to `" + guilds.size() + "` guilds.\n";
+            output += "```xl\n";
+            output += String.format("%-50s | %-20s | %-10s", centerString("Server Name", 50), centerString("Server ID", 20), centerString("Users", 10)) + "\n";
+            output += String.format("%-50s-|-%-20s-|-%-10s", repeatString("-", 50), repeatString("-", 20), repeatString("-", 10)) + "\n";
+            for (Guild g : guilds) {
+                output += String.format("%50s | %s | %s", g.getName(), centerString(g.getId().asString() + "", 20), centerString((g.getMemberCount().isPresent() ? g.getMemberCount().getAsInt() : -1) + "", 10)) + "\n";
+            }
+            output += "```";
+            String m = output;
+            return EschaUtil.sendMessage(event, m);
+        };
+
+        Command uptime = EschaUtil.createMessageCommand("`Uptime: " + timeBetween(Eschamali.startTime, LocalDateTime.now()) + "`");
+
+        Command version = event -> {
+            Path file = FileSystems.getDefault().getPath("", "Eschamali-1.0-SNAPSHOT-shaded.jar");
+            try {
+                BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
+                return EschaUtil.sendMessage(event, "Last Modified: " + new SimpleDateFormat().format(attr.lastModifiedTime().toMillis()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return Mono.empty();
+        };
+
+        Command shutdown = event ->
+                EschaUtil.sendMessage(event, "Shutting down...")
+                        .doOnSuccess(ignored -> System.exit(0))
+                        .doOnError(ignored -> System.exit(0));
+
+        privateCommands.put("changestatus", changestatus);
+        privateCommands.put("status", changestatus);
+        privateCommands.put("cs", changestatus);
+        privateCommands.put("changedefaultstatus", changedefaultstatus);
+        privateCommands.put("cds", changedefaultstatus);
+        privateCommands.put("servers", servers);
+        privateCommands.put("guilds", servers);
+        privateCommands.put("uptime", uptime);
+        privateCommands.put("up", uptime);
+        privateCommands.put("version", version);
+        privateCommands.put("v", version);
+        privateCommands.put("shutdown", shutdown);
+
+        this.client.getEventDispatcher().on(MessageCreateEvent.class)
+                // Get event Message
+                .flatMap(event -> Mono.justOrEmpty(event.getMessage())
+                        // Filter out other bot messages
+                        .filter(message -> message.getAuthor().map(user -> !user.isBot()).orElse(false))
+                        // Filter out non-owner messages
+                        .filter(message -> message.getAuthor().map(user -> Eschamali.ownerIDs.contains(user.getId().asLong())).orElse(false))
+                        // Only read from private chats
+                        .flatMap(message -> message.getChannel()
+                                .ofType(PrivateChannel.class)
+                                // Turn message into its contents
+                                .flatMap(channel -> Mono.justOrEmpty(event.getMessage().getContent())
+                                        // Iterate through all commands
+                                        .flatMap(content -> Flux.fromIterable(privateCommands.entrySet())
+                                                // If a command matches, execute it
+                                                .filter(entry -> content.contains(" ") ?
+                                                        content.substring(0, content.indexOf(" ")).equalsIgnoreCase(prefix + entry.getKey()) :
+                                                        content.equalsIgnoreCase(prefix + entry.getKey()))
+                                                .flatMap(entry -> entry.getValue().execute(event))
+                                                .next()))))
+                .subscribe();
+    }
+
+    @Override
+    protected Map<String, Command> makeCommands() {
+        Map<String, Command> commands = new HashMap<>();
+
+        return commands;
+    }
+
+    @Override
+    public String getName() {
+        return "Owner";
     }
 
     public String centerString(String str, int width) {

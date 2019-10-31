@@ -1,294 +1,291 @@
 package base;
 
-import modules.BufferedMessage.Sender;
-import modules.Permissions.PermissionsListener;
-import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.modules.IModule;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.EmbedBuilder;
+import discord4j.core.DiscordClient;
+import modules.ChannelPerms;
+import reactor.core.publisher.Mono;
 
-import java.awt.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.FormatStyle;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-/**
- * Created by Iggie on 8/14/2016.
- */
-public class GeneralListener {
+public class GeneralListener extends Module {
     private boolean ayy = false;
 
-    @EventSubscriber
-    public void onMessageToGoogle(MessageReceivedEvent event) {
-        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
-                String msg = event.getMessage().getContent();
-                if (msg.startsWith("?g ") || msg.startsWith("?google ")) {
-                    String query = msg.substring(msg.indexOf(" ") + 1, msg.length());
-                    query = query.replaceAll(" ", "+");
-                    String url = "https://www.google.com/#q=";
-                    Sender.sendMessage(event.getChannel(), url + query);
-                }
-            }
-        }
+    public GeneralListener(DiscordClient client) {
+        super(client, "");
     }
 
-    @EventSubscriber
-    public void onMessage(MessageReceivedEvent event) {
-        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
-                String msg = event.getMessage().getContent().toLowerCase().trim();
-                IChannel channel = event.getChannel();
-                if (msg.equals("!donate")) {
-                    Sender.sendMessage(channel, "Donate for server/development funds at: https://streamlabs.com/barkuto");
-                } else if (msg.equals("!maker")) {
-                    Sender.sendMessage(channel, "Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali");
-                } else if (msg.equals("!ayy")) {
-                    List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
-                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
-                        ayy = !ayy;
-                        if (ayy) {
-                            Sender.sendMessage(channel, "lmao!");
-                        } else {
-                            Sender.sendMessage(channel, "lmao...");
-                        }
-                    } else {
-                        for (IRole r : roles) {
-                            if (r.getPermissions().contains(Permissions.ADMINISTRATOR) || r.getPermissions().contains(Permissions.MANAGE_SERVER)) {
-                                ayy = !ayy;
-                                if (ayy) {
-                                    Sender.sendMessage(channel, "lmao!");
-                                } else {
-                                    Sender.sendMessage(channel, "lmao...");
-                                }
-                                break;
-                            }
-                        }
-                    }
-                } else if (msg.equals("ayy") && ayy) {
-                    Sender.sendMessage(channel, "lmao");
-                } else if (msg.equals("!tilt")) {
-                    Sender.sendMessage(channel, "*T* *I* *L* *T* *E* *D*");
-                } else if (msg.equals("!riot")) {
-                    Sender.sendMessage(channel, "ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ");
-                } else if (msg.equals("!ping")) {
-                    Sender.sendMessage(channel, "pong!");
-//                } else if (msg.equalsIgnoreCase("!alert")) {
-//                    Sender.sendMessage(channel, Eschamali.client.getUserByID(Eschamali.ownerIDs.get(0)).mention() + " is on his way! Eventually...");
-                } else if (msg.startsWith("!say")) {
-                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
-                        event.getMessage().delete();
-                        Sender.sendMessage(channel, msg.substring(msg.indexOf(" ")));
-                    }
-                } else if (msg.equals("!serverinfo") || msg.equals("!sinfo")) {
-                    IGuild guild = event.getMessage().getGuild();
-//                    LocalDateTime creationDate = guild.getCreationDate();
-                    Instant creationDate = guild.getCreationDate();
-                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
-                            .appendPattern("MMM dd, yyyy hh:mm a")
-                            .toFormatter()
-                            .withLocale(Locale.US)
-                            .withZone(ZoneId.systemDefault());
+    @Override
+    protected Map<String, Command> makeCommands() {
+        Map<String, Command> commands = new HashMap<>();
 
-                    EmbedBuilder eb = new EmbedBuilder();
-                    eb.withTitle(guild.getName());
-                    eb.withThumbnail(guild.getIconURL());
-                    eb.withDesc("ID: " + guild.getLongID());
-                    eb.appendField("Created", dtf.format(creationDate), true);
-                    eb.appendField("Server Age", DAYS.between(creationDate, Instant.now()) + " days", true);
-                    eb.appendField("Region", guild.getRegion().getName(), true);
-                    eb.appendField("Owner", guild.getOwner().mention(), true);
-                    eb.appendField("Users", guild.getUsers().size() + "", true);
-                    eb.appendField("Roles", guild.getRoles().size() + "", true);
-                    eb.withColor(Color.WHITE);
-                    EmbedObject embed = eb.build();
+        Command google = event -> {
+            if (!ChannelPerms.canTalkInChannel(event.getGuild().block(), event.getMessage().getChannel().block()))
+                return Mono.empty();
 
-                    Sender.sendEmbed(channel, embed);
-                } else if (msg.equals("!userinfo") || msg.equals("!uinfo")) {
-                    IGuild guild = event.getMessage().getGuild();
-                    IUser user = null;
-                    if (msg.contains(" ")) {
-                        String arg = msg.substring(msg.indexOf(" ") + 1).trim();
-                        if (arg.startsWith("<@")) {
-                            String id = "";
-                            int startIndex = 2;
-                            if (arg.startsWith("<@!")) {
-                                startIndex++;
-                            }
-                            id += arg.substring(startIndex, arg.length() - 1);
-                            user = guild.getUserByID(Long.parseLong(id));
-                        } else {
-                            List<IUser> users = guild.getUsers();
-                            for (IUser u : users) {
-                                if (u.getName().toLowerCase().contains(arg.toLowerCase())) {
-                                    user = u;
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        user = event.getMessage().getAuthor();
-                    }
-                    if (user == null) {
-                        Sender.sendMessage(channel, "Could not find that user.");
-                        return;
-                    }
-                    String name = user.getName();
-                    String disc = user.getDiscriminator();
-                    String nick = user.getNicknameForGuild(guild) != null ? user.getNicknameForGuild(guild) : "";
-                    long id = user.getLongID();
-                    String avatar = user.getAvatarURL();
-                    Instant accCreated = user.getCreationDate();
-                    Instant guildJoinDate = null;
-                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
-                            .appendPattern("MMM dd, yyyy hh:mm a")
-                            .toFormatter()
-                            .withLocale(Locale.US)
-                            .withZone(ZoneId.systemDefault());
-                    List<IRole> roles = user.getRolesForGuild(guild);
-                    EmbedBuilder eb = new EmbedBuilder();
+            String msg = EschaUtil.getMessage(event);
+            if (msg.length() > 0) {
+                String query = msg.substring(msg.indexOf(" ") + 1);
+                query = query.replaceAll(" ", "+");
+                String url = "https://www.google.com/#q=" + query;
+                return EschaUtil.sendMessage(event, url);
+            }
+            return Mono.empty();
+        };
 
-                    try {
-                        guildJoinDate = guild.getJoinTimeForUser(user);
-                    } catch (DiscordException e) {
-                        e.printStackTrace();
-                    }
+        Command eval = event -> {
+            if (!ChannelPerms.canTalkInChannel(event.getGuild().block(), event.getMessage().getChannel().block()))
+                return Mono.empty();
 
-                    String statusType = "";
-                    switch (user.getPresence().getStatus()) {
-                        case ONLINE:
-                            statusType = "Online";
-                            break;
-                        case OFFLINE:
-                            statusType = "Offline";
-                            break;
-                        case IDLE:
-                            statusType = "Idle";
-                            break;
-                        case DND:
-                            statusType = "Do Not Disturb";
-                            break;
-//                        case STREAMING:
-//                            statusType = "Streaming ";
+            String msg = EschaUtil.getMessage(event);
+            try {
+                double ans = eval(msg.substring(msg.indexOf(" ") + 1));
+                return EschaUtil.sendMessage(event, "`" + msg.substring(5).trim() + "` equals: " + ans);
+            } catch (RuntimeException e) {
+                return EschaUtil.sendMessage(event, "Invalid expression.");
+            }
+        };
+
+        commands.put("!donate", EschaUtil.createMessageCommandGen("Donate for server/development funds at: https://streamlabs.com/barkuto"));
+        commands.put("!maker", EschaUtil.createMessageCommandGen("Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali"));
+        commands.put("!tilt", EschaUtil.createMessageCommandGen("*T* *I* *L* *T* *E* *D*"));
+        commands.put("!riot", EschaUtil.createMessageCommandGen("ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ"));
+        commands.put("!ping", EschaUtil.createMessageCommandGen("Pong!"));
+
+        commands.put("?eval", eval);
+        commands.put("?g", google);
+        commands.put("?google", google);
+
+        return commands;
+    }
+
+    @Override
+    public String getName() {
+        return "General";
+    }
+
+    //    @EventSubscriber
+//    public void onMessage(MessageReceivedEvent event) {
+//        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+//            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
+//                String msg = event.getMessage().getContent().toLowerCase().trim();
+//                IChannel channel = event.getChannel();
+//                if (msg.equals("!ayy")) {
+//                    List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
+//                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
+//                        ayy = !ayy;
+//                        if (ayy) {
+//                            Sender.sendMessage(channel, "lmao!");
+//                        } else {
+//                            Sender.sendMessage(channel, "lmao...");
+//                        }
+//                    } else {
+//                        for (IRole r : roles) {
+//                            if (r.getPermissions().contains(Permissions.ADMINISTRATOR) || r.getPermissions().contains(Permissions.MANAGE_SERVER)) {
+//                                ayy = !ayy;
+//                                if (ayy) {
+//                                    Sender.sendMessage(channel, "lmao!");
+//                                } else {
+//                                    Sender.sendMessage(channel, "lmao...");
+//                                }
+//                                break;
+//                            }
+//                        }
+//                    }
+//                } else if (msg.equals("ayy") && ayy) {
+//                    Sender.sendMessage(channel, "lmao");
+//                } else if (msg.equals("!serverinfo") || msg.equals("!sinfo")) {
+//                    IGuild guild = event.getMessage().getGuild();
+////                    LocalDateTime creationDate = guild.getCreationDate();
+//                    Instant creationDate = guild.getCreationDate();
+//                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+//                            .appendPattern("MMM dd, yyyy hh:mm a")
+//                            .toFormatter()
+//                            .withLocale(Locale.US)
+//                            .withZone(ZoneId.systemDefault());
+//
+//                    EmbedBuilder eb = new EmbedBuilder();
+//                    eb.withTitle(guild.getName());
+//                    eb.withThumbnail(guild.getIconURL());
+//                    eb.withDesc("ID: " + guild.getLongID());
+//                    eb.appendField("Created", dtf.format(creationDate), true);
+//                    eb.appendField("Server Age", DAYS.between(creationDate, Instant.now()) + " days", true);
+//                    eb.appendField("Region", guild.getRegion().getName(), true);
+//                    eb.appendField("Owner", guild.getOwner().mention(), true);
+//                    eb.appendField("Users", guild.getUsers().size() + "", true);
+//                    eb.appendField("Roles", guild.getRoles().size() + "", true);
+//                    eb.withColor(Color.WHITE);
+//                    EmbedObject embed = eb.build();
+//
+//                    Sender.sendEmbed(channel, embed);
+//                } else if (msg.equals("!userinfo") || msg.equals("!uinfo")) {
+//                    IGuild guild = event.getMessage().getGuild();
+//                    IUser user = null;
+//                    if (msg.contains(" ")) {
+//                        String arg = msg.substring(msg.indexOf(" ") + 1).trim();
+//                        if (arg.startsWith("<@")) {
+//                            String id = "";
+//                            int startIndex = 2;
+//                            if (arg.startsWith("<@!")) {
+//                                startIndex++;
+//                            }
+//                            id += arg.substring(startIndex, arg.length() - 1);
+//                            user = guild.getUserByID(Long.parseLong(id));
+//                        } else {
+//                            List<IUser> users = guild.getUsers();
+//                            for (IUser u : users) {
+//                                if (u.getName().toLowerCase().contains(arg.toLowerCase())) {
+//                                    user = u;
+//                                    break;
+//                                }
+//                            }
+//                        }
+//                    } else {
+//                        user = event.getMessage().getAuthor();
+//                    }
+//                    if (user == null) {
+//                        Sender.sendMessage(channel, "Could not find that user.");
+//                        return;
+//                    }
+//                    String name = user.getName();
+//                    String disc = user.getDiscriminator();
+//                    String nick = user.getNicknameForGuild(guild) != null ? user.getNicknameForGuild(guild) : "";
+//                    long id = user.getLongID();
+//                    String avatar = user.getAvatarURL();
+//                    Instant accCreated = user.getCreationDate();
+//                    Instant guildJoinDate = null;
+//                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+//                            .appendPattern("MMM dd, yyyy hh:mm a")
+//                            .toFormatter()
+//                            .withLocale(Locale.US)
+//                            .withZone(ZoneId.systemDefault());
+//                    List<IRole> roles = user.getRolesForGuild(guild);
+//                    EmbedBuilder eb = new EmbedBuilder();
+//
+//                    try {
+//                        guildJoinDate = guild.getJoinTimeForUser(user);
+//                    } catch (DiscordException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    String statusType = "";
+//                    switch (user.getPresence().getStatus()) {
+//                        case ONLINE:
+//                            statusType = "Online";
 //                            break;
-                        case UNKNOWN:
-                            statusType = "Unknown";
-                            break;
-                    }
+//                        case OFFLINE:
+//                            statusType = "Offline";
+//                            break;
+//                        case IDLE:
+//                            statusType = "Idle";
+//                            break;
+//                        case DND:
+//                            statusType = "Do Not Disturb";
+//                            break;
+////                        case STREAMING:
+////                            statusType = "Streaming ";
+////                            break;
+//                        case UNKNOWN:
+//                            statusType = "Unknown";
+//                            break;
+//                    }
+//
+//                    eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
+//                    eb.withDesc("Status: " + (user.getPresence().getText().isPresent() ? "Playing " + user.getPresence().getText().get() : statusType));
+//                    eb.withThumbnail(avatar.replace(".jpg", ".gif"));
+//                    List<IUser> usersSortedByJoin = guild.getUsers();
+//                    usersSortedByJoin.sort((o1, o2) -> {
+//                        try {
+//                            return guild.getJoinTimeForUser(o1).compareTo(guild.getJoinTimeForUser(o2));
+//                        } catch (DiscordException e) {
+//                            e.printStackTrace();
+//                        }
+//                        return -2;
+//                    });
+//                    eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
+//                    eb.appendField("Account Created", dtf.format(accCreated) + "\n" + DAYS.between(accCreated, Instant.now()) + " days ago", true);
+//                    eb.appendField("Guild Joined", dtf.format(guildJoinDate) + "\n" + DAYS.between(guildJoinDate, Instant.now()) + " days ago", true);
+//                    String rolesString = roles.toString().replace("[", "").replace("]", "");
+//                    int count = 0;
+//                    for (IRole r : roles) {
+//                        if (r == guild.getEveryoneRole()) {
+//                            count++;
+//                        }
+//                    }
+//                    if (count > 1) {
+//                        rolesString = rolesString.replaceFirst(", @everyone", "");
+//                    }
+//                    eb.appendField("Roles", rolesString, false);
+//                    eb.withColor(roles.get(0).getColor());
+//                    EmbedObject embed = eb.build();
+//                    Sender.sendEmbed(channel, embed);
+//                }
+//            }
+//        }
+//    }
 
-                    eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
-                    eb.withDesc("Status: " + (user.getPresence().getText().isPresent() ? "Playing " + user.getPresence().getText().get() : statusType));
-                    eb.withThumbnail(avatar.replace(".jpg", ".gif"));
-                    List<IUser> usersSortedByJoin = guild.getUsers();
-                    usersSortedByJoin.sort((o1, o2) -> {
-                        try {
-                            return guild.getJoinTimeForUser(o1).compareTo(guild.getJoinTimeForUser(o2));
-                        } catch (DiscordException e) {
-                            e.printStackTrace();
-                        }
-                        return -2;
-                    });
-                    eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
-                    eb.appendField("Account Created", dtf.format(accCreated) + "\n" + DAYS.between(accCreated, Instant.now()) + " days ago", true);
-                    eb.appendField("Guild Joined", dtf.format(guildJoinDate) + "\n" + DAYS.between(guildJoinDate, Instant.now()) + " days ago", true);
-                    String rolesString = roles.toString().replace("[", "").replace("]", "");
-                    int count = 0;
-                    for (IRole r : roles) {
-                        if (r == guild.getEveryoneRole()) {
-                            count++;
-                        }
-                    }
-                    if (count > 1) {
-                        rolesString = rolesString.replaceFirst(", @everyone", "");
-                    }
-                    eb.appendField("Roles", rolesString, false);
-                    eb.withColor(roles.get(0).getColor());
-                    EmbedObject embed = eb.build();
-                    Sender.sendEmbed(channel, embed);
-                } else if (msg.startsWith("?eval")) {
-                    try {
-                        double ans = eval(msg.substring(msg.indexOf(" ") + 1));
-                        Sender.sendMessage(channel, "`" + msg.substring(5, msg.length()).trim() + "` equals: " + ans);
-                    } catch (RuntimeException e) {
-                        Sender.sendMessage(channel, "Invalid expression.");
-                    }
-                }
-            }
-        }
-    }
-
-    @EventSubscriber
-    public void helpMessages(MessageReceivedEvent event) {
-        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
-                String msg = event.getMessage().getContent();
-                IChannel channel = event.getChannel();
-                String[] args = msg.split(" ");
-                if (msg.startsWith("!help")) {
-                    if (args.length == 1) {
-                        String output = "__Eschamali Bot commands - Prefix:__ !\n";
-                        ArrayList<String> commands = new ArrayList<>();
-                        commands.add("`help`: Lists commands for certains parts of the bot. **USAGE**: help <module name>");
-                        commands.add("`donate`: See where you can donate to fund development/server keep up.");
-                        commands.add("`maker`: See who made me.");
-                        commands.add("`ayy`: Enable ayy mode for the server, requires ADMIN/MANAGE SERVER perm");
-                        commands.add("`tilt`: Send a message indicating you are tilted.");
-                        commands.add("`riot`: riot.");
-                        commands.add("`ping`: Visually check your ping with a pong.");
-                        commands.add("`alert`: Alerts Barkuto that something went wrong!");
-                        commands.add("`serverinfo`: Shows some information about the current server.");
-                        commands.add("`userinfo`: Shows some information about yourself, or the given user.");
-                        commands.add("`?google`: Give a link to google based on your query. Not !?google **UASGE**: ?google <query>");
-                        commands.add("`?eval`: Evaluate a simple math expression. Supports +,-,*,/,^,sqrt,sin,cos,tan. **USAGE**: ?eval <expression>");
-                        Collections.sort(commands);
-                        for (int i = 0; i < commands.size(); i++) {
-                            output += commands.get(i) + "\n";
-                        }
-                        Sender.sendMessage(channel, output);
-                    } else {
-                        String module = "";
-                        for (int i = 1; i < args.length; i++) {
-                            module += args[i];
-                        }
-                        String output = "";
-                        IModule theModule = null;
-                        ArrayList<String> cmds = null;
-                        for (IModule m : Eschamali.modules) {
-                            if (m.getName().equalsIgnoreCase(module)) {
-                                if (m instanceof ICommands) {
-                                    theModule = m;
-                                    cmds = ((ICommands) m).commands();
-                                    break;
-                                }
-                            }
-                        }
-                        if (cmds != null) {
-                            output += "__" + theModule.getName() + " module commands - Prefix:__ " + cmds.get(0) + "\n";
-                            for (int i = 1; i < cmds.size(); i++) {
-                                output += cmds.get(i) + "\n";
-                            }
-                            Sender.sendMessage(channel, output);
-                        } else {
-                            Sender.sendMessage(channel, "There is no module with that name.");
-                        }
-                    }
-                }
-            }
-        }
-    }
+//    @EventSubscriber
+//    public void helpMessages(MessageReceivedEvent event) {
+//        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
+//            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
+//                String msg = event.getMessage().getContent();
+//                IChannel channel = event.getChannel();
+//                String[] args = msg.split(" ");
+//                if (msg.startsWith("!help")) {
+//                    if (args.length == 1) {
+//                        String output = "__Eschamali Bot commands - Prefix:__ !\n";
+//                        ArrayList<String> commands = new ArrayList<>();
+//                        commands.add("`help`: Lists commands for certains parts of the bot. **USAGE**: help <module name>");
+//                        commands.add("`donate`: See where you can donate to fund development/server keep up.");
+//                        commands.add("`maker`: See who made me.");
+//                        commands.add("`ayy`: Enable ayy mode for the server, requires ADMIN/MANAGE SERVER perm");
+//                        commands.add("`tilt`: Send a message indicating you are tilted.");
+//                        commands.add("`riot`: riot.");
+//                        commands.add("`ping`: Visually check your ping with a pong.");
+//                        commands.add("`alert`: Alerts Barkuto that something went wrong!");
+//                        commands.add("`serverinfo`: Shows some information about the current server.");
+//                        commands.add("`userinfo`: Shows some information about yourself, or the given user.");
+//                        commands.add("`?google`: Give a link to google based on your query. Not !?google **UASGE**: ?google <query>");
+//                        commands.add("`?eval`: Evaluate a simple math expression. Supports +,-,*,/,^,sqrt,sin,cos,tan. **USAGE**: ?eval <expression>");
+//                        Collections.sort(commands);
+//                        for (int i = 0; i < commands.size(); i++) {
+//                            output += commands.get(i) + "\n";
+//                        }
+//                        Sender.sendMessage(channel, output);
+//                    } else {
+//                        String module = "";
+//                        for (int i = 1; i < args.length; i++) {
+//                            module += args[i];
+//                        }
+//                        String output = "";
+//                        IModule theModule = null;
+//                        ArrayList<String> cmds = null;
+//                        for (IModule m : Eschamali.modules) {
+//                            if (m.getName().equalsIgnoreCase(module)) {
+//                                if (m instanceof ICommands) {
+//                                    theModule = m;
+//                                    cmds = ((ICommands) m).commands();
+//                                    break;
+//                                }
+//                            }
+//                        }
+//                        if (cmds != null) {
+//                            output += "__" + theModule.getName() + " module commands - Prefix:__ " + cmds.get(0) + "\n";
+//                            for (int i = 1; i < cmds.size(); i++) {
+//                                output += cmds.get(i) + "\n";
+//                            }
+//                            Sender.sendMessage(channel, output);
+//                        } else {
+//                            Sender.sendMessage(channel, "There is no module with that name.");
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     public String timeBetween(LocalDateTime from, LocalDateTime to) {
         LocalDateTime fromDateTime = from;

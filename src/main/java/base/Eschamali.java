@@ -1,25 +1,11 @@
 package base;
 
-import modules.Admin.AdminModule;
-import modules.CustomCommands.CustomCommandsModule;
-import modules.Games.GamesModule;
-import modules.JoinLeave.JoinLeaveModule;
-import modules.Music.MusicModule;
-import modules.PAD.PADModule;
-import modules.Parrot.ParrotModule;
-import modules.Permissions.PermissionsListener;
-import modules.Profiles.ProfilesModule;
-import modules.Reactions.ReactionsModule;
-import modules.Required.RequiredModule;
-import modules.Roles.RolesModule;
-import modules.Yugioh.YGOModule;
-import sx.blah.discord.api.ClientBuilder;
-import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.obj.ActivityType;
-import sx.blah.discord.handle.obj.StatusType;
-import sx.blah.discord.modules.IModule;
+import discord4j.core.DiscordClient;
+import discord4j.core.DiscordClientBuilder;
+import discord4j.core.event.domain.lifecycle.ReadyEvent;
+import discord4j.core.object.presence.Activity;
+import discord4j.core.object.presence.Presence;
+import modules.*;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -30,69 +16,21 @@ import java.util.Comparator;
 import java.util.Properties;
 import java.util.TreeMap;
 
-/**
- * Created by Iggie on 8/14/2016.
- */
 public class Eschamali {
-    //private String clientID = "214442111720751104";
+    // private String clientID = "214442111720751104";
     private String token = "";
     public static String configFileName = "config.properties";
     private String status = "";
     private String credentials = "";
-    public static ArrayList<IModule> modules;
-    public static TreeMap<IModule, Boolean> defaultmodules;
-    public static IDiscordClient client;
+    public static ArrayList<Module> modules;
+    public static TreeMap<Module, Boolean> defaultmodules;
+    public static DiscordClient client;
     //    public static String ownerID = "85844964633747456";
     public static ArrayList<Long> ownerIDs = new ArrayList<>();
     public static final LocalDateTime startTime = LocalDateTime.now();
 
     public Eschamali() {
         readConfig();
-        Comparator<IModule> cmpr = Comparator.comparing(IModule::getName);
-        defaultmodules = new TreeMap<>(cmpr);
-        RolesModule roles = new RolesModule();
-        GamesModule games = new GamesModule();
-        ParrotModule parrot = new ParrotModule();
-        MusicModule music = new MusicModule();
-        PADModule pad = new PADModule(this.credentials);
-        JoinLeaveModule jl = new JoinLeaveModule();
-        AdminModule admin = new AdminModule();
-        CustomCommandsModule custom = new CustomCommandsModule();
-        ReactionsModule reactions = new ReactionsModule();
-        YGOModule ygo = new YGOModule();
-        ProfilesModule profiles = new ProfilesModule();
-        RequiredModule required = new RequiredModule();
-
-        defaultmodules.put(roles, true);
-        defaultmodules.put(games, true);
-        defaultmodules.put(parrot, false);
-        defaultmodules.put(music, true);
-        if (this.credentials.length() != 0)
-            defaultmodules.put(pad, true);
-        defaultmodules.put(jl, true);
-        defaultmodules.put(admin, true);
-        defaultmodules.put(custom, true);
-        defaultmodules.put(reactions, true);
-        defaultmodules.put(ygo, true);
-        defaultmodules.put(profiles, true);
-        defaultmodules.put(required, false);
-
-        modules = new ArrayList<>();
-        modules.add(roles);
-        modules.add(games);
-        modules.add(parrot);
-        modules.add(music);
-        if (this.credentials.length() != 0)
-            modules.add(pad);
-        modules.add(jl);
-        modules.add(admin);
-        modules.add(custom);
-        modules.add(reactions);
-        modules.add(ygo);
-        modules.add(profiles);
-        modules.add(required);
-        modules.sort(Comparator.comparing(IModule::getName));
-
     }
 
     private void readConfig() {
@@ -112,7 +50,7 @@ public class Eschamali {
                 System.out.println("No Google Cloud Storage credential file was specified, PAD Module will not be enabled.");
             } else this.credentials = credentials;
 
-            ownerIDs.add(85844964633747456L);//Barkuto's ID
+            ownerIDs.add(85844964633747456L);// Barkuto's ID
             for (int i = 0; i < ownerIDS.length; i++) {
                 if (ownerIDS[i].length() > 0)
                     ownerIDs.add(Long.parseLong(ownerIDS[i]));
@@ -134,26 +72,42 @@ public class Eschamali {
         }
     }
 
-    @EventSubscriber
-    public void onReady(ReadyEvent event) {
-        if (status.length() > 0) {
-            client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, status);
-        }
-    }
-
     public void run() {
-        client = new ClientBuilder().withToken(token).login();
-        client.getDispatcher().registerListener(this);
-        client.getDispatcher().registerListener(new GeneralListener());
-        client.getDispatcher().registerListener(new OwnerListener());
-        client.getDispatcher().registerListener(new PermissionsListener());
-        for (IModule m : modules) {
-            m.enable(client);
-        }
+        client = new DiscordClientBuilder(token).build();
+
+        JoinLeave joinleave = new JoinLeave(client);
+        Roles roles = new Roles(client);
+        Admin admin = new Admin(client);
+        PAD pad = new PAD(client, this.credentials);
+
+        Comparator<Module> cmpr = Comparator.comparing(Module::getName);
+        defaultmodules = new TreeMap<>(cmpr);
+        defaultmodules.put(joinleave, true);
+        defaultmodules.put(roles, true);
+        defaultmodules.put(admin, true);
+        if (this.credentials.length() != 0)
+            defaultmodules.put(pad, true);
+
+        modules = new ArrayList<>();
+        modules.add(joinleave);
+        modules.add(roles);
+        modules.add(admin);
+        if (this.credentials.length() != 0)
+            modules.add(pad);
+        modules.sort(Comparator.comparing(Module::getName));
+
+        client.getEventDispatcher().on(ReadyEvent.class)
+                .flatMap(event -> client.updatePresence(Presence.online(Activity.playing(this.status))))
+                .subscribe();
+
+        new GeneralListener(client);
+        new OwnerListener(client);
+        new ChannelPerms(client);
+
+        client.login().block();
     }
 
     public static void main(String[] args) {
-        Eschamali e = new Eschamali();
-        e.run();
+        new Eschamali().run();
     }
 }
