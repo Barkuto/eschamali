@@ -460,22 +460,22 @@ public class Admin extends Module {
             return Mono.empty();
         };
 
-        commands.put("kick", kick);
-        commands.put("ban", ban);
-        commands.put("prune", prune);
-        commands.put("mute", mute);
-        commands.put("unmute", unmute);
-        commands.put("muterole", muterole);
-        commands.put("lock", lock);
-        commands.put("unlock", unlock);
-        commands.put("warn", warn);
-        commands.put("warnings", warnings);
-        commands.put("addbannedword", addbannedword);
-        commands.put("abw", addbannedword);
-        commands.put("deletebannedword", deletebannedword);
-        commands.put("dbw", deletebannedword);
-        commands.put("bannedwords", bannedwords);
-        commands.put("bw", bannedwords);
+        commands.put(prefix + "kick", kick);
+        commands.put(prefix + "ban", ban);
+        commands.put(prefix + "prune", prune);
+        commands.put(prefix + "mute", mute);
+        commands.put(prefix + "unmute", unmute);
+        commands.put(prefix + "muterole", muterole);
+        commands.put(prefix + "lock", lock);
+        commands.put(prefix + "unlock", unlock);
+        commands.put(prefix + "warn", warn);
+        commands.put(prefix + "warnings", warnings);
+        commands.put(prefix + "addbannedword", addbannedword);
+        commands.put(prefix + "abw", addbannedword);
+        commands.put(prefix + "deletebannedword", deletebannedword);
+        commands.put(prefix + "dbw", deletebannedword);
+        commands.put(prefix + "bannedwords", bannedwords);
+        commands.put(prefix + "bw", bannedwords);
 
         return commands;
     }

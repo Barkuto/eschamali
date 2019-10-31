@@ -13,13 +13,11 @@ public abstract class Module {
     protected DiscordClient client;
     protected String prefix;
 
-    protected static final Map<String, Command> commands = new HashMap<>();
-
     public Module(DiscordClient client, String prefix) {
         this.client = client;
         this.prefix = prefix;
 
-        commands.putAll(makeCommands());
+        Map<String, Command> commands = makeCommands();
 
         this.client.getEventDispatcher().on(MessageCreateEvent.class)
                 // Get event Message
@@ -35,9 +33,9 @@ public abstract class Module {
                                         .flatMap(content -> Flux.fromIterable(commands.entrySet())
                                                 //If a command matches, execute it
                                                 .filter(entry -> {
-                                                    if (content.contains(" "))
-                                                        return content.substring(0, content.indexOf(" ")).equalsIgnoreCase(prefix + entry.getKey());
-                                                    else return content.equalsIgnoreCase(prefix + entry.getKey());
+                                                    if (content.contains(" ")) {
+                                                        return content.substring(0, content.indexOf(" ")).equalsIgnoreCase(entry.getKey());
+                                                    } else return content.equalsIgnoreCase(entry.getKey());
                                                 })
                                                 .flatMap(entry -> entry.getValue().execute(event))
                                                 .next()))))

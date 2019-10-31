@@ -448,35 +448,35 @@ public class ChannelPerms extends Module {
             }
         };
 
-        commands.put("addtalkchannel", addtalkchannel);
-        commands.put("atc", addtalkchannel);
-        commands.put("deletetalkchannel", deletetalkchannel);
-        commands.put("resettalkchannels", resettalkchannels);
-        commands.put("rtc", resettalkchannels);
-        commands.put("talkchannels", talkchannels);
-        commands.put("tc", talkchannels);
+        commands.put(prefix + "addtalkchannel", addtalkchannel);
+        commands.put(prefix + "atc", addtalkchannel);
+        commands.put(prefix + "deletetalkchannel", deletetalkchannel);
+        commands.put(prefix + "resettalkchannels", resettalkchannels);
+        commands.put(prefix + "rtc", resettalkchannels);
+        commands.put(prefix + "talkchannels", talkchannels);
+        commands.put(prefix + "tc", talkchannels);
 
-        commands.put("modules", modules);
-        commands.put("m", modules);
-        commands.put("disableallmodules", disableallmodules);
-        commands.put("dam", disableallmodules);
-        commands.put("enabledefaultmodules", enableedefaultmodules);
-        commands.put("edm", enableedefaultmodules);
-        commands.put("enableallmodules", enableallmodules);
-        commands.put("eam", enableallmodules);
-        commands.put("enablemodule", enablemodule);
-        commands.put("em", enablemodule);
-        commands.put("disablemodule", disablemodule);
-        commands.put("dm", disablemodule);
+        commands.put(prefix + "modules", modules);
+        commands.put(prefix + "m", modules);
+        commands.put(prefix + "disableallmodules", disableallmodules);
+        commands.put(prefix + "dam", disableallmodules);
+        commands.put(prefix + "enabledefaultmodules", enableedefaultmodules);
+        commands.put(prefix + "edm", enableedefaultmodules);
+        commands.put(prefix + "enableallmodules", enableallmodules);
+        commands.put(prefix + "eam", enableallmodules);
+        commands.put(prefix + "enablemodule", enablemodule);
+        commands.put(prefix + "em", enablemodule);
+        commands.put(prefix + "disablemodule", disablemodule);
+        commands.put(prefix + "dm", disablemodule);
 
-        commands.put("addmodulechannel", addmodulechannel);
-        commands.put("amc", addmodulechannel);
-        commands.put("deletemodulechannel", deletemodulechannel);
-        commands.put("dmc", deletemodulechannel);
-        commands.put("resetmodulechannels", resetmodulechannels);
-        commands.put("rmc", resetmodulechannels);
-        commands.put("modulechannels", modulechannels);
-        commands.put("mc", modulechannels);
+        commands.put(prefix + "addmodulechannel", addmodulechannel);
+        commands.put(prefix + "amc", addmodulechannel);
+        commands.put(prefix + "deletemodulechannel", deletemodulechannel);
+        commands.put(prefix + "dmc", deletemodulechannel);
+        commands.put(prefix + "resetmodulechannels", resetmodulechannels);
+        commands.put(prefix + "rmc", resetmodulechannels);
+        commands.put(prefix + "modulechannels", modulechannels);
+        commands.put(prefix + "mc", modulechannels);
 
         return commands;
     }
