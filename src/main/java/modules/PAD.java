@@ -328,8 +328,8 @@ public class PAD extends Module {
             return Mono.empty();
         };
 
-        commands.put("update", update);
-        commands.put("updatedb", update);
+//        commands.put("update", update);
+//        commands.put("updatedb", update);
         commands.put("info", info);
         commands.put("i", info);
         commands.put("infojp", info);
