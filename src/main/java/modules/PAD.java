@@ -22,9 +22,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-/**
- * Created by Iggie on 8/25/2016.
- */
 public class PAD extends Module {
     private TreeMap<String, String> abbrMon = new TreeMap<>();
     private TreeMap<String, String> abbrDun = new TreeMap<>();

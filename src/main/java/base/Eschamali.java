@@ -79,6 +79,7 @@ public class Eschamali {
         Roles roles = new Roles(client);
         Admin admin = new Admin(client);
         PAD pad = new PAD(client, this.credentials);
+        CustomCommands customCommands = new CustomCommands(client);
 
         Comparator<Module> cmpr = Comparator.comparing(Module::getName);
         defaultmodules = new TreeMap<>(cmpr);
@@ -87,6 +88,7 @@ public class Eschamali {
         defaultmodules.put(admin, true);
         if (this.credentials.length() != 0)
             defaultmodules.put(pad, true);
+        defaultmodules.put(customCommands, true);
 
         modules = new ArrayList<>();
         modules.add(joinleave);
@@ -94,6 +96,7 @@ public class Eschamali {
         modules.add(admin);
         if (this.credentials.length() != 0)
             modules.add(pad);
+        modules.add(customCommands);
         modules.sort(Comparator.comparing(Module::getName));
 
         client.getEventDispatcher().on(ReadyEvent.class)
