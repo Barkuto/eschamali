@@ -16,10 +16,8 @@ import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class Admin extends Module {
     private String tableName = "admin";
@@ -83,11 +81,11 @@ public class Admin extends Module {
             if (!message.getContent().isPresent()) return Mono.empty();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
 
-            String msg = message.getContent().get();
-            String[] bannedWords = driver.getPerms(tableName, col1, bannedField, col2).split(";");
-            for (int i = 0; i < bannedWords.length; i++) {
-                String word = bannedWords[i].trim();
-                if (word.length() > 0 && msg.contains(word)) {
+            String msg = message.getContent().get().toLowerCase();
+            List<String> bannedWords = Arrays.asList(driver.getPerms(tableName, col1, bannedField, col2).split(";"));
+            String[] split = msg.split(" ");
+            for (String w : split) {
+                if (bannedWords.contains(w)) {
                     return message.delete();
                 }
             }
