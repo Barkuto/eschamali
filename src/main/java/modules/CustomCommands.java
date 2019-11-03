@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CustomCommands extends Module {
-    public static String prefix = "!";
     private String tableName = "customcommands";
     private String col1 = "command";
     private String col2 = "message";

@@ -432,6 +432,10 @@ public class ChannelPerms extends Module {
             if (module != null) {
                 String output = "The " + module.getName() + " module can be used in the following channels: ";
                 String chans = driver.getPerms(channelsTableName, channelsCol1, module.getName(), channelsCol2);
+                if (chans.length() == 0) {
+                    driver.addPerms(channelsTableName, channelsCol1, module.getName(), channelsCol2, "all");
+                    chans = "all";
+                }
                 if (chans.equalsIgnoreCase("all")) {
                     return EschaUtil.sendMessage(event, "The " + module.getName() + " module can used in all channels.");
                 }
