@@ -25,7 +25,6 @@ public class Eschamali {
     public static ArrayList<Module> modules;
     public static TreeMap<Module, Boolean> defaultmodules;
     public static DiscordClient client;
-    //    public static String ownerID = "85844964633747456";
     public static ArrayList<Long> ownerIDs = new ArrayList<>();
     public static final LocalDateTime startTime = LocalDateTime.now();
 
@@ -80,6 +79,7 @@ public class Eschamali {
         Admin admin = new Admin(client);
         PAD pad = new PAD(client, this.credentials);
         CustomCommands customCommands = new CustomCommands(client);
+        Games games = new Games(client);
 
         Comparator<Module> cmpr = Comparator.comparing(Module::getName);
         defaultmodules = new TreeMap<>(cmpr);
@@ -89,6 +89,7 @@ public class Eschamali {
         if (this.credentials.length() != 0)
             defaultmodules.put(pad, true);
         defaultmodules.put(customCommands, true);
+        defaultmodules.put(games, true);
 
         modules = new ArrayList<>();
         modules.add(joinleave);
@@ -97,6 +98,7 @@ public class Eschamali {
         if (this.credentials.length() != 0)
             modules.add(pad);
         modules.add(customCommands);
+        modules.add(games);
         modules.sort(Comparator.comparing(Module::getName));
 
         client.getEventDispatcher().on(ReadyEvent.class)

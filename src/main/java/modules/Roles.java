@@ -140,7 +140,7 @@ public class Roles extends Module {
 
                         if (theRole != null) {
                             return theUser.addRole(theRole.getId())
-                                    .then(EschaUtil.sendMessage(event, theUser.getMention() + " now has the " + theRole.getMention() + " role."))
+                                    .then(EschaUtil.sendMessage(event, theUser.getMention() + " now has the " + theRole.getName() + " role."))
                                     .onErrorResume(v -> EschaUtil.sendMessage(event, "An error occurred adding that role to the user."));
                         } else return EschaUtil.sendMessage(event, "Invalid role.");
                     }
@@ -172,7 +172,7 @@ public class Roles extends Module {
 
                         if (theRole != null) {
                             return theUser.removeRole(theRole.getId())
-                                    .then(EschaUtil.sendMessage(event, theUser.getMention() + " no longer has the " + theRole.getMention() + " role."))
+                                    .then(EschaUtil.sendMessage(event, theUser.getMention() + " no longer has the " + theRole.getName() + " role."))
                                     .onErrorResume(v -> EschaUtil.sendMessage(event, "An error occurred removing that role from the user."));
                         } else return EschaUtil.sendMessage(event, "Invalid role.");
                     }
@@ -286,7 +286,7 @@ public class Roles extends Module {
                 if (user != null) {
                     List<Role> userRoles = user.getRoles().collectList().block();
                     for (Role r : userRoles) {
-                        output += "\n•" + r.getMention() + "";
+                        output += "\n•" + r.getName() + "";
                     }
                     return EschaUtil.sendMessage(event, output);
                 }
@@ -302,7 +302,7 @@ public class Roles extends Module {
                 List<Role> allRoles = guild.getRoles().collectList().block();
                 for (Role r : allRoles) {
                     if (!r.isEveryone())
-                        output += "\n•" + r.getMention();
+                        output += "\n•" + r.getName();
                 }
                 return EschaUtil.sendMessage(event, output);
             }
@@ -323,7 +323,7 @@ public class Roles extends Module {
                     for (int i = 0; i < theRoles.length; i++) {
                         Role r = guild.getRoleById(Snowflake.of(Long.parseLong(theRoles[i]))).block();
                         if (r != null) {
-                            output += r.getMention() + ", ";
+                            output += r.getName() + ", ";
                             count++;
                         }
                     }
@@ -378,7 +378,7 @@ public class Roles extends Module {
                         for (Role r : rolesToAdd) {
                             if (!roleISA(guild, r)) {
                                 driver.addPerms(miscTableName, miscCol1, miscField2, miscCol2, r.getId().asString());
-                                output += r.getMention() + ", ";
+                                output += r.getName() + ", ";
                                 added++;
                             }
                         }
@@ -444,7 +444,7 @@ public class Roles extends Module {
                                 if (csar.get(i).equalsIgnoreCase(removeRoles.get(j).getId().asString())) {
                                     removed++;
                                     remove = true;
-                                    output += guild.getRoleById(removeRoles.get(j).getId()).block().getMention() + ", ";
+                                    output += guild.getRoleById(removeRoles.get(j).getId()).block().getName() + ", ";
                                 }
                             }
                             if (!remove) {
