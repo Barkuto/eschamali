@@ -10,7 +10,6 @@ import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.util.Snowflake;
-import discord4j.core.spec.EmbedCreateSpec;
 import pad.data.PADData;
 import pad.data.structure.card.*;
 import reactor.core.publisher.Mono;
@@ -19,7 +18,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class PAD extends Module {
@@ -45,11 +43,8 @@ public class PAD extends Module {
     private boolean threadRunning = false;
     private boolean updatingDB = false;
 
-    private PADData paddata;
-
-    public PAD(DiscordClient client, String credentials) {
+    public PAD(DiscordClient client) {
         super(client, "&");
-        paddata = new PADData(credentials);
         abbrMon.put("mzeus", "awoken machine zeus");
         abbrMon.put("mhera", "awoken machine hera");
         abbrMon.put("miru", "star myr");
@@ -113,7 +108,7 @@ public class PAD extends Module {
                     updatingDB = true;
                     EschaUtil.sendMessage(event, "Updating DB. Might take a while.").subscribe();
                     new Thread(() -> {
-                        paddata.updateMonsters();
+                        PADData.updateMonsters();
                         EschaUtil.sendMessage(channel, "DB updated.").subscribe();
                         updatingDB = false;
                     }).start();
@@ -136,11 +131,11 @@ public class PAD extends Module {
 
                 Monster monster = null;
                 if (args.length == 0) {
-                    monster = paddata.getMonster(new Random().nextInt(maxMonNum) + 1 + "", region);
+                    monster = PADData.getMonster(new Random().nextInt(maxMonNum) + 1 + "", region);
                 } else {
-                    monster = paddata.getMonster(query, region);
+                    monster = PADData.getMonster(query, region);
                     if (region.equals("NA") && monster == null) {
-                        monster = paddata.getMonster(query, "JP");
+                        monster = PADData.getMonster(query, "JP");
                         region = "JP";
                     }
                 }
@@ -150,7 +145,7 @@ public class PAD extends Module {
                     String fRegion = region;
                     Mono<Message> msg = channel.createMessage(mSpec -> mSpec.setEmbed(e -> {
                         Color c = Color.GRAY;
-                        switch (Attribute.fromID(m.getAttr_id())) {
+                        switch (Attribute.fromID(m.getAttribute_1_id())) {
                             case FIRE:
                                 c = new Color(0xff744b);
                                 break;
@@ -182,7 +177,7 @@ public class PAD extends Module {
                         if (desc.length() == 0)
                             desc += "No Awakenings.";
 
-                        int[] superAwakenings = m.getSuper_awakenings();
+                        int[] superAwakenings = m.getSupers();
                         if (superAwakenings.length > 0)
                             desc += "\n";
                         for (int i = 0; i < superAwakenings.length; i++) {
@@ -214,17 +209,17 @@ public class PAD extends Module {
                         Type type = Type.fromID(m.getType_1_id());
                         Type type2 = Type.fromID(m.getType_2_id());
                         Type type3 = Type.fromID(m.getType_3_id());
-                        String inheritable = m.isInheritable() ? "Yes" : "No";
+                        String inheritable = m.getInheritable() == 1 ? "Yes" : "No";
                         String typing = type.getName() + (type2 == Type.NONE ? "" : "/" + type2.getName()) + (type3 == Type.NONE ? "" : "/" + type3.getName()) + "\n";
-                        String mInfo = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d" + "\n**Inheritable** %-5s", m.getRarity(), m.getCost(), m.getSell_mp(), inheritable);
+                        String mInfo = String.format("**Rarity** %-5d" + "\n**Cost**   %-5d" + "\n**MP**     %-5d" + "\n**Inheritable** %-5s", m.getRarity(), m.getCost(), m.getMp(), inheritable);
                         e.addField(typing, mInfo, true);
 
-                        int hp = m.getMax_hp();
-                        int atk = m.getMax_atk();
-                        int rcv = m.getMax_rcv();
+                        int hp = m.getHp_max();
+                        int atk = m.getAtk_max();
+                        int rcv = m.getRcv_max();
                         int weighted = m.getWeighted();
 
-                        if (m.getLimit_mult() == 0)
+                        if (m.getLb_mult() == 0)
                             e.addField("**Weighted** " + weighted, String.format("**HP**    %-4d\n**ATK** %-4d\n**RCV** %-4d", hp, atk, rcv), true);
                         else {
                             int lbhp = m.getLB_hp();
@@ -236,29 +231,29 @@ public class PAD extends Module {
                         }
 
 
-                        ActiveSkill active = m.getActive_Skill();
+                        ActiveSkill active = m.getActive();
                         String activeName = "Active: " + (active == null ? "" : active.getName() + " (" + active.getTurn_max() + "->" + active.getTurn_min() + ")");
-                        e.addField(activeName, active == null ? "None." : active.getClean_description(), false);
+                        e.addField(activeName, active == null ? "None." : active.getDesc(), false);
 
-                        LeaderSkill leader = m.getLeader_Skill();
+                        LeaderSkill leader = m.getLeader();
                         String leaderName = "Leader: " + (leader == null ? "" : leader.getName());
-                        e.addField(leaderName, leader == null ? "None." : leader.getClean_description().replace("^p", "").replace(";", ""), false);
+                        e.addField(leaderName, leader == null ? "None." : leader.getDesc().replace("^p", "").replace(";", ""), false);
 
                         int[] evos = m.getEvolutions();
                         TreeSet<Integer> otherEvoes = new TreeSet<>(Integer::compareTo);
                         for (int i = 0; i < evos.length; i++) {
-                            if (evos[i] != m.getCard_id())
+                            if (evos[i] != m.getNo())
                                 otherEvoes.add(evos[i]);
                         }
 
                         String otherEvos = otherEvoes.toString().replace("[", "").replace("]", "");
 
-                        ArrayList<Monster> similarNames = query.length() > 0 ? paddata.getAllMonsters(query, fRegion) : new ArrayList<>();
+                        ArrayList<Monster> similarNames = query.length() > 0 ? PADData.getAllMonsters(query, fRegion) : new ArrayList<>();
                         String similar = "";
                         if (similarNames.size() <= 10) {
                             for (int i = 0; i < similarNames.size(); i++) {
-                                int currentID = similarNames.get(i).getCard_id();
-                                if (currentID != m.getCard_id()) {
+                                int currentID = similarNames.get(i).getNo();
+                                if (currentID != m.getNo()) {
                                     boolean contains = false;
                                     for (int j = 0; j < evos.length; j++) {
                                         if (evos[j] == currentID) {
@@ -267,7 +262,7 @@ public class PAD extends Module {
                                         }
                                     }
                                     if (!contains)
-                                        similar += similarNames.get(i).getCard_id() + ", ";
+                                        similar += similarNames.get(i).getNo() + ", ";
                                 }
                             }
                             if (similar.contains(",")) {
@@ -280,9 +275,9 @@ public class PAD extends Module {
                         if (otherEvos.length() > 0) e.addField("Other Evos", otherEvos, true);
                         if (similar.length() > 0) e.addField("Similar Names", similar, true);
 
-                        e.setThumbnail(paddata.getPortraitPictureURL(m.getCard_id() + "", fRegion));
-                        e.setTitle("No." + m.getCard_id() + " " + m.getName());
-                        e.setUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getCard_id());
+                        e.setThumbnail(PADData.getPortraitPictureURL(m.getNo() + "", fRegion));
+                        e.setTitle("No." + m.getNo() + " " + m.getName());
+                        e.setUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getNo());
                         e.setColor(c);
                     }));
                     return msg.then();
@@ -311,9 +306,9 @@ public class PAD extends Module {
                 }
                 String url;
                 if (args.length == 0)
-                    url = paddata.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "", region);
+                    url = PADData.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "", region);
                 else
-                    url = paddata.getFullPictureURL(argsconcat, region);
+                    url = PADData.getFullPictureURL(argsconcat, region);
 
                 if (url != null)
                     return channel.createMessage(mSpec -> mSpec.setEmbed(e -> {
@@ -325,8 +320,7 @@ public class PAD extends Module {
             return Mono.empty();
         };
 
-//        commands.put(prefix+"update", update);
-//        commands.put(prefix+"updatedb", update);
+        commands.put(prefix + "update", update);
         commands.put(prefix + "info", info);
         commands.put(prefix + "i", info);
         commands.put(prefix + "infojp", info);

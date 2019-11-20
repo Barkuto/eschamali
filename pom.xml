@@ -39,7 +39,7 @@
         <dependency>
             <groupId>pad.data</groupId>
             <artifactId>PADData</artifactId>
-            <version>2.2</version>
+            <version>3.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>

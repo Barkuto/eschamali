@@ -21,7 +21,6 @@ public class Eschamali {
     private String token = "";
     public static String configFileName = "config.properties";
     private String status = "";
-    private String credentials = "";
     public static ArrayList<Module> modules;
     public static TreeMap<Module, Boolean> defaultmodules;
     public static DiscordClient client;
@@ -39,17 +38,12 @@ public class Eschamali {
             String[] ownerIDS = props.getProperty("ownerid").split(";");
             String token = props.getProperty("token");
             String status = props.getProperty("status");
-            String credentials = props.getProperty("credentials");
             if (token.length() == 0) {
                 System.out.println("No token specified, please fill out the token field in config.properties.");
                 System.exit(0);
             } else this.token = token;
 
-            if (credentials.length() == 0) {
-                System.out.println("No Google Cloud Storage credential file was specified, PAD Module will not be enabled.");
-            } else this.credentials = credentials;
-
-            ownerIDs.add(85844964633747456L);// Barkuto's ID
+            ownerIDs.add(85844964633747456L); // Barkuto's ID
             for (int i = 0; i < ownerIDS.length; i++) {
                 if (ownerIDS[i].length() > 0)
                     ownerIDs.add(Long.parseLong(ownerIDS[i]));
@@ -60,7 +54,6 @@ public class Eschamali {
             props.setProperty("ownerid", "");
             props.setProperty("token", "");
             props.setProperty("status", "");
-            props.setProperty("credentials", "");
             try {
                 props.store(new FileWriter(configFileName), "Separate owner IDs using semi-colons(;). Make a Bot user and get a bot token at https://discordapp.com/developers/applications/me");
             } catch (IOException e1) {
@@ -77,7 +70,7 @@ public class Eschamali {
         JoinLeave joinleave = new JoinLeave(client);
         Roles roles = new Roles(client);
         Admin admin = new Admin(client);
-        PAD pad = new PAD(client, this.credentials);
+        PAD pad = new PAD(client);
         CustomCommands customCommands = new CustomCommands(client);
         Games games = new Games(client);
 
@@ -86,8 +79,7 @@ public class Eschamali {
         defaultmodules.put(joinleave, true);
         defaultmodules.put(roles, true);
         defaultmodules.put(admin, true);
-        if (this.credentials.length() != 0)
-            defaultmodules.put(pad, true);
+        defaultmodules.put(pad, true);
         defaultmodules.put(customCommands, true);
         defaultmodules.put(games, true);
 
@@ -95,8 +87,7 @@ public class Eschamali {
         modules.add(joinleave);
         modules.add(roles);
         modules.add(admin);
-        if (this.credentials.length() != 0)
-            modules.add(pad);
+        modules.add(pad);
         modules.add(customCommands);
         modules.add(games);
         modules.sort(Comparator.comparing(Module::getName));
