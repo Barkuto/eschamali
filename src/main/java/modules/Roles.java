@@ -493,22 +493,22 @@ public class Roles extends Module {
             return Mono.empty();
         };
 
-        commands.put(prefix+"db", db);
-        commands.put(prefix+"autorole", autorole);
-        commands.put(prefix+"removeautorole", removeautorole);
-        commands.put(prefix+"addrole", addrole);
-        commands.put(prefix+"ar", addrole);
-        commands.put(prefix+"removerole", removerole);
-        commands.put(prefix+"rr", removerole);
-        commands.put(prefix+"iam", iam);
-        commands.put(prefix+"iamn", iamn);
-        commands.put(prefix+"inrole", inrole);
-        commands.put(prefix+"roles", roles);
-        commands.put(prefix+"allroles", allroles);
-        commands.put(prefix+"lsar", lsar);
-        commands.put(prefix+"asar", asar);
-        commands.put(prefix+"rsar", rsar);
-        commands.put(prefix+"servertree", servertree);
+        commands.put(prefix + "db", db);
+        commands.put(prefix + "autorole", autorole);
+        commands.put(prefix + "removeautorole", removeautorole);
+        commands.put(prefix + "addrole", addrole);
+        commands.put(prefix + "ar", addrole);
+        commands.put(prefix + "removerole", removerole);
+        commands.put(prefix + "rr", removerole);
+        commands.put(prefix + "iam", iam);
+        commands.put(prefix + "iamn", iamn);
+        commands.put(prefix + "inrole", inrole);
+        commands.put(prefix + "roles", roles);
+        commands.put(prefix + "allroles", allroles);
+        commands.put(prefix + "lsar", lsar);
+        commands.put(prefix + "asar", asar);
+        commands.put(prefix + "rsar", rsar);
+        commands.put(prefix + "servertree", servertree);
 
         return commands;
     }

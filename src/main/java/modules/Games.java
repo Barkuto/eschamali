@@ -5,7 +5,10 @@ import base.EschaUtil;
 import base.Module;
 import discord4j.core.DiscordClient;
 import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.MessageChannel;
+import discord4j.core.object.reaction.ReactionEmoji;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
@@ -151,11 +154,46 @@ public class Games extends Module {
             return Mono.empty();
         };
 
+        Command poll = event -> {
+            Guild guild = event.getGuild().block();
+            MessageChannel channel = event.getMessage().getChannel().block();
+            if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
+                String argsconcat = EschaUtil.getArgsConcat(event);
+                String[] params = argsconcat.split(";");
+                if (params.length > 0 && params.length <= 27) {
+                    ArrayList<Integer> codes = new ArrayList<>();
+                    Mono<Message> msg = channel.createMessage(mSpec -> mSpec.setEmbed(e -> {
+                        String a = "🇦";
+                        int startCodepoint = a.codePointAt(0);
+
+                        StringBuilder desc = new StringBuilder();
+                        for (int i = 1; i < params.length; i++) {
+                            int code = startCodepoint + i - 1;
+                            codes.add(code);
+                            desc.appendCodePoint(code);
+                            desc.append(": " + params[i] + "\n");
+                        }
+
+                        e.setTitle(params[0]);
+                        e.setDescription(desc.toString());
+                    }));
+                    return msg.flatMap(message -> {
+                        Flux.fromIterable(codes).subscribe(c -> message.addReaction(ReactionEmoji.unicode(new StringBuilder().appendCodePoint(c).toString())).subscribe());
+                        return Mono.empty();
+                    });
+                } else {
+                    return EschaUtil.sendMessage(event, "Too many arguments.");
+                }
+            }
+            return Mono.empty();
+        };
+
         commands.put(prefix + "8ball", eightball);
         commands.put(prefix + "8", eightball);
         commands.put(prefix + "choose", choose);
         commands.put(prefix + "rps", rps);
         commands.put(prefix + "roll", roll);
+        commands.put(prefix + "poll", poll);
 
         return commands;
     }
@@ -164,77 +202,6 @@ public class Games extends Module {
     public String getName() {
         return "Games";
     }
-
-//    @EventSubscriber
-//    public void onMessage(MessageReceivedEvent event) {
-//        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-//            IGuild guild = event.getMessage().getGuild();
-//            IChannel channel = event.getMessage().getChannel();
-//            if (PermissionsListener.isModuleOn(guild, GamesModule.name) && PermissionsListener.canModuleInChannel(guild, GamesModule.name, channel)) {
-//                String msg = event.getMessage().getContent();
-//                IUser user = event.getMessage().getAuthor();
-//                if (msg.startsWith(prefix)) {
-//                    String[] args = msg.split(" ");
-//                    args[0] = args[0].replace(prefix, "");
-//                    String cmd = args[0].toLowerCase();
-//                    if (cmd.equals("8") || cmd.equals("8ball")) {
-
-//                    } else if (cmd.equals("choose")) {
-
-//                    } else if (cmd.equals("rps")) {
-
-//                    } else if (cmd.equals("roll")) {
-
-//                    } else if (cmd.equals("poll")) {
-//                        String[] params = msg.substring(msg.indexOf(" ")).split(";");
-//                        if (params.length > 1 && params.length <= 27) {
-//                            EmbedBuilder eb = new EmbedBuilder();
-//                            eb.withTitle(params[0]);
-//
-//                            String a = "🇦";
-//                            int startCodepoint = a.codePointAt(0);
-//
-//                            StringBuilder desc = new StringBuilder();
-//                            ArrayList<Integer> codes = new ArrayList<>();
-//                            for (int i = 1; i < params.length; i++) {
-//                                int code = startCodepoint + i - 1;
-//                                codes.add(code);
-//                                desc.appendCodePoint(code);
-//                                desc.append(": " + params[i] + "\n");
-//                            }
-//
-//                            eb.withDesc(desc.toString());
-//
-//                            EmbedObject e = eb.build();
-//
-//                            RequestBuffer.request(() -> {
-//                                IMessage m = channel.sendMessage(e);
-//
-//                                RequestBuilder rb = new RequestBuilder(GamesModule.client);
-//                                rb.shouldBufferRequests(true);
-//                                for (int i = 0; i < codes.size(); i++) {
-//                                    String unicode = new StringBuilder().appendCodePoint(codes.get(i)).toString();
-//
-//                                    if (i == 0)
-//                                        rb.doAction(() -> {
-//                                            m.addReaction(ReactionEmoji.of(unicode));
-//                                            return true;
-//                                        });
-//                                    else
-//                                        rb.andThen(() -> {
-//                                            m.addReaction(ReactionEmoji.of(unicode));
-//                                            return true;
-//                                        });
-//                                }
-//                                rb.build();
-//                            });
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//    }
 
     private String rpsPick(int pick) {
         if (pick == 0)
