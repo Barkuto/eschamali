@@ -1,13 +1,27 @@
 package base;
 
 import discord4j.core.DiscordClient;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
+import discord4j.core.object.presence.Activity;
+import discord4j.core.object.presence.Presence;
+import discord4j.core.object.presence.Status;
+import discord4j.core.object.util.Image;
+import discord4j.core.object.util.Snowflake;
+import discord4j.core.spec.EmbedCreateSpec;
 import modules.ChannelPerms;
 import reactor.core.publisher.Mono;
 
+import java.awt.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -49,11 +63,68 @@ public class General extends Module {
             }
         };
 
+        Command serverinfo = event -> {
+            if (!ChannelPerms.canTalkInChannel(event.getGuild().block(), event.getMessage().getChannel().block()))
+                return Mono.empty();
+            String[] args = EschaUtil.getArgs(event);
+            Guild guild = null;
+            if (args.length == 0) {
+                guild = event.getGuild().block();
+            } else {
+                List<Guild> guilds = client.getGuilds().collectList().block();
+                for (Guild g : guilds) {
+                    if (g.getId().asString().equalsIgnoreCase(args[0])) {
+                        guild = g;
+                        break;
+                    }
+                }
+                if (guild == null) return EschaUtil.sendMessage(event, "Invalid Guild ID, or I am not in that server.");
+            }
+            Guild fGuild = guild;
+            return event.getMessage().getChannel().flatMap(channel -> channel.createEmbed(e -> serverInfoEmbedSpec(e, fGuild)).then());
+        };
+
+        Command userinfo = event -> {
+            if (!ChannelPerms.canTalkInChannel(event.getGuild().block(), event.getMessage().getChannel().block()))
+                return Mono.empty();
+            String[] args = EschaUtil.getArgs(event);
+            String argsconcat = EschaUtil.getArgsConcat(event);
+            Guild guild = event.getGuild().block();
+            Member member = null;
+            if (args.length == 0) {
+                member = event.getMember().get();
+            } else {
+                Set<Snowflake> mentions = event.getMessage().getUserMentionIds();
+                Iterator<Snowflake> iterator = mentions.iterator();
+                if (iterator.hasNext()) {
+                    member = guild.getMemberById(iterator.next()).block();
+                } else {
+                    List<Member> members = guild.getMembers().collectList().block();
+                    for (Member m : members) {
+                        if (m.getId().asString().equalsIgnoreCase(args[0])
+                                || m.getDisplayName().equalsIgnoreCase(argsconcat)
+                                || (m.getNickname().isPresent() && m.getNickname().get().equalsIgnoreCase(argsconcat))) {
+                            member = m;
+                            break;
+                        }
+                    }
+                }
+                if (member == null) return EschaUtil.sendMessage(event, "Invalid ID, name, or nickname");
+            }
+            Member fMember = member;
+            return event.getMessage().getChannel().flatMap(channel -> channel.createEmbed(e -> userInfoEmbedSpec(e, guild, fMember)).then());
+        };
+
         commands.put(prefix + "donate", EschaUtil.createMessageCommandGen("Donate for server/development funds at: https://streamlabs.com/barkuto"));
         commands.put(prefix + "maker", EschaUtil.createMessageCommandGen("Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali"));
         commands.put(prefix + "tilt", EschaUtil.createMessageCommandGen("*T* *I* *L* *T* *E* *D*"));
         commands.put(prefix + "riot", EschaUtil.createMessageCommandGen("ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ"));
         commands.put(prefix + "ping", EschaUtil.createMessageCommandGen("Pong!"));
+
+        commands.put(prefix + "serverinfo", serverinfo);
+        commands.put(prefix + "sinfo", serverinfo);
+        commands.put(prefix + "userinfo", userinfo);
+        commands.put(prefix + "uinfo", userinfo);
 
         commands.put("?eval", eval);
         commands.put("?g", google);
@@ -67,165 +138,83 @@ public class General extends Module {
         return "General";
     }
 
-    //    @EventSubscriber
-//    public void onMessage(MessageReceivedEvent event) {
-//        if (!(event.getMessage().getChannel() instanceof IPrivateChannel)) {
-//            if (PermissionsListener.canTalkInChannel(event.getMessage().getGuild(), event.getMessage().getChannel())) {
-//                String msg = event.getMessage().getContent().toLowerCase().trim();
-//                IChannel channel = event.getChannel();
-//                if (msg.equals("!ayy")) {
-//                    List<IRole> roles = event.getMessage().getAuthor().getRolesForGuild(event.getMessage().getGuild());
-//                    if (Eschamali.ownerIDs.contains(event.getMessage().getAuthor().getLongID())) {
-//                        ayy = !ayy;
-//                        if (ayy) {
-//                            Sender.sendMessage(channel, "lmao!");
-//                        } else {
-//                            Sender.sendMessage(channel, "lmao...");
-//                        }
-//                    } else {
-//                        for (IRole r : roles) {
-//                            if (r.getPermissions().contains(Permissions.ADMINISTRATOR) || r.getPermissions().contains(Permissions.MANAGE_SERVER)) {
-//                                ayy = !ayy;
-//                                if (ayy) {
-//                                    Sender.sendMessage(channel, "lmao!");
-//                                } else {
-//                                    Sender.sendMessage(channel, "lmao...");
-//                                }
-//                                break;
-//                            }
-//                        }
-//                    }
-//                } else if (msg.equals("ayy") && ayy) {
-//                    Sender.sendMessage(channel, "lmao");
-//                } else if (msg.equals("!serverinfo") || msg.equals("!sinfo")) {
-//                    IGuild guild = event.getMessage().getGuild();
-////                    LocalDateTime creationDate = guild.getCreationDate();
-//                    Instant creationDate = guild.getCreationDate();
-//                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
-//                            .appendPattern("MMM dd, yyyy hh:mm a")
-//                            .toFormatter()
-//                            .withLocale(Locale.US)
-//                            .withZone(ZoneId.systemDefault());
-//
-//                    EmbedBuilder eb = new EmbedBuilder();
-//                    eb.withTitle(guild.getName());
-//                    eb.withThumbnail(guild.getIconURL());
-//                    eb.withDesc("ID: " + guild.getLongID());
-//                    eb.appendField("Created", dtf.format(creationDate), true);
-//                    eb.appendField("Server Age", DAYS.between(creationDate, Instant.now()) + " days", true);
-//                    eb.appendField("Region", guild.getRegion().getName(), true);
-//                    eb.appendField("Owner", guild.getOwner().mention(), true);
-//                    eb.appendField("Users", guild.getUsers().size() + "", true);
-//                    eb.appendField("Roles", guild.getRoles().size() + "", true);
-//                    eb.withColor(Color.WHITE);
-//                    EmbedObject embed = eb.build();
-//
-//                    Sender.sendEmbed(channel, embed);
-//                } else if (msg.equals("!userinfo") || msg.equals("!uinfo")) {
-//                    IGuild guild = event.getMessage().getGuild();
-//                    IUser user = null;
-//                    if (msg.contains(" ")) {
-//                        String arg = msg.substring(msg.indexOf(" ") + 1).trim();
-//                        if (arg.startsWith("<@")) {
-//                            String id = "";
-//                            int startIndex = 2;
-//                            if (arg.startsWith("<@!")) {
-//                                startIndex++;
-//                            }
-//                            id += arg.substring(startIndex, arg.length() - 1);
-//                            user = guild.getUserByID(Long.parseLong(id));
-//                        } else {
-//                            List<IUser> users = guild.getUsers();
-//                            for (IUser u : users) {
-//                                if (u.getName().toLowerCase().contains(arg.toLowerCase())) {
-//                                    user = u;
-//                                    break;
-//                                }
-//                            }
-//                        }
-//                    } else {
-//                        user = event.getMessage().getAuthor();
-//                    }
-//                    if (user == null) {
-//                        Sender.sendMessage(channel, "Could not find that user.");
-//                        return;
-//                    }
-//                    String name = user.getName();
-//                    String disc = user.getDiscriminator();
-//                    String nick = user.getNicknameForGuild(guild) != null ? user.getNicknameForGuild(guild) : "";
-//                    long id = user.getLongID();
-//                    String avatar = user.getAvatarURL();
-//                    Instant accCreated = user.getCreationDate();
-//                    Instant guildJoinDate = null;
-//                    DateTimeFormatter dtf = new DateTimeFormatterBuilder()
-//                            .appendPattern("MMM dd, yyyy hh:mm a")
-//                            .toFormatter()
-//                            .withLocale(Locale.US)
-//                            .withZone(ZoneId.systemDefault());
-//                    List<IRole> roles = user.getRolesForGuild(guild);
-//                    EmbedBuilder eb = new EmbedBuilder();
-//
-//                    try {
-//                        guildJoinDate = guild.getJoinTimeForUser(user);
-//                    } catch (DiscordException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                    String statusType = "";
-//                    switch (user.getPresence().getStatus()) {
-//                        case ONLINE:
-//                            statusType = "Online";
-//                            break;
-//                        case OFFLINE:
-//                            statusType = "Offline";
-//                            break;
-//                        case IDLE:
-//                            statusType = "Idle";
-//                            break;
-//                        case DND:
-//                            statusType = "Do Not Disturb";
-//                            break;
-////                        case STREAMING:
-////                            statusType = "Streaming ";
-////                            break;
-//                        case UNKNOWN:
-//                            statusType = "Unknown";
-//                            break;
-//                    }
-//
-//                    eb.withTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
-//                    eb.withDesc("Status: " + (user.getPresence().getText().isPresent() ? "Playing " + user.getPresence().getText().get() : statusType));
-//                    eb.withThumbnail(avatar.replace(".jpg", ".gif"));
-//                    List<IUser> usersSortedByJoin = guild.getUsers();
-//                    usersSortedByJoin.sort((o1, o2) -> {
-//                        try {
-//                            return guild.getJoinTimeForUser(o1).compareTo(guild.getJoinTimeForUser(o2));
-//                        } catch (DiscordException e) {
-//                            e.printStackTrace();
-//                        }
-//                        return -2;
-//                    });
-//                    eb.withFooterText("Member #" + (usersSortedByJoin.indexOf(user) + 1) + " | " + "ID: " + id);
-//                    eb.appendField("Account Created", dtf.format(accCreated) + "\n" + DAYS.between(accCreated, Instant.now()) + " days ago", true);
-//                    eb.appendField("Guild Joined", dtf.format(guildJoinDate) + "\n" + DAYS.between(guildJoinDate, Instant.now()) + " days ago", true);
-//                    String rolesString = roles.toString().replace("[", "").replace("]", "");
-//                    int count = 0;
-//                    for (IRole r : roles) {
-//                        if (r == guild.getEveryoneRole()) {
-//                            count++;
-//                        }
-//                    }
-//                    if (count > 1) {
-//                        rolesString = rolesString.replaceFirst(", @everyone", "");
-//                    }
-//                    eb.appendField("Roles", rolesString, false);
-//                    eb.withColor(roles.get(0).getColor());
-//                    EmbedObject embed = eb.build();
-//                    Sender.sendEmbed(channel, embed);
-//                }
-//            }
-//        }
-//    }
+    private void serverInfoEmbedSpec(EmbedCreateSpec e, Guild g) {
+        Instant creationDate = g.getId().getTimestamp();
+        DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                .appendPattern("MMM dd, yyyy hh:mm a")
+                .toFormatter()
+                .withLocale(Locale.US)
+                .withZone(ZoneId.systemDefault());
+        Optional<String> iconURL = g.getIconUrl(Image.Format.GIF);
+
+        e.setTitle(g.getName());
+        iconURL.ifPresent(e::setThumbnail);
+        e.setDescription("ID: " + g.getId().asString());
+
+        e.addField("Created", dtf.format(creationDate), true);
+        e.addField("Server Age", DAYS.between(creationDate, Instant.now()) + " days", true);
+        e.addField("Region", g.getRegion().block().getName(), true);
+        e.addField("Owner", g.getOwner().block().getMention(), true);
+        e.addField("Users", g.getMemberCount().getAsInt() + "", true);
+        e.addField("Roles", g.getRoleIds().size() + "", true);
+        e.setColor(Color.WHITE);
+    }
+
+    private void userInfoEmbedSpec(EmbedCreateSpec e, Guild g, Member m) {
+        String name = m.getUsername();
+        String disc = m.getDiscriminator();
+        String nick = m.getNickname().isPresent() ? m.getNickname().get() : "";
+        String id = m.getId().asString();
+        String avatar = m.getAvatarUrl();
+        Instant accCreated = m.getId().getTimestamp();
+        Instant guildJoinDate = m.getJoinTime();
+        List<Role> roles = m.getRoles().collectList().block();
+        Presence prescence = m.getPresence().block();
+        Status status = prescence.getStatus();
+        Activity activity = prescence.getActivity().isPresent() ? prescence.getActivity().get() : null;
+
+        List<Member> usersSortedByJoin = g.getMembers().collectList().block();
+        usersSortedByJoin.sort(Comparator.comparing(Member::getJoinTime));
+        DateTimeFormatter dtf = new DateTimeFormatterBuilder()
+                .appendPattern("MMM dd, yyyy hh:mm a")
+                .toFormatter()
+                .withLocale(Locale.US)
+                .withZone(ZoneId.systemDefault());
+
+        e.setTitle(name + "#" + disc + (nick.length() > 0 ? " AKA " + nick : ""));
+        String activityString = "";
+        if (activity != null)
+            switch (activity.getType()) {
+                case LISTENING:
+                    activityString = "\nListening to **" + activity.getName() + "**";
+                    break;
+                case PLAYING:
+                    activityString = "\nPlaying **" + activity.getName() + "**";
+                    break;
+                case STREAMING:
+                    activityString = "\nStreaming" + (activity.getStreamingUrl().isPresent() ? ": " + activity.getStreamingUrl().get() : "");
+                    break;
+                case WATCHING:
+                    activityString = "\nWatching **" + activity.getName() + "**";
+                    break;
+            }
+        e.setDescription("Status **" + status.getValue().toUpperCase() + "**" + activityString);
+        e.setThumbnail(avatar);
+
+        e.setFooter("Member #" + (usersSortedByJoin.indexOf(m) + 1) + " | " + "ID: " + id, "");
+        e.addField("Account Created", dtf.format(accCreated) + "\n" + DAYS.between(accCreated, Instant.now()) + " days ago", true);
+        e.addField("Guild Joined", dtf.format(guildJoinDate) + "\n" + DAYS.between(guildJoinDate, Instant.now()) + " days ago", true);
+
+        if (roles.size() > 0) {
+            Collections.reverse(roles);
+            StringBuilder sb = new StringBuilder();
+            for (Role r : roles) {
+                sb.append(r.getMention()).append(", ");
+            }
+            e.addField("Roles", sb.toString().substring(0, sb.toString().lastIndexOf(",")), false);
+            e.setColor(roles.get(0).getColor());
+        }
+    }
 
 //    @EventSubscriber
 //    public void helpMessages(MessageReceivedEvent event) {
