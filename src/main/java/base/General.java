@@ -105,7 +105,7 @@ public class General extends Module {
                     List<Member> members = guild.getMembers().collectList().block();
                     for (Member m : members) {
                         if (m.getId().asString().equalsIgnoreCase(args[0])
-                                || m.getDisplayName().equalsIgnoreCase(argsconcat)
+                                || m.getUsername().equalsIgnoreCase(argsconcat)
                                 || (m.getNickname().isPresent() && m.getNickname().get().equalsIgnoreCase(argsconcat))) {
                             member = m;
                             break;
