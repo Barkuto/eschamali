@@ -49,7 +49,7 @@ public class ChannelPerms extends Module {
                     }
                     driver.close();
                     return Mono.empty();
-                });
+                }).subscribe();
     }
 
     @Override
