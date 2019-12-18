@@ -14,6 +14,9 @@ import modules.ChannelPerms;
 import reactor.core.publisher.Mono;
 
 import java.awt.*;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -146,6 +149,18 @@ public class General extends Module {
                 .withLocale(Locale.US)
                 .withZone(ZoneId.systemDefault());
         Optional<String> iconURL = g.getIconUrl(Image.Format.GIF);
+        if (iconURL.isPresent()) {
+            try {
+                HttpURLConnection connection = (HttpURLConnection) (new URL(iconURL.get()).openConnection());
+                connection.setRequestMethod("GET");
+                connection.connect();
+                int code = connection.getResponseCode();
+                if (code >= 400)
+                    iconURL = g.getIconUrl(Image.Format.PNG);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
 
         e.setTitle(g.getName());
         iconURL.ifPresent(e::setThumbnail);
