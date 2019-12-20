@@ -164,15 +164,19 @@ public class PAD extends Module {
                             remove = true;
                         } else if (eventEmoji.equals(regional_indicator_n)) {
                             Monster m_na = PADData.getMonster(number + "", "NA");
-                            message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_na, number + "", "NA"))).subscribe();
-                            message.removeAllReactions().subscribe();
-                            addMonsterEmbedReactions(message, "NA").subscribe();
+                            if (m_na != null) {
+                                message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_na, number + "", "NA"))).subscribe();
+                                message.removeAllReactions().subscribe();
+                                addMonsterEmbedReactions(message, "NA").subscribe();
+                            }
                             remove = true;
                         } else if (eventEmoji.equals(regional_indicator_j)) {
                             Monster m_jp = PADData.getMonster(number + "", "JP");
-                            message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_jp, number + "", "JP"))).subscribe();
-                            message.removeAllReactions().subscribe();
-                            addMonsterEmbedReactions(message, "NA").subscribe();
+                            if (m_jp != null) {
+                                message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_jp, number + "", "JP"))).subscribe();
+                                message.removeAllReactions().subscribe();
+                                addMonsterEmbedReactions(message, "JP").subscribe();
+                            }
                             remove = true;
                         }
                         if (remove)
