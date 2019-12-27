@@ -300,15 +300,18 @@ public class PAD extends Module {
                 String url;
                 if (args.length == 0)
                     url = PADData.getFullPictureURL((new Random().nextInt(maxMonNum) + 1) + "", region);
-                else
+                else {
                     url = PADData.getFullPictureURL(argsconcat, region);
-
-                if (url != null)
+                    if (url == null && region.equalsIgnoreCase("NA")) url = PADData.getFullPictureURL(argsconcat, "JP");
+                    else if (url == null && region.equalsIgnoreCase("JP"))
+                        url = PADData.getFullPictureURL(argsconcat, "NA");
+                }
+                if (url != null) {
+                    String fUrl = url;
                     return channel.createMessage(mSpec -> mSpec.setEmbed(e -> {
-                        e.setImage(url);
+                        e.setImage(fUrl);
                     })).then();
-//                    return EschaUtil.sendMessage(event, new EmbedBuilder().withImage(url).build());
-                else return EschaUtil.sendMessage(event, "Nothing was found.");
+                } else return EschaUtil.sendMessage(event, "Nothing was found.");
             }
             return Mono.empty();
         };
