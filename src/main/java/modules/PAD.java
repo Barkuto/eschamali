@@ -323,6 +323,8 @@ public class PAD extends Module {
                 String cmd = event.getMessage().getContent().get().split(" ")[0].replace(prefix, "");
                 String argsconcat = EschaUtil.getArgsConcat(event);
                 String region = "NA";
+                if (argsconcat.length() <= 0) return Mono.empty();
+
                 if (cmd.equalsIgnoreCase("sj") || cmd.equalsIgnoreCase("seriesjp")) region = "JP";
                 ArrayList<Monster> monsters = PADData.getSeries(argsconcat, region);
                 if (region.equalsIgnoreCase("NA") && monsters.size() == 0)
