@@ -55,6 +55,8 @@ public class PAD extends Module {
     private ReactionEmoji regional_indicator_n = ReactionEmoji.unicode("🇳");
     private ReactionEmoji regional_indicator_j = ReactionEmoji.unicode("🇯");
     private ReactionEmoji x = ReactionEmoji.unicode("❌");
+    private ReactionEmoji left_triangle = ReactionEmoji.unicode("◀️");
+    private ReactionEmoji right_triangle = ReactionEmoji.unicode("▶️");
 
     public PAD(DiscordClient client) {
         super(client, "&");
@@ -122,68 +124,100 @@ public class PAD extends Module {
                         return message.delete();
                     } else {
                         Embed embed = message.getEmbeds().get(0);
-                        int number = Integer.parseInt(embed.getTitle().get().split("\\.")[1].split(" ")[0]);
-                        List<Embed.Field> fields = embed.getFields();
-                        String evos = "";
-                        for (int i = 0; i < fields.size(); i++) {
-                            if (fields.get(i).getName().equals("Other Evos"))
-                                evos = fields.get(i).getValue();
-                        }
+                        if (!embed.getTitle().isPresent()) return Mono.empty();
+                        String title = embed.getTitle().get();
+                        if (title.startsWith("Series: \"")) {
+                            String footer = embed.getFooter().get().getText();
+                            String series = title.split("\"")[1];
 
-                        String[] evosArray = {};
-                        int prevIndex = -1;
-                        if (evos.length() > 0) {
-                            evosArray = evos.split(", ");
-                            for (int i = 0; i < evosArray.length; i++) {
-                                int current = Integer.parseInt(evosArray[i]);
-                                if (number > current) prevIndex = i;
-                            }
-                        }
+                            String region = "NA";
+                            if (footer.startsWith("JP")) region = "JP";
 
-                        String region = "NA";
-                        for (int i = 0; i < reactions.size(); i++) {
-                            if (reactions.get(i).getEmoji().asUnicodeEmoji().get().getRaw().equals("\uD83C\uDDF3"))
-                                region = "JP";
-                        }
+                            int currPage = Integer.parseInt(footer.split(" ")[1].split("\\/")[0]);
+                            int maxPage = Integer.parseInt(footer.split(" ")[1].split("\\/")[1]);
 
-                        final String fRegion = region;
-                        boolean remove = false;
-                        if (eventEmoji.equals(left_arrow)) {
-                            if (prevIndex != -1) {
-                                Monster m_dec = PADData.getMonster(evosArray[prevIndex], region);
-                                if (m_dec != null)
-                                    message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_dec, m_dec.getNo() + "", fRegion))).subscribe();
+                            ArrayList<Monster> monsters = PADData.getSeries(series, region);
+
+                            final String fRegion = region;
+                            boolean remove = false;
+                            if (eventEmoji.equals(left_triangle)) {
+                                if (currPage > 1)
+                                    message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> seriesEmbedSpec(e, monsters, series, fRegion, currPage - 1))).subscribe();
+                                remove = true;
+                            } else if (eventEmoji.equals(right_triangle)) {
+                                if (currPage < maxPage)
+                                    message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> seriesEmbedSpec(e, monsters, series, fRegion, currPage + 1))).subscribe();
+                                remove = true;
                             }
-                            remove = true;
-                        } else if (eventEmoji.equals(right_arrow)) {
-                            if (prevIndex + 1 < evosArray.length) {
-                                Monster m_inc = PADData.getMonster(evosArray[prevIndex + 1], region);
-                                if (m_inc != null)
-                                    message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_inc, m_inc.getNo() + "", fRegion))).subscribe();
+                            if (remove)
+                                users.forEach(u -> {
+                                    if (u.getId().asLong() != client.getSelfId().get().asLong())
+                                        message.removeReaction(eventEmoji, u.asMember(guild.getId()).block().getId()).subscribe();
+                                });
+                        } else {
+                            int number = Integer.parseInt(embed.getTitle().get().split("\\.")[1].split(" ")[0]);
+                            List<Embed.Field> fields = embed.getFields();
+                            String evos = "";
+                            for (int i = 0; i < fields.size(); i++) {
+                                if (fields.get(i).getName().equals("Other Evos"))
+                                    evos = fields.get(i).getValue();
                             }
-                            remove = true;
-                        } else if (eventEmoji.equals(regional_indicator_n)) {
-                            Monster m_na = PADData.getMonster(number + "", "NA");
-                            if (m_na != null) {
-                                message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_na, number + "", "NA"))).subscribe();
-                                message.removeAllReactions().subscribe();
-                                addMonsterEmbedReactions(message, "NA").subscribe();
+
+                            String[] evosArray = {};
+                            int prevIndex = -1;
+                            if (evos.length() > 0) {
+                                evosArray = evos.split(", ");
+                                for (int i = 0; i < evosArray.length; i++) {
+                                    int current = Integer.parseInt(evosArray[i]);
+                                    if (number > current) prevIndex = i;
+                                }
                             }
-                            remove = true;
-                        } else if (eventEmoji.equals(regional_indicator_j)) {
-                            Monster m_jp = PADData.getMonster(number + "", "JP");
-                            if (m_jp != null) {
-                                message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_jp, number + "", "JP"))).subscribe();
-                                message.removeAllReactions().subscribe();
-                                addMonsterEmbedReactions(message, "JP").subscribe();
+
+                            String region = "NA";
+                            for (int i = 0; i < reactions.size(); i++) {
+                                if (reactions.get(i).getEmoji().asUnicodeEmoji().get().getRaw().equals("\uD83C\uDDF3"))
+                                    region = "JP";
                             }
-                            remove = true;
+
+                            final String fRegion = region;
+                            boolean remove = false;
+                            if (eventEmoji.equals(left_arrow)) {
+                                if (prevIndex != -1) {
+                                    Monster m_dec = PADData.getMonster(evosArray[prevIndex], region);
+                                    if (m_dec != null)
+                                        message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_dec, m_dec.getNo() + "", fRegion))).subscribe();
+                                }
+                                remove = true;
+                            } else if (eventEmoji.equals(right_arrow)) {
+                                if (prevIndex + 1 < evosArray.length) {
+                                    Monster m_inc = PADData.getMonster(evosArray[prevIndex + 1], region);
+                                    if (m_inc != null)
+                                        message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_inc, m_inc.getNo() + "", fRegion))).subscribe();
+                                }
+                                remove = true;
+                            } else if (eventEmoji.equals(regional_indicator_n)) {
+                                Monster m_na = PADData.getMonster(number + "", "NA");
+                                if (m_na != null) {
+                                    message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_na, number + "", "NA"))).subscribe();
+                                    message.removeAllReactions().subscribe();
+                                    addMonsterEmbedReactions(message, "NA").subscribe();
+                                }
+                                remove = true;
+                            } else if (eventEmoji.equals(regional_indicator_j)) {
+                                Monster m_jp = PADData.getMonster(number + "", "JP");
+                                if (m_jp != null) {
+                                    message.edit(messageEditSpec -> messageEditSpec.setEmbed(e -> infoEmbedSpec(e, m_jp, number + "", "JP"))).subscribe();
+                                    message.removeAllReactions().subscribe();
+                                    addMonsterEmbedReactions(message, "JP").subscribe();
+                                }
+                                remove = true;
+                            }
+                            if (remove)
+                                users.forEach(u -> {
+                                    if (u.getId().asLong() != client.getSelfId().get().asLong())
+                                        message.removeReaction(eventEmoji, u.asMember(guild.getId()).block().getId()).subscribe();
+                                });
                         }
-                        if (remove)
-                            users.forEach(u -> {
-                                if (u.getId().asLong() != client.getSelfId().get().asLong())
-                                    message.removeReaction(eventEmoji, u.asMember(guild.getId()).block().getId()).subscribe();
-                            });
                     }
                 }
             }
@@ -279,6 +313,31 @@ public class PAD extends Module {
             return Mono.empty();
         };
 
+        Command series = event -> {
+            Guild guild = event.getGuild().block();
+            MessageChannel channel = event.getMessage().getChannel().block();
+            if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
+                String cmd = event.getMessage().getContent().get().split(" ")[0].replace(prefix, "");
+                String argsconcat = EschaUtil.getArgsConcat(event);
+                String region = "NA";
+                if (cmd.equalsIgnoreCase("sj") || cmd.equalsIgnoreCase("seriesjp")) region = "JP";
+                ArrayList<Monster> monsters = PADData.getSeries(argsconcat, region);
+                if (region.equalsIgnoreCase("NA") && monsters.size() == 0)
+                    monsters = PADData.getSeries(argsconcat, "JP");
+                else if (region.equalsIgnoreCase("JP") && monsters.size() == 0)
+                    monsters = PADData.getSeries(argsconcat, "NA");
+                if (monsters.size() == 0)
+                    return EschaUtil.sendMessage(event, "Invalid series.");
+                else {
+                    ArrayList<Monster> fMons = monsters;
+                    String fRegion = region;
+                    return channel.createMessage(mSpec -> mSpec.setEmbed(e -> seriesEmbedSpec(e, fMons, argsconcat, fRegion, 1)))
+                            .flatMap(message -> addSeriesEmbedReactions(message));
+                }
+            }
+            return Mono.empty();
+        };
+
         commands.put(prefix + "update", update);
         commands.put(prefix + "info", info);
         commands.put(prefix + "i", info);
@@ -288,6 +347,10 @@ public class PAD extends Module {
         commands.put(prefix + "picjp", pic);
         commands.put(prefix + "p", pic);
         commands.put(prefix + "pj", pic);
+        commands.put(prefix + "series", series);
+        commands.put(prefix + "seriesjp", series);
+        commands.put(prefix + "s", series);
+        commands.put(prefix + "sj", series);
 
         return commands;
     }
@@ -301,6 +364,13 @@ public class PAD extends Module {
         return message.addReaction(left_arrow)
                 .then(message.addReaction(right_arrow))
                 .then((region.equals("JP") ? message.addReaction(regional_indicator_n) : message.addReaction(regional_indicator_j)))
+                .then(message.addReaction(x))
+                .then();
+    }
+
+    private Mono<Void> addSeriesEmbedReactions(Message message) {
+        return message.addReaction(left_triangle)
+                .then(message.addReaction(right_triangle))
                 .then(message.addReaction(x))
                 .then();
     }
@@ -441,6 +511,30 @@ public class PAD extends Module {
         e.setTitle("No." + m.getNo() + " " + m.getName());
         e.setUrl("http://puzzledragonx.com/en/monster.asp?n=" + m.getNo());
         e.setColor(c);
+
+        String series = m.getSeries();
+        if (!series.equalsIgnoreCase("unsorted"))
+            e.setFooter("Series: " + series, "");
+    }
+
+    private void seriesEmbedSpec(EmbedCreateSpec e, ArrayList<Monster> monsters, String query, String region, int page) {
+        e.setTitle("Series: \"" + query + "\"");
+
+        int perPage = 10;
+
+        StringBuilder s = new StringBuilder();
+        for (int i = perPage * (page - 1); i < perPage * page; i++) {
+            if (i >= monsters.size()) break;
+            Monster m = monsters.get(i);
+            s
+                    .append("**")
+                    .append(m.getNo())
+                    .append("**: ")
+                    .append(m.getName())
+                    .append("\n");
+        }
+        e.setDescription(s.toString());
+        e.setFooter(region.toUpperCase() + " " + page + "/" + (int) Math.ceil(monsters.size() / (double) perPage), "");
     }
 
 
