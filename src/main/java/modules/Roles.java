@@ -502,6 +502,7 @@ public class Roles extends Module {
         commands.put(prefix + "rr", removerole);
         commands.put(prefix + "iam", iam);
         commands.put(prefix + "iamn", iamn);
+        commands.put(prefix + "iamnot", iamn);
         commands.put(prefix + "inrole", inrole);
         commands.put(prefix + "roles", roles);
         commands.put(prefix + "allroles", allroles);

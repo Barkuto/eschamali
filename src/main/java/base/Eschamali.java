@@ -73,6 +73,7 @@ public class Eschamali {
         PAD pad = new PAD(client);
         CustomCommands customCommands = new CustomCommands(client);
         Games games = new Games(client);
+        Reactions reactions = new Reactions(client);
 
         Comparator<Module> cmpr = Comparator.comparing(Module::getName);
         defaultmodules = new TreeMap<>(cmpr);
@@ -82,6 +83,7 @@ public class Eschamali {
         defaultmodules.put(pad, true);
         defaultmodules.put(customCommands, true);
         defaultmodules.put(games, true);
+        defaultmodules.put(reactions, false);
 
         modules = new ArrayList<>();
         modules.add(joinleave);
@@ -90,6 +92,7 @@ public class Eschamali {
         modules.add(pad);
         modules.add(customCommands);
         modules.add(games);
+        modules.add(reactions);
         modules.sort(Comparator.comparing(Module::getName));
 
         client.getEventDispatcher().on(ReadyEvent.class)
