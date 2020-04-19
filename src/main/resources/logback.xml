@@ -2,6 +2,11 @@
 <configuration scan="true">
     <!-- You can configure per-logger level at this point -->
     <!-- This set of preconfigured loggers is good if you want to have a DEBUG level as baseline -->
+    <logger name="discord4j.core.StateHolder" level="INFO"/>
+    <logger name="discord4j.dispatch" level="INFO"/>
+    <logger name="discord4j.events" level="DEBUG"/>
+    <logger name="discord4j.rest" level="INFO"/>
+    <logger name="discord4j.gateway" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
     <logger name="reactor" level="INFO"/>
 
