@@ -86,7 +86,7 @@ public class Roles extends Module {
                         if (id.length() > 0) {
                             Role role = guild.getRoleById(Snowflake.of(Long.parseLong(id))).block();
                             if (role != null) {
-                                output += role.getMention();
+                                output += role.getName();
                                 return EschaUtil.sendMessage(event, output);
                             }
                         }
@@ -95,7 +95,7 @@ public class Roles extends Module {
                         Role role = EschaUtil.roleFromGuild(guild, argsconcat);
                         if (role != null) {
                             driver.setPerms(miscTableName, miscCol1, "autorole", miscCol2, role.getId().asString());
-                            return EschaUtil.sendMessage(event, "The auto-role is now " + role.getMention());
+                            return EschaUtil.sendMessage(event, "The auto-role is now " + role.getName());
                         }
                     }
                 }
@@ -195,7 +195,7 @@ public class Roles extends Module {
                         if (roleISA(guild, role)) {
                             Role theRole = role;
                             return author.addRole(role.getId())
-                                    .then(event.getMessage().getChannel().flatMap(c -> c.createMessage(author.getMention() + " You now the have the " + theRole.getMention() + " role."))
+                                    .then(event.getMessage().getChannel().flatMap(c -> c.createMessage(author.getMention() + " You now the have the " + theRole.getName() + " role."))
                                             .flatMap(m -> Mono.delay(Duration.ofSeconds(2)).then(m.delete()))
                                             .then(event.getMessage().delete()))
                                     .onErrorResume(v -> EschaUtil.sendMessage(event, "An error occurred adding that role to you."));
@@ -221,7 +221,7 @@ public class Roles extends Module {
                         if (roleISA(guild, role)) {
                             Role theRole = role;
                             return author.removeRole(role.getId())
-                                    .then(event.getMessage().getChannel().flatMap(c -> c.createMessage(author.getMention() + " Removed " + theRole.getMention() + " role from you."))
+                                    .then(event.getMessage().getChannel().flatMap(c -> c.createMessage(author.getMention() + " Removed " + theRole.getName() + " role from you."))
                                             .flatMap(m -> Mono.delay(Duration.ofSeconds(2)).then(m.delete()))
                                             .then(event.getMessage().delete()))
                                     .onErrorResume(v -> EschaUtil.sendMessage(event, "An error occurred removing that role from you."));
@@ -245,7 +245,7 @@ public class Roles extends Module {
                     if (role == null) {
                         return EschaUtil.sendMessage(event, "That is not a role!");
                     } else {
-                        String output = "`Here is a list of people in the role " + role.getMention() + ":`\n";
+                        String output = "`Here is a list of people in the role " + role.getName() + ":`\n";
                         List<Member> members = guild.getMembers().collectList().block();
                         for (Member m : members) {
                             List<Role> userRoles = m.getRoles().collectList().block();
