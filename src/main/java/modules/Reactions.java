@@ -9,10 +9,7 @@ import discord4j.core.object.entity.*;
 import discord4j.core.object.util.Snowflake;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class Reactions extends Module {
     private String[] enk = {
@@ -48,8 +45,10 @@ public class Reactions extends Module {
 
             if (msg.replace("\'", "").toLowerCase().contains("dont quote me")) {
                 return EschaUtil.sendMessage(event, "\"" + msg + "\" -" + author.getUsername());
-            } else if (msg.toLowerCase().contains("alot")) {
+            } else if (Arrays.stream(msg.toLowerCase().split(" ")).anyMatch(s -> s.equalsIgnoreCase("alot"))) {
                 return EschaUtil.sendMessage(event, "http://thewritepractice.com/wp-content/uploads/2012/05/Alot-vs-a-lot1-600x450.png");
+            } else if (Arrays.stream(msg.toLowerCase().split(" ")).anyMatch(s -> s.equalsIgnoreCase("lambo"))) {
+                return EschaUtil.sendMessage(event, "https://streamable.com/qxx1ob");
             } else if (author.getId().asLong() == 207986006840836097L && mentioned.contains(Snowflake.of(102559179507519488L))) {
 //            } else if (author.getId().asLong() == 85844964633747456L && mentioned.contains(Snowflake.of(216037525754609664L))) {
                 int choice = new Random().nextInt(enk.length);
