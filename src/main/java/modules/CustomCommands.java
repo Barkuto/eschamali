@@ -3,13 +3,13 @@ package modules;
 import base.Command;
 import base.EschaUtil;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.MessageChannel;
-import discord4j.core.object.entity.TextChannel;
-import discord4j.core.object.util.Permission;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.object.entity.channel.TextChannel;
+import discord4j.rest.util.Permission;
 import reactor.core.publisher.Mono;
 
 import java.sql.ResultSet;
@@ -23,10 +23,10 @@ public class CustomCommands extends Module {
     private String col2 = "message";
     private String[] tableCols = new String[]{col1, col2};
 
-    public CustomCommands(DiscordClient client) {
+    public CustomCommands(GatewayDiscordClient client) {
         super(client, "!");
 
-        client.getEventDispatcher().on(GuildCreateEvent.class).flatMap(event -> {
+        client.on(GuildCreateEvent.class).flatMap(event -> {
             Guild guild = event.getGuild();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
             if (!driver.tableExists(tableName)) {
@@ -36,7 +36,7 @@ public class CustomCommands extends Module {
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(MessageCreateEvent.class)
+        client.on(MessageCreateEvent.class)
                 .flatMap(event -> Mono.justOrEmpty(event.getMessage())
                         .filter(message -> message.getAuthor().map(user -> !user.isBot()).orElse(false))
                         .flatMap(message -> message.getChannel())

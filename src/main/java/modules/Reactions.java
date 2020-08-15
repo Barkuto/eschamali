@@ -3,10 +3,14 @@ package modules;
 import base.Command;
 import base.EschaUtil;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.*;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.User;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.TextChannel;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -23,10 +27,10 @@ public class Reactions extends Module {
             "isnt it past your bedtime|why are you awake"
     };
 
-    public Reactions(DiscordClient client) {
+    public Reactions(GatewayDiscordClient client) {
         super(client, "");
 
-        this.client.getEventDispatcher().on(MessageCreateEvent.class)
+        this.client.on(MessageCreateEvent.class)
                 .flatMap(event -> Mono.justOrEmpty(event.getMessage())
                         .filter(message -> message.getAuthor().map(user -> !user.isBot()).orElse(false))
                         .flatMap(message -> message.getChannel()
@@ -40,7 +44,7 @@ public class Reactions extends Module {
         if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
             Message message = event.getMessage();
             User author = message.getAuthor().get();
-            String msg = message.getContent().isPresent() ? message.getContent().get() : "";
+            String msg = message.getContent();
             Set<Snowflake> mentioned = message.getUserMentionIds();
 
             if (msg.replace("\'", "").toLowerCase().contains("dont quote me")) {

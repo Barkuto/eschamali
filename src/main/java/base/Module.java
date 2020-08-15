@@ -1,25 +1,24 @@
 package base;
 
-import discord4j.core.DiscordClient;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.TextChannel;
+import discord4j.core.object.entity.channel.TextChannel;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Module {
-    protected DiscordClient client;
+    protected GatewayDiscordClient client;
     protected String prefix;
 
-    public Module(DiscordClient client, String prefix) {
+    public Module(GatewayDiscordClient client, String prefix) {
         this.client = client;
         this.prefix = prefix;
 
         Map<String, Command> commands = makeCommands();
 
-        this.client.getEventDispatcher().on(MessageCreateEvent.class)
+        this.client.on(MessageCreateEvent.class)
                 // Get event Message
                 .flatMap(event -> Mono.justOrEmpty(event.getMessage())
                         // Filter out other bot messages

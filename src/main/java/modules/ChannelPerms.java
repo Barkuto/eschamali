@@ -4,12 +4,12 @@ import base.Command;
 import base.EschaUtil;
 import base.Eschamali;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
-import discord4j.core.object.entity.Channel;
 import discord4j.core.object.entity.Guild;
-import discord4j.core.object.util.Permission;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.common.util.Snowflake;
+import discord4j.rest.util.Permission;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
@@ -32,10 +32,10 @@ public class ChannelPerms extends Module {
 
     public static final String GENERAL = "General";
 
-    public ChannelPerms(DiscordClient client) {
+    public ChannelPerms(GatewayDiscordClient client) {
         super(client, ";");
 
-        client.getEventDispatcher().on(GuildCreateEvent.class)
+        client.on(GuildCreateEvent.class)
                 .flatMap(event -> {
                     DBDriver driver = getPermissionDB(event.getGuild());
                     if (!driver.tableExists(channelsTableName)) {

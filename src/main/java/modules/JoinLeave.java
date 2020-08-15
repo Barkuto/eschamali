@@ -3,15 +3,15 @@ package modules;
 import base.Command;
 import base.EschaUtil;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.BanEvent;
 import discord4j.core.event.domain.guild.MemberJoinEvent;
 import discord4j.core.event.domain.guild.MemberLeaveEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.channel.MessageChannel;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -19,10 +19,10 @@ import java.util.Map;
 
 public class JoinLeave extends Module {
 
-    public JoinLeave(DiscordClient client) {
+    public JoinLeave(GatewayDiscordClient client) {
         super(client, "");
 
-        client.getEventDispatcher().on(MemberJoinEvent.class).flatMap(event -> {
+        client.on(MemberJoinEvent.class).flatMap(event -> {
             Guild guild = event.getGuild().block();
             if (ChannelPerms.isModuleOn(guild, getName())) {
                 Member user = event.getMember();
@@ -37,7 +37,7 @@ public class JoinLeave extends Module {
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(MemberLeaveEvent.class).flatMap(event -> {
+        client.on(MemberLeaveEvent.class).flatMap(event -> {
             Guild guild = event.getGuild().block();
             if (ChannelPerms.isModuleOn(guild, getName())) {
                 User user = event.getUser();
@@ -52,7 +52,7 @@ public class JoinLeave extends Module {
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(BanEvent.class).flatMap(event -> {
+        client.on(BanEvent.class).flatMap(event -> {
             Guild guild = event.getGuild().block();
             if (ChannelPerms.isModuleOn(guild, getName())) {
                 User user = event.getUser();

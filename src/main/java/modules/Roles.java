@@ -4,12 +4,16 @@ import base.Command;
 import base.EschaUtil;
 import base.Eschamali;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
 import discord4j.core.event.domain.guild.MemberJoinEvent;
-import discord4j.core.object.entity.*;
-import discord4j.core.object.util.Permission;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.PrivateChannel;
+import discord4j.rest.util.Permission;
 import reactor.core.publisher.Mono;
 
 import java.sql.ResultSet;
@@ -25,10 +29,10 @@ public class Roles extends Module {
     private String miscField2 = "selfroles";
     private String[] miscCols = new String[]{miscCol1, miscCol2};
 
-    public Roles(DiscordClient client) {
+    public Roles(GatewayDiscordClient client) {
         super(client, ".");
 
-        client.getEventDispatcher().on(GuildCreateEvent.class).flatMap(event -> {
+        client.on(GuildCreateEvent.class).flatMap(event -> {
             DBDriver driver = ChannelPerms.getPermissionDB(event.getGuild());
             if (!driver.tableExists(miscTableName)) {
                 driver.createTable(miscTableName, miscCols, new String[]{"string", "string"}, false);
@@ -39,7 +43,7 @@ public class Roles extends Module {
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(MemberJoinEvent.class).flatMap(event -> {
+        client.on(MemberJoinEvent.class).flatMap(event -> {
             Guild guild = event.getGuild().block();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
             if (ChannelPerms.isModuleOn(guild, getName())) {

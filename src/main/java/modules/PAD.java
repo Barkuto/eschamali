@@ -3,27 +3,26 @@ package modules;
 import base.Command;
 import base.EschaUtil;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.object.Embed;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.Reaction;
 import discord4j.core.object.reaction.ReactionEmoji;
-import discord4j.core.object.util.Snowflake;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.util.Color;
 import pad.data.PADData;
 import pad.data.structure.card.*;
 import reactor.core.publisher.Mono;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -58,49 +57,39 @@ public class PAD extends Module {
     private ReactionEmoji left_triangle = ReactionEmoji.unicode("◀️");
     private ReactionEmoji right_triangle = ReactionEmoji.unicode("▶️");
 
-    public PAD(DiscordClient client) {
+    public PAD(GatewayDiscordClient client) {
         super(client, "&");
-        abbrMon.put("mzeus", "awoken machine zeus");
-        abbrMon.put("mhera", "awoken machine hera");
-        abbrMon.put("miru", "star myr");
-        abbrMon.put("myr", "star myr");
-        abbrMon.put("z8", "maleficent phantom zaerog");
-        abbrMon.put("radra", "sun god ra dragon");
-        abbrMon.put("ra dragon", "sun god ra dragon");
-        abbrMon.put("ragdrag", "anti god machine ragnarok");
-        abbrMon.put("rag drag", "anti god machine ragnarok");
-        abbrMon.put("rag dragon", "anti god machine ragnarok");
-
-        abbrDun.put("sudr", "super ultimate dragon rush");
-        abbrDun.put("mhera", "machine hera descended");
-        abbrDun.put("mzeus", "machine zeus descended");
-        abbrDun.put("z8", "zaerog descended");
 
         // Load Emote Servers
-        client.getEventDispatcher().on(ReadyEvent.class).flatMap(event -> {
-            File f = new File(emoteServerFile);
+        client.on(ReadyEvent.class).flatMap(event -> {
             try {
+                File f = new File(emoteServerFile);
                 Scanner s = new Scanner(f);
                 String[] line = s.nextLine().split(";");
-                for (int i = 0; i < line.length; i++) {
-                    Guild g = client.getGuildById(Snowflake.of(Long.parseLong(line[i]))).block();
-                    if (g != null)
-                        emoteServers.add(g);
-                }
-
-                if (emoteServers.size() > 0)
-                    useEmotes = true;
-
                 s.close();
 
-                AwakeningEmoji.loadEmojis(emoteServers);
+                client.getGuilds().filter(guild -> {
+                    for (int i = 0; i < line.length; i++) {
+                        if (guild.getId().asLong() == Snowflake.of(line[i]).asLong())
+                            return true;
+                    }
+                    return false;
+                }).collectList().subscribe(
+                        guilds -> {
+                            emoteServers.addAll(guilds);
+                            AwakeningEmoji.loadEmojis(emoteServers);
+                            if (emoteServers.size() > 0)
+                                useEmotes = true;
+                        }
+                );
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(GuildCreateEvent.class).flatMap(event -> {
+        client.on(GuildCreateEvent.class).flatMap(event -> {
             Guild guild = event.getGuild();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
             if (!driver.tableExists(tableName)) {
@@ -110,11 +99,11 @@ public class PAD extends Module {
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(ReactionAddEvent.class).flatMap(event -> {
+        client.on(ReactionAddEvent.class).flatMap(event -> {
             Guild guild = event.getGuild().block();
             Message message = event.getMessage().block();
             MessageChannel channel = message.getChannel().block();
-            if (ChannelPerms.canModuleIn(guild, getName(), channel) && message.getAuthor().get().getId().asLong() == client.getSelfId().get().asLong()) {
+            if (ChannelPerms.canModuleIn(guild, getName(), channel) && message.getAuthor().get().getId().asLong() == client.getSelfId().asLong()) {
                 List<Reaction> reactions = Arrays.asList(message.getReactions().toArray(new Reaction[0]));
                 ReactionEmoji eventEmoji = event.getEmoji();
                 List<User> users = message.getReactors(eventEmoji).collectList().block();
@@ -151,7 +140,7 @@ public class PAD extends Module {
                             }
                             if (remove)
                                 users.forEach(u -> {
-                                    if (u.getId().asLong() != client.getSelfId().get().asLong())
+                                    if (u.getId().asLong() != client.getSelfId().asLong())
                                         message.removeReaction(eventEmoji, u.asMember(guild.getId()).block().getId()).subscribe();
                                 });
                         } else {
@@ -214,7 +203,7 @@ public class PAD extends Module {
                             }
                             if (remove)
                                 users.forEach(u -> {
-                                    if (u.getId().asLong() != client.getSelfId().get().asLong())
+                                    if (u.getId().asLong() != client.getSelfId().asLong())
                                         message.removeReaction(eventEmoji, u.asMember(guild.getId()).block().getId()).subscribe();
                                 });
                         }
@@ -251,7 +240,7 @@ public class PAD extends Module {
             Guild guild = event.getGuild().block();
             MessageChannel channel = event.getMessage().getChannel().block();
             if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
-                String cmd = event.getMessage().getContent().get().split(" ")[0].replace(prefix, "");
+                String cmd = event.getMessage().getContent().split(" ")[0].replace(prefix, "");
                 String[] args = EschaUtil.getArgs(event);
                 String query = EschaUtil.getArgsConcat(event);
                 String region = "NA";
@@ -284,7 +273,7 @@ public class PAD extends Module {
             Guild guild = event.getGuild().block();
             MessageChannel channel = event.getMessage().getChannel().block();
             if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
-                String cmd = event.getMessage().getContent().get().split(" ")[0].replace(prefix, "");
+                String cmd = event.getMessage().getContent().split(" ")[0].replace(prefix, "");
                 String args[] = EschaUtil.getArgs(event);
                 String argsconcat = EschaUtil.getArgsConcat(event);
 
@@ -320,7 +309,7 @@ public class PAD extends Module {
             Guild guild = event.getGuild().block();
             MessageChannel channel = event.getMessage().getChannel().block();
             if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
-                String cmd = event.getMessage().getContent().get().split(" ")[0].replace(prefix, "");
+                String cmd = event.getMessage().getContent().split(" ")[0].replace(prefix, "");
                 String argsconcat = EschaUtil.getArgsConcat(event);
                 String region = "NA";
                 if (argsconcat.length() <= 0) return Mono.empty();
@@ -384,19 +373,19 @@ public class PAD extends Module {
         Color c = Color.GRAY;
         switch (Attribute.fromID(m.getAttribute_1_id())) {
             case FIRE:
-                c = new Color(0xff744b);
+                c = Color.of(0xff744b);
                 break;
             case WATER:
-                c = new Color(0x40ffff);
+                c = Color.of(0x40ffff);
                 break;
             case WOOD:
-                c = new Color(0x4cd962);
+                c = Color.of(0x4cd962);
                 break;
             case LIGHT:
-                c = new Color(0xf2e74c);
+                c = Color.of(0xf2e74c);
                 break;
             case DARK:
-                c = new Color(0xcc54c2);
+                c = Color.of(0xcc54c2);
                 break;
         }
         String desc = "";

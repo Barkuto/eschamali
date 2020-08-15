@@ -3,21 +3,27 @@ package modules;
 import base.Command;
 import base.EschaUtil;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.Event;
 import discord4j.core.event.domain.guild.GuildCreateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.event.domain.message.MessageUpdateEvent;
 import discord4j.core.object.PermissionOverwrite;
-import discord4j.core.object.entity.*;
-import discord4j.core.object.util.Permission;
-import discord4j.core.object.util.PermissionSet;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.Role;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.GuildChannel;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.object.entity.channel.TextChannel;
+import discord4j.rest.util.Color;
+import discord4j.rest.util.Permission;
+import discord4j.rest.util.PermissionSet;
 import reactor.core.publisher.Mono;
 
-import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 public class Admin extends Module {
     private String tableName = "admin";
@@ -33,10 +39,10 @@ public class Admin extends Module {
     private String bannedField = "bannedwords";
     private String muteRoleField = "muterole";
 
-    public Admin(DiscordClient client) {
+    public Admin(GatewayDiscordClient client) {
         super(client, "/");
 
-        client.getEventDispatcher().on(GuildCreateEvent.class).flatMap(event -> {
+        client.on(GuildCreateEvent.class).flatMap(event -> {
             Guild guild = event.getGuild();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
             if (!driver.tableExists(tableName)) {
@@ -49,12 +55,12 @@ public class Admin extends Module {
             return Mono.empty();
         }).subscribe();
 
-        client.getEventDispatcher().on(MessageCreateEvent.class).flatMap(event -> Mono.just(event.getMessage())
+        client.on(MessageCreateEvent.class).flatMap(event -> Mono.just(event.getMessage())
                 .filter(message -> message.getAuthor().map(user -> !user.isBot()).orElse(false))
                 .flatMap(message -> message.getChannel()
                         .ofType(TextChannel.class)
                         .flatMap(channel -> checkForBannedWords(event)))).subscribe();
-        client.getEventDispatcher().on(MessageUpdateEvent.class).flatMap(event -> event.getMessage()
+        client.on(MessageUpdateEvent.class).flatMap(event -> event.getMessage()
                 .filter(message -> message.getAuthor().map(user -> !user.isBot()).orElse(false))
                 .flatMap(message -> message.getChannel()
                         .ofType(TextChannel.class)
@@ -78,10 +84,9 @@ public class Admin extends Module {
         } else return Mono.empty();
 
         if (ChannelPerms.canModuleIn(guild, getName(), channel)) {
-            if (!message.getContent().isPresent()) return Mono.empty();
             DBDriver driver = ChannelPerms.getPermissionDB(guild);
 
-            String msg = message.getContent().get().toLowerCase();
+            String msg = message.getContent().toLowerCase();
             List<String> bannedWords = Arrays.asList(driver.getPerms(tableName, col1, bannedField, col2).split(";"));
             String[] split = msg.split(" ");
             for (String w : split) {
@@ -186,7 +191,7 @@ public class Admin extends Module {
                         if (mentions.size() > 0) {
                             Role muteRole = guild.getRoleById(Snowflake.of(Long.parseLong(driver.getPerms(tableName, col1, muteRoleField, col2)))).block();
                             if (muteRole == null) {
-                                muteRole = guild.createRole(r -> r.setName("Muted").setColor(new Color(12, 0, 0))).block();
+                                muteRole = guild.createRole(r -> r.setName("Muted").setColor(Color.of(12, 0, 0))).block();
                                 driver.setPerms(tableName, col1, muteRoleField, col2, muteRole.getId().asString() + "");
 
                                 List<GuildChannel> serverChannels = guild.getChannels().collectList().block();

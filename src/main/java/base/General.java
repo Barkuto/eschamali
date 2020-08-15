@@ -1,19 +1,19 @@
 package base;
 
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Role;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
 import discord4j.core.object.presence.Status;
-import discord4j.core.object.util.Image;
-import discord4j.core.object.util.Snowflake;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.rest.util.Color;
+import discord4j.rest.util.Image;
 import modules.ChannelPerms;
 import reactor.core.publisher.Mono;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -23,7 +23,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -31,7 +30,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class General extends Module {
     private boolean ayy = false;
 
-    public General(DiscordClient client) {
+    public General(GatewayDiscordClient client) {
         super(client, "!");
     }
 
@@ -170,7 +169,7 @@ public class General extends Module {
         e.addField("Server Age", DAYS.between(creationDate, Instant.now()) + " days", true);
         e.addField("Region", g.getRegion().block().getName(), true);
         e.addField("Owner", g.getOwner().block().getMention(), true);
-        e.addField("Users", g.getMemberCount().getAsInt() + "", true);
+        e.addField("Users", g.getMemberCount() + "", true);
         e.addField("Roles", g.getRoleIds().size() + "", true);
         e.setColor(Color.WHITE);
     }

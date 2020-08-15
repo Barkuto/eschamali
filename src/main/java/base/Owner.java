@@ -1,9 +1,9 @@
 package base;
 
-import discord4j.core.DiscordClient;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.PrivateChannel;
+import discord4j.core.object.entity.channel.PrivateChannel;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
 import reactor.core.publisher.Flux;
@@ -25,7 +25,7 @@ import java.util.*;
 public class Owner extends Module {
     Map<String, Command> privateCommands;
 
-    public Owner(DiscordClient client) {
+    public Owner(GatewayDiscordClient client) {
         super(client, "~");
         privateCommands = new HashMap<>();
 
@@ -68,7 +68,7 @@ public class Owner extends Module {
             output += String.format("%-50s | %-20s | %-10s", centerString("Server Name", 50), centerString("Server ID", 20), centerString("Users", 10)) + "\n";
             output += String.format("%-50s-|-%-20s-|-%-10s", repeatString("-", 50), repeatString("-", 20), repeatString("-", 10)) + "\n";
             for (Guild g : guilds) {
-                output += String.format("%50s | %s | %s", g.getName(), centerString(g.getId().asString() + "", 20), centerString((g.getMemberCount().isPresent() ? g.getMemberCount().getAsInt() : -1) + "", 10)) + "\n";
+                output += String.format("%50s | %s | %s", g.getName(), centerString(g.getId().asString() + "", 20), centerString((g.getMemberCount()) + "", 10)) + "\n";
             }
             output += "```";
             String m = output;
@@ -106,7 +106,7 @@ public class Owner extends Module {
         privateCommands.put("v", version);
         privateCommands.put("shutdown", shutdown);
 
-        this.client.getEventDispatcher().on(MessageCreateEvent.class)
+        this.client.on(MessageCreateEvent.class)
                 // Get event Message
                 .flatMap(event -> Mono.justOrEmpty(event.getMessage())
                         // Filter out other bot messages

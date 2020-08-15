@@ -1,9 +1,13 @@
 package base;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.*;
-import discord4j.core.object.util.Permission;
-import discord4j.core.object.util.PermissionSet;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.object.entity.channel.PrivateChannel;
+import discord4j.rest.util.Permission;
+import discord4j.rest.util.PermissionSet;
 import modules.ChannelPerms;
 import reactor.core.publisher.Mono;
 
@@ -23,7 +27,7 @@ public class EschaUtil {
     }
 
     public static String getMessage(MessageCreateEvent event) {
-        return event.getMessage().getContent().isPresent() ? event.getMessage().getContent().get() : "";
+        return event.getMessage().getContent();
     }
 
     public static String getArgsConcat(MessageCreateEvent event) {

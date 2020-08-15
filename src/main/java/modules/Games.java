@@ -3,10 +3,10 @@ package modules;
 import base.Command;
 import base.EschaUtil;
 import base.Module;
-import discord4j.core.DiscordClient;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.MessageChannel;
+import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.ReactionEmoji;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,7 +19,7 @@ import java.util.Random;
 public class Games extends Module {
     private ArrayList<String> answers;
 
-    public Games(DiscordClient client) {
+    public Games(GatewayDiscordClient client) {
         super(client, ">");
         answers = new ArrayList<>();
         answers.add("It is certain");

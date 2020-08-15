@@ -65,45 +65,47 @@ public class Eschamali {
     }
 
     public void run() {
-        client = new DiscordClientBuilder(token).build();
+        DiscordClientBuilder.create(token)
+                .build()
+                .withGateway(client -> {
+                    JoinLeave joinleave = new JoinLeave(client);
+                    Roles roles = new Roles(client);
+                    Admin admin = new Admin(client);
+                    PAD pad = new PAD(client);
+                    CustomCommands customCommands = new CustomCommands(client);
+                    Games games = new Games(client);
+                    Reactions reactions = new Reactions(client);
 
-        JoinLeave joinleave = new JoinLeave(client);
-        Roles roles = new Roles(client);
-        Admin admin = new Admin(client);
-        PAD pad = new PAD(client);
-        CustomCommands customCommands = new CustomCommands(client);
-        Games games = new Games(client);
-        Reactions reactions = new Reactions(client);
+                    Comparator<Module> cmpr = Comparator.comparing(Module::getName);
+                    defaultmodules = new TreeMap<>(cmpr);
+                    defaultmodules.put(joinleave, true);
+                    defaultmodules.put(roles, true);
+                    defaultmodules.put(admin, true);
+                    defaultmodules.put(pad, true);
+                    defaultmodules.put(customCommands, true);
+                    defaultmodules.put(games, true);
+                    defaultmodules.put(reactions, false);
 
-        Comparator<Module> cmpr = Comparator.comparing(Module::getName);
-        defaultmodules = new TreeMap<>(cmpr);
-        defaultmodules.put(joinleave, true);
-        defaultmodules.put(roles, true);
-        defaultmodules.put(admin, true);
-        defaultmodules.put(pad, true);
-        defaultmodules.put(customCommands, true);
-        defaultmodules.put(games, true);
-        defaultmodules.put(reactions, false);
+                    modules = new ArrayList<>();
+                    modules.add(joinleave);
+                    modules.add(roles);
+                    modules.add(admin);
+                    modules.add(pad);
+                    modules.add(customCommands);
+                    modules.add(games);
+                    modules.add(reactions);
+                    modules.sort(Comparator.comparing(Module::getName));
 
-        modules = new ArrayList<>();
-        modules.add(joinleave);
-        modules.add(roles);
-        modules.add(admin);
-        modules.add(pad);
-        modules.add(customCommands);
-        modules.add(games);
-        modules.add(reactions);
-        modules.sort(Comparator.comparing(Module::getName));
+                    client.on(ReadyEvent.class)
+                            .flatMap(event -> client.updatePresence(Presence.online(Activity.playing(this.status))))
+                            .subscribe();
 
-        client.getEventDispatcher().on(ReadyEvent.class)
-                .flatMap(event -> client.updatePresence(Presence.online(Activity.playing(this.status))))
-                .subscribe();
+                    new General(client);
+                    new Owner(client);
+                    new ChannelPerms(client);
 
-        new General(client);
-        new Owner(client);
-        new ChannelPerms(client);
-
-        client.login().block();
+                    return client.onDisconnect();
+                }).block();
     }
 
     public static void main(String[] args) {
