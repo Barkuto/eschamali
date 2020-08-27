@@ -117,7 +117,7 @@ public class General extends Module {
             return event.getMessage().getChannel().flatMap(channel -> channel.createEmbed(e -> userInfoEmbedSpec(e, guild, fMember)).then());
         };
 
-        commands.put(prefix + "donate", EschaUtil.createMessageCommandGen("Donate for server/development funds at: https://streamlabs.com/barkuto"));
+        commands.put(prefix + "donate", EschaUtil.createMessageCommandGen("Donate for server/development funds at: https://streamelements.com/barkuto/tip"));
         commands.put(prefix + "maker", EschaUtil.createMessageCommandGen("Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali"));
         commands.put(prefix + "tilt", EschaUtil.createMessageCommandGen("*T* *I* *L* *T* *E* *D*"));
         commands.put(prefix + "riot", EschaUtil.createMessageCommandGen("ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ"));
