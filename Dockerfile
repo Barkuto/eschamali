@@ -5,8 +5,10 @@ apt update -y && \
 apt install -y \
 	git openjdk-8-jdk
 
+COPY docker/*.sh /root/
+
 WORKDIR /eschamali
 
-COPY build/Eschamali-1.0-SNAPSHOT-shaded.jar escha.jar
+VOLUME /data
 
-CMD ["java", "-jar", "escha.jar"]
+CMD /root/install.sh && /root/start.sh
