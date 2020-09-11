@@ -1,5 +1,8 @@
 FROM java:8
 
-COPY ./build/Eschamali-1.0-SNAPSHOT-shaded.jar /eschamali/escha.jar
+WORKDIR /eschamali
+COPY Eschamali-1.0-SNAPSHOT-shaded.jar escha.jar
 
-CMD java -jar /eschamali/escha.jar
+VOLUME /eschamali
+
+CMD java -jar escha.jar

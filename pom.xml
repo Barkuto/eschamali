@@ -74,7 +74,7 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
-                            <outputDirectory>${project.basedir}/build</outputDirectory>
+                            <outputDirectory>${project.basedir}</outputDirectory>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                         </configuration>
                     </execution>
