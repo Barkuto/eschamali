@@ -90,8 +90,7 @@ public class Owner extends Module {
 
         Command shutdown = event ->
                 EschaUtil.sendMessage(event, "Shutting down...")
-                        .doOnSuccess(ignored -> System.exit(0))
-                        .doOnError(ignored -> System.exit(0));
+                        .then(client.logout());
 
         privateCommands.put("changestatus", changestatus);
         privateCommands.put("status", changestatus);

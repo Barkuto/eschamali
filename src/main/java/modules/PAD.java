@@ -27,35 +27,29 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 public class PAD extends Module {
-    private TreeMap<String, String> abbrMon = new TreeMap<>();
-    private TreeMap<String, String> abbrDun = new TreeMap<>();
-    private int maxMonNum = 5636;
+    private final int maxMonNum = 6475;
 
-    private String tableName = "pad";
-    private String col1 = "field";
-    private String col2 = "value";
-    private String[] tableCols = {col1, col2};
+    private final String tableName = "pad";
+    private final String col1 = "field";
+    private final String col2 = "value";
+    private final String[] tableCols = {col1, col2};
 
-    private String guerillasField = "guerillas";
+    private final String guerillasField = "guerillas";
 
-    private String emoteServerFile = "modules/PAD/emoteserver.txt";
-    private ArrayList<Guild> emoteServers = new ArrayList<>();
+    private final String emoteServerFile = "modules/PAD/emoteserver.txt";
+    private final ArrayList<Guild> emoteServers = new ArrayList<>();
     private boolean useEmotes = false;
-
-    private Pattern p1 = Pattern.compile("^&(buttoncalc|bc) (\\d+)\\s*(\\d+)?\\s*(\\d+)?\\s*(\\d+)?\\s*([TtYyFfNn])?\\s*(\\d+)?\\s*(\\d+)?\\s*$");
-    private Pattern p2 = Pattern.compile("\\d+");
-    private Pattern p3 = Pattern.compile(" [TtYyFfNn]");
 
     private boolean threadRunning = false;
     private boolean updatingDB = false;
 
-    private ReactionEmoji left_arrow = ReactionEmoji.unicode("⬅️");
-    private ReactionEmoji right_arrow = ReactionEmoji.unicode("➡️");
-    private ReactionEmoji regional_indicator_n = ReactionEmoji.unicode("🇳");
-    private ReactionEmoji regional_indicator_j = ReactionEmoji.unicode("🇯");
-    private ReactionEmoji x = ReactionEmoji.unicode("❌");
-    private ReactionEmoji left_triangle = ReactionEmoji.unicode("◀️");
-    private ReactionEmoji right_triangle = ReactionEmoji.unicode("▶️");
+    private final ReactionEmoji left_arrow = ReactionEmoji.unicode("⬅️");
+    private final ReactionEmoji right_arrow = ReactionEmoji.unicode("➡️");
+    private final ReactionEmoji regional_indicator_n = ReactionEmoji.unicode("🇳");
+    private final ReactionEmoji regional_indicator_j = ReactionEmoji.unicode("🇯");
+    private final ReactionEmoji x = ReactionEmoji.unicode("❌");
+    private final ReactionEmoji left_triangle = ReactionEmoji.unicode("◀️");
+    private final ReactionEmoji right_triangle = ReactionEmoji.unicode("▶️");
 
     public PAD(GatewayDiscordClient client) {
         super(client, "&");
