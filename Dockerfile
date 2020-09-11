@@ -6,9 +6,8 @@ apt install -y \
 	git openjdk-8-jdk
 
 COPY docker/*.sh /root/
-
-WORKDIR /eschamali
+RUN chmod 0755 /root/*.sh
 
 VOLUME /data
 
-CMD /root/install.sh && /root/start.sh
+CMD /bin/bash /root/install.sh && /bin/bash /root/start.sh

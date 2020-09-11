@@ -1,2 +1,2 @@
 #!/bin/bash
-cd /data/build && java -jar Eschamali-1.0-SNAPSHOT-shaded.jar
+cd /data/ && java -jar Eschamali-1.0-SNAPSHOT-shaded.jar
