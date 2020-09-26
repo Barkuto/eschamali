@@ -148,7 +148,7 @@ async def shutdown(ctx):
 async def gitup(ctx):
     stream = os.popen('git pull origin master')
     output = stream.read()
-    await ctx.send(f'```{stream.read()}```')
+    await ctx.send(f'```{output}```')
     if output != 'Already up to date.':
         await ctx.bot.cogs['General']._reload_all(ctx)
 
