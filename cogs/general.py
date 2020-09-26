@@ -204,7 +204,8 @@ class General(commands.Cog):
                 return await ctx.send('Nice try, Joe :smirk:')
             env = {
                 '__builtins__': {},
-                'print': print
+                'print': print,
+                'range': range
             }
         # Add math methods to either environment
         for fname in dir(math):
