@@ -233,6 +233,7 @@ class General(commands.Cog):
 
         func = env['func']
         result = None
+        errored = False
         try:
             with redirect_stdout(stdout):
                 signal.alarm(10)
@@ -240,10 +241,19 @@ class General(commands.Cog):
         except TimeOutException as e:
             printed = traceback.format_exc()
         except:
+            errored = True
             printed = f'{stdout.getvalue()}{traceback.format_exc()}'
         else:
             printed = stdout.getvalue()
         signal.alarm(0)
+
+        max_lines = 20
+        split = printed.split('\n')
+        if len(split) > max_lines:
+            if errored:
+                printed = traceback.format_exc()
+            else:
+                printed = '\n'.join(split[:max_lines] + ['...more output...'])
 
         if result is not None:
             if ctx.author.id in ctx.bot.owner_ids:
