@@ -146,8 +146,8 @@ async def shutdown(ctx):
 
 @commands.command(aliases=['git'])
 async def gitup(ctx):
-    os.popen('git checkout -- .')
-    await ctx.send('Updated.')
+    stream = os.popen('git pull origin master')
+    await ctx.send(f'```{stream.read()}```')
     await ctx.bot.cogs['General']._reload_all(ctx)
 
 
