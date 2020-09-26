@@ -157,7 +157,7 @@ async def gitup(ctx):
     stream = os.popen('git pull origin master')
     output = stream.read()
     await ctx.send(f'```{output}```')
-    if output.startswith('Already up to date.'):
+    if not output.startswith('Already up to date.'):
         await ctx.bot.cogs['General']._reload_all(ctx)
 
 
