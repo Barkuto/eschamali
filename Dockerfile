@@ -1,12 +1,14 @@
-FROM ubuntu:18.04
-
-RUN \
-apt update -y && \
-apt install -y \
-	git openjdk-8-jdk
+FROM python:3.8
 
 COPY docker/*.sh /root/
 RUN chmod 0755 /root/*.sh
+
+WORKDIR /data
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
 
 VOLUME /data
 

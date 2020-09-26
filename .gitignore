@@ -1,0 +1,8 @@
+__pycache__
+.vscode
+cards_*.db
+env
+logs
+servers
+config.json
+todo
