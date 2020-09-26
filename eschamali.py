@@ -76,6 +76,8 @@ class Eschamali(commands.Bot):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             return
+        elif isinstance(error, commands.NotOwner):
+            return
         elif isinstance(error, commands.CheckAnyFailure) or isinstance(error, commands.CheckFailure):
             await ctx.send(error)
         elif isinstance(error, commands.TooManyArguments):
