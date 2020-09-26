@@ -105,11 +105,13 @@ class Eschamali(commands.Bot):
 
 
 @commands.command()
+@commands.is_owner()
 async def uptime(ctx):
     await ctx.send(str(datetime.now() - ctx.bot.start_time).split('.')[0])
 
 
 @commands.command(aliases=['guilds'])
+@commands.is_owner()
 async def servers(ctx):
     guilds = sorted(ctx.bot.guilds, key=lambda g: g.id)
     output = f'Connected to `{len(guilds)}` guilds.\n'
@@ -125,11 +127,13 @@ async def servers(ctx):
 
 
 @commands.command(aliases=['cs'])
+@commands.is_owner()
 async def changestatus(ctx, *, msg):
     await ctx.bot.change_presence(activity=Game(msg))
 
 
 @commands.command(aliases=['cds'])
+@commands.is_owner()
 async def changedefaultstatus(ctx, *, msg):
     ctx.bot.config['status'] = msg
     await changestatus(ctx, msg=msg)
@@ -139,12 +143,14 @@ async def changedefaultstatus(ctx, *, msg):
 
 
 @commands.command()
+@commands.is_owner()
 async def shutdown(ctx):
     await ctx.send('Shutting down...')
     await ctx.bot.logout()
 
 
 @commands.command(aliases=['git'])
+@commands.is_owner()
 async def gitup(ctx):
     stream = os.popen('git pull origin master')
     output = stream.read()
