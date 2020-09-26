@@ -315,12 +315,14 @@ class Admin(commands.Cog):
     """
 
     async def check_for_banned_words(self, msg):
-        words = re.split(' |\n', msg.content)
+        words = re.split(' |\n|,', msg.content)
         db = UTILS.get_server_db(msg.guild)
         banned_words = [r[1] for r in db.get_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD))]
         for w in words:
-            if w.lower() in banned_words:
-                await msg.delete()
+            for bw in banned_words:
+                reg = re.compile(fr'^[_\W]*{bw}[_\W]*$', flags=re.IGNORECASE)
+                if re.match(reg, w):
+                    return await msg.delete()
 
     @commands.Cog.listener()
     async def on_message(self, msg):
