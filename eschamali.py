@@ -144,5 +144,12 @@ async def shutdown(ctx):
     await ctx.bot.logout()
 
 
-DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown]
+@commands.command(aliases=['git'])
+async def gitup(ctx):
+    os.popen('git checkout -- .')
+    await ctx.send('Updated.')
+    await ctx.bot.cogs['General']._reload_all(ctx)
+
+
+DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown, gitup]
 Eschamali()._run()

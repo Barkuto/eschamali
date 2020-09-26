@@ -202,7 +202,10 @@ class General(commands.Cog):
                 run = run and not s in body
             if not run:
                 return await ctx.send('Nice try, Joe :smirk:')
-            env = {'__builtins__': {}}
+            env = {
+                '__builtins__': {},
+                'print': print
+            }
         # Add math methods to either environment
         for fname in dir(math):
             if not '__' in fname:
