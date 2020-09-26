@@ -214,7 +214,7 @@ class General(commands.Cog):
         # Remove code block from body
         # Add a return statement if code is one-liner
         if body.startswith('```') and body.endswith('```'):
-            body = body.replace('```python', '').replace('```py', '')[:-3]
+            body = body.replace('```python', '').replace('```py', '').replace('```', '')[:-3]
         body = body.strip(' \n')
         body_split = body.split('\n')
         if len(body_split) == 1:
