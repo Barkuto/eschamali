@@ -36,31 +36,48 @@ class General(commands.Cog):
         self.last_result = None
         self.last_cmd = None
 
-    @commands.command(ignore_extra=False)
+    @commands.command(ignore_extra=False,
+                      description='Ping!',
+                      help='Pong!',
+                      brief='Ping!')
     async def ping(self, ctx):
         await ctx.send('pong!')
 
-    @commands.command(aliases=['g'])
+    @commands.command(aliases=['g'],
+                      description='Get a google search link from *query*',
+                      help='Let me google that for you',
+                      brief='Google')
     async def google(self, ctx, *query):
         await ctx.send('https://www.google.com/?q=' + '+'.join(query))
 
-    @commands.command()
+    @commands.command(description='Show donation link',
+                      help='Optional donations',
+                      brief='Donate')
     async def donate(self, ctx):
         await ctx.send('Donate for server/development funds at: https://streamelements.com/barkuto/tip')
 
-    @commands.command()
+    @commands.command(description='Show bot maker',
+                      help='Yes I made this',
+                      brief='Maker')
     async def maker(self, ctx):
         await ctx.send('Made by **Barkuto**#2315 specifically for Puzzle and Dragons servers. Code at https://github.com/Barkuto/Eschamali')
 
-    @commands.command()
+    @commands.command(description='*T* *I* *L* *T* *E* *D*',
+                      help='*T* *I* *L* *T* *E* *D*',
+                      brief='TILT')
     async def tilt(self, ctx):
         await ctx.send('*T* *I* *L* *T* *E* *D*')
 
-    @commands.command()
+    @commands.command(description='ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ',
+                      help='ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ',
+                      brief='RIOT')
     async def riot(self, ctx):
         await ctx.send('ヽ༼ຈل͜ຈ༽ﾉ RIOT ヽ༼ຈل͜ຈ༽ﾉ')
 
-    @commands.command(aliases=['uinfo'])
+    @commands.command(aliases=['uinfo'],
+                      description='Show user info for user from *query*',
+                      help='Get self info by giving no argument\nGet other user argument by mention, name, nickname, or name#discriminator',
+                      brief='User info')
     async def userinfo(self, ctx, query=None):
         user = ctx.author
         if query:
@@ -119,7 +136,10 @@ class General(commands.Cog):
                         inline=False)
         await ctx.send(embed=e)
 
-    @commands.command(aliases=['sinfo'])
+    @commands.command(aliases=['sinfo'],
+                      description='Show server info for current server',
+                      help='No arguments',
+                      brief='Server info')
     async def serverinfo(self, ctx):
         guild = ctx.guild
         name = guild.name
@@ -164,7 +184,9 @@ class General(commands.Cog):
         ).set_thumbnail(url=guild.icon_url_as()).set_footer(text=guild.id)
         await ctx.send(embed=e)
 
-    @commands.command()
+    @commands.command(description='Make the bot say *msg*',
+                      help='Owners Only',
+                      brief='Say it')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def say(self, ctx, *, msg):
@@ -172,7 +194,10 @@ class General(commands.Cog):
         await ctx.send(msg)
 
     # Based off https://github.com/Cog-Creators/Red-DiscordBot/blob/V3/develop/redbot/core/dev_commands.py#L152
-    @commands.command(aliases=['eval'])
+    @commands.command(aliases=['eval'],
+                      description='Evaluate a string *body* with python',
+                      help='Supports basic math and python operations.\npython math module is built-in\nOutput taken from "print()" and "return"\nMake sure to indent, supports code blocks',
+                      brief='Evaluate')
     async def ev(self, ctx, *, body=None):
         # Set environment based on author
         if ctx.author.id in ctx.bot.owner_ids:
@@ -271,7 +296,10 @@ class General(commands.Cog):
         else:
             await ctx.send('```No output.```')
 
-    @commands.command(aliases=['tb'])
+    @commands.command(aliases=['tb'],
+                      description='Shows the last *num* tracebacks',
+                      help='Owners only\nDefaults to 1 traceback',
+                      brief='Tracebacks')
     @commands.is_owner()
     async def traceback(self, ctx, num: int = 1):
         if self.bot.tbs:
@@ -295,7 +323,9 @@ class General(commands.Cog):
     COG COMMANDS
     """
 
-    @commands.command()
+    @commands.command(description='Loads *cogs*',
+                      help='Owners only',
+                      brief='Load cogs')
     @commands.is_owner()
     async def load(self, ctx, *cogs):
         for cog_name in cogs:
@@ -308,7 +338,9 @@ class General(commands.Cog):
                 await ctx.send(f'Error loading `{cog_name}`')
                 raise e
 
-    @commands.command()
+    @commands.command(description='Reloads *cogs*',
+                      help='Owners only',
+                      brief='Reload cogs')
     @commands.is_owner()
     async def reload(self, ctx, *cogs):
         for cog_name in cogs:
@@ -333,7 +365,9 @@ class General(commands.Cog):
                     await ctx.send(f'Error reloading `{cog_name}`')
                     raise e
 
-    @commands.command()
+    @commands.command(description='Unloads *cogs*',
+                      help='Owners only',
+                      brief='Unload cogs')
     @commands.is_owner()
     async def unload(self, ctx, *cogs):
         for cog_name in cogs:
@@ -364,7 +398,9 @@ class General(commands.Cog):
         if(not_reloaded):
             await ctx.send(f'Could not reload {" ".join(not_reloaded)}')
 
-    @commands.command()
+    @commands.command(description='Shows all cogs',
+                      help='No arguments',
+                      brief='Show cogs')
     async def cogs(self, ctx):
         loaded = [k.lower() for k, _ in ctx.bot.cogs.items()]
         all_cogs = self.bot.all_cogs()

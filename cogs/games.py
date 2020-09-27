@@ -40,10 +40,15 @@ PICKS = {
 
 
 class Games(commands.Cog):
+    """Fun commands"""
+
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['8', '8ball', '8b'])
+    @commands.command(aliases=['8', '8ball', '8b'],
+                      description='Ask the magic eight-ball a *question*',
+                      help='Luck doesn\'t need help',
+                      brief='Ask 8ball')
     async def eightball(self, ctx, *, question):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -58,7 +63,9 @@ class Games(commands.Cog):
             value=ANSWERS[random.randint(0, len(ANSWERS) - 1)],
             inline=False))
 
-    @commands.command()
+    @commands.command(description='Choose a choice from given *choices*',
+                      help='*choices* are separated by ";"\ni.e choice 1;choice 2;etc...',
+                      brief='Choose choice')
     async def choose(self, ctx, *, choices):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -96,30 +103,40 @@ class Games(commands.Cog):
             name='Winner',
             value=f'{winner.mention if winner else "Tie."}'))
 
-    @commands.group()
+    @commands.group(description='Play Rock, Paper, Scissors with the bot',
+                    help='Choose rock, paper, or scissors\nAliased by r, p, and s',
+                    brief='R,P,S')
     async def rps(self, ctx):
         if not UTILS.can_cog_in(self, ctx.channel) or ctx.invoked_subcommand is None:
             return
 
-    @rps.command(aliases=['r'])
+    @rps.command(aliases=['r'],
+                 description=':moyai:')
     async def rock(self, ctx):
         await self.determine_rps_winner(ctx, 0)
 
-    @rps.command(aliases=['p'])
+    @rps.command(aliases=['p'],
+                 description=':newspaper:')
     async def paper(self, ctx):
         await self.determine_rps_winner(ctx, 1)
 
-    @rps.command(aliases=['s'])
+    @rps.command(aliases=['s'],
+                 description=':scissors:')
     async def scissors(self, ctx):
         await self.determine_rps_winner(ctx, 2)
 
-    @commands.command(aliases=['r'])
+    @commands.command(aliases=['r'],
+                      description='Roll a number from 1 to *max_num*',
+                      help='Default *max_num* is 100',
+                      brief='Roll a number')
     async def roll(self, ctx, max_num: int = 100):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         await ctx.send(f'`{random.randint(1, max_num)}`')
 
-    @commands.command()
+    @commands.command(description='Make a poll from *options*',
+                      help='*options* are separated by ";"\nFirst option in list is set as the question/title',
+                      brief='Make poll')
     async def poll(self, ctx, *, options):
         if not UTILS.can_cog_in(self, ctx.channel):
             return

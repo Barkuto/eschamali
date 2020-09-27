@@ -11,12 +11,13 @@ CUSTOM_TABLE = 'custom_commands'
 CUSTOM_TABLE_COL1 = ('command', DB_MOD.TEXT)
 CUSTOM_TABLE_COL2 = ('message', DB_MOD.TEXT)
 
-PREFIX = '!'
-
 
 class CustomCommands(commands.Cog):
+    """Server bound custom commands"""
+
     def __init__(self, bot):
         self.bot = bot
+        self.prefix = bot.pm.cog_prefixes[self.qualified_name]
         for guild in bot.guilds:
             self._init_db(guild)
 
@@ -37,15 +38,18 @@ class CustomCommands(commands.Cog):
             return
         m = msg.content
         split = m.split(' ')
-        if m.startswith(PREFIX) and len(split) == 1:
+        if m.startswith(self.prefix) and len(split) == 1:
             db = UTILS.get_server_db(msg.guild)
             cmds = db.get_all(CUSTOM_TABLE)
-            cmd = split[0].split(PREFIX)[1].lower()
+            cmd = split[0].split(self.prefix)[1].lower()
             for c_name, c_text in cmds:
                 if c_name == cmd:
                     return await ctx.send(c_text)
 
-    @commands.command(aliases=['acc'])
+    @commands.command(aliases=['acc'],
+                      description='Add a custom command to the server',
+                      help='Requires **Manage Guild** permission',
+                      brief='Add custom command')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def addcustomcommand(self, ctx, name, *, text):
@@ -61,7 +65,10 @@ class CustomCommands(commands.Cog):
             db.update_row(CUSTOM_TABLE, (CUSTOM_TABLE_COL1[0], name), (CUSTOM_TABLE_COL2[0], text))
             await ctx.send(f'Edited custom command `{name}`.')
 
-    @commands.command(aliases=['dcc'])
+    @commands.command(aliases=['dcc'],
+                      description='Delete a custom command from the server',
+                      help='Requires **Manage Guild** permission',
+                      brief='Delete custom command')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def deletecustomcommand(self, ctx, name):
@@ -76,9 +83,10 @@ class CustomCommands(commands.Cog):
         else:
             await ctx.send(f'Invalid custom command.')
 
-    @commands.command(aliases=['cc'])
-    @commands.check_any(commands.is_owner(),
-                        commands.has_permissions(manage_guild=True))
+    @commands.command(aliases=['cc'],
+                      description='Show custom commands for ths server',
+                      help='All custom commands use the same prefix',
+                      brief='Show custom commands')
     async def customcommands(self, ctx):
         if not UTILS.can_cog_in(self, ctx):
             return

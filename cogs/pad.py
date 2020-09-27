@@ -32,6 +32,8 @@ RIGHT_TRIANGLE = '▶️'
 
 
 class PAD(commands.Cog):
+    """Displays PAD monster data"""
+
     def __init__(self, bot):
         self.bot = bot
         self.use_emotes = False
@@ -117,7 +119,9 @@ class PAD(commands.Cog):
     async def _update_db(self):
         await asyncio.get_event_loop().run_in_executor(ThreadPoolExecutor(), PAD_DATA.update_monsters)
 
-    @commands.command()
+    @commands.command(description='Update the internal PAD DB data',
+                      help='Takes roughly 2 minutes',
+                      brief='Update DB')
     async def update(self, ctx):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -143,11 +147,17 @@ class PAD(commands.Cog):
             return await self._add_info_reactions(await ctx.send(embed=e), region)
         await ctx.send('Nothing was found.')
 
-    @commands.command(aliases=['i'])
+    @commands.command(aliases=['i'],
+                      description='Show info for monster from *query*',
+                      help='Use reactions to do different actions\nLeft/Right: Go through evos\nN/J: Switch between NA and JP\nX: Delete embed',
+                      brief='Show info')
     async def info(self, ctx, *, query=None):
         await self._info(ctx, query, NA)
 
-    @commands.command(aliases=['ij'])
+    @commands.command(aliases=['ij'],
+                      description='Show info for JP monster from *query*',
+                      help='Use reactions to do different actions\nLeft/Right: Go through evos\nN/J: Switch between NA and JP\nX: Delete embed',
+                      brief='Show JP info')
     async def infojp(self, ctx, *, query=None):
         await self._info(ctx, query, JP)
 
@@ -160,11 +170,17 @@ class PAD(commands.Cog):
         else:
             await ctx.send('Nothing was found.')
 
-    @commands.command(aliases=['p'])
+    @commands.command(aliases=['p'],
+                      description='Show pictures for monster from *query*',
+                      help='If animated, will also display MP4 and GIF(JIF) links',
+                      brief='Show picture')
     async def pic(self, ctx, *, query):
         await self._pic(ctx, query, NA)
 
-    @commands.command(aliases=['pj'])
+    @commands.command(aliases=['pj'],
+                      description='Show pictures for JP monster from *query*',
+                      help='If animated, will also display MP4 and GIF(JIF) links',
+                      brief='Show JP picture')
     async def picjp(self, ctx, *, query):
         await self._pic(ctx, query, JP)
 
@@ -177,11 +193,15 @@ class PAD(commands.Cog):
         else:
             await ctx.send('Invalid series.')
 
-    @commands.command()
+    @commands.command(description='Show monsters with *query* in series name',
+                      help='Use reactions to do different actions:\nLeft/Right: Change page\nX: Delete embed',
+                      brief='Show series')
     async def series(self, ctx, *, query):
         await self._series(ctx, query, NA)
 
-    @commands.command()
+    @commands.command(description='Show JP monsters with *query* in JP series name',
+                      help='Use reactions to do different actions:\nLeft/Right: Change page\nX: Delete embed',
+                      brief='Show JP series')
     async def seriesjp(self, ctx, *, query):
         await self._series(ctx, query, JP)
 
@@ -248,23 +268,14 @@ class PAD(commands.Cog):
                                                        Type.from_id(m.type_3_id)]))
 
         typing = '/'.join(map(str, types))
-        m_info = """
-        **Rarity** %-5d
-        **Cost** %-5d
-        **MP** %-5d
-        **Inheritable** %-5s
-        """ % (m.rarity, m.cost, m.mp, 'Yes' if m.inheritable else 'No')
+        m_info = '**Rarity** %d\n**Cost** %d\n**MP** %d\n**Inheritable** %s' % (
+            m.rarity, m.cost, m.mp, 'Yes' if m.inheritable else 'No')
 
         weighted = f'Weighted {m.weighted()}' + (f' | LB {m.lb_weighted()} ({m.lb_mult}%)' if m.lb_mult else '')
         hp = str(m.hp_max) + (f' | {m.lb_hp()}' if m.lb_mult else '')
         atk = str(m.atk_max) + (f' | {m.lb_atk()}' if m.lb_mult else '')
         rcv = str(m.rcv_max) + (f' | {m.lb_rcv()}' if m.lb_mult else '')
-        stats = """
-        **HP** %s
-        **ATK** %s
-        **RCV** %s
-        **XP** %s
-        """ % (hp, atk, rcv, m.exp)
+        stats = '\n**HP** %s\n**ATK** %s\n**RCV** %s\n**XP** %s' % (hp, atk, rcv, m.exp)
 
         similar = [str(m.id) for m in PAD_DATA.get_monsters(query, region)]
         similar.remove(str(m.id))

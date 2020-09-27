@@ -24,6 +24,8 @@ STRIKES_TABLE_COL2 = ('strikes', DB_MOD.INTEGER)
 
 
 class Admin(commands.Cog):
+    """Administrative commands"""
+
     def __init__(self, bot):
         self.bot = bot
         for guild in bot.guilds:
@@ -42,7 +44,9 @@ class Admin(commands.Cog):
     USER/MESSAGE FUNCTIONS
     """
 
-    @commands.command()
+    @commands.command(description='Kicks *users* from the server',
+                      help='Requires **Kick Members** permission\nUse by **mentioning** users',
+                      brief='Kick user(s)')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(kick_members=True))
     async def kick(self, ctx, *users):
@@ -61,7 +65,9 @@ class Admin(commands.Cog):
             'Could not kick: ' + ' '.join([u.mention for u in not_kicked])
             if not_kicked else ''))
 
-    @commands.command()
+    @commands.command(description='Bans *users* from the server',
+                      help='Requires **Ban Members** permission\nUse by **mentioning** users',
+                      brief='Ban user(s)')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(ban_members=True))
     async def ban(self, ctx, *users):
@@ -80,7 +86,9 @@ class Admin(commands.Cog):
             'Could not ban: ' + ' '.join([u.mention for u in not_banned])
             if not_banned else ''))
 
-    @commands.command()
+    @commands.command(description='Remove *num* messages of *users*',
+                      help='Requires **Manage Messages** permission\nUse by **mentioning** users\nIf no mentions, prune *num* messages in the channel',
+                      brief='Remove messages')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True))
     async def prune(self, ctx, num: int, *users):
@@ -154,7 +162,9 @@ class Admin(commands.Cog):
     async def set_channel_mute_perms(self, role, channel):
         await channel.set_permissions(role, read_messages=False, send_messages=False)
 
-    @commands.command()
+    @commands.command(description='Mute *users*',
+                      help='Requires **Manage Roles** permission\nUse by **mentioning** users',
+                      brief='Mute user(s)')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_roles=True))
     async def mute(self, ctx, *users):
@@ -177,7 +187,9 @@ class Admin(commands.Cog):
                 m = '%sCould not mute: %s' % (m, ' '.join([u.mention for u in not_added]))
             await ctx.send(m)
 
-    @commands.command()
+    @commands.command(description='Unmute *users*',
+                      help='Requires **Manage Roles** permission\nUse by **mentioning** users',
+                      brief='Unmute user(s)')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_roles=True))
     async def unmute(self, ctx, *users):
@@ -200,7 +212,9 @@ class Admin(commands.Cog):
                 m = '%sCould not unmute: %s' % (m, ' '.join([u.mention for u in not_removed]))
             await ctx.send(m)
 
-    @commands.command()
+    @commands.command(description='Show mute role for current server',
+                      help='Requires **Manage Roles** permission',
+                      brief='Show mute role')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_roles=True))
     async def muterole(self, ctx, *, role=None):
@@ -227,7 +241,9 @@ class Admin(commands.Cog):
     LOCK FUNCTIONS
     """
 
-    @commands.command()
+    @commands.command(description='Locks current channel',
+                      help='Requires **Manage Messages** or **Manage Channels** permission',
+                      brief='Lock channel')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True))
@@ -238,7 +254,9 @@ class Admin(commands.Cog):
             await ctx.send('Channel locked.')
             await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=False)
 
-    @commands.command()
+    @commands.command(description='Unlocks current channel',
+                      help='Requires **Manage Messages** or **Manage Channels** permission\nNote that unlocking could overwrite manual channel permissions for @everyone',
+                      brief='Unlock channel')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True))
@@ -253,7 +271,9 @@ class Admin(commands.Cog):
     WARNING FUNCTIONS
     """
 
-    @commands.command()
+    @commands.command(description='Warns *users*',
+                      help='Requires **Kick Members** or **Ban Members** permission\nYou can specify how many warnings to give before mentioning users\n3 warnings = kick\n5 warnings = ban',
+                      brief='Warn user(s)')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(kick_members=True),
                         commands.has_permissions(ban_members=True))
@@ -290,7 +310,9 @@ class Admin(commands.Cog):
         if msg:
             await ctx.send(msg)
 
-    @commands.command()
+    @commands.command(description='Check warnings of a given *user*',
+                      help='Requires **Kick Members** or **Ban Members** permission\n*user* can be given by mention, name, nickname, or name#discriminator',
+                      brief='Show user warnings')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(kick_members=True),
                         commands.has_permissions(ban_members=True))
@@ -340,12 +362,15 @@ class Admin(commands.Cog):
             return
         await self.check_for_banned_words(after)
 
-    @commands.command(aliases=['abw'])
+    @commands.command(aliases=['abw'],
+                      description='Adds new banned *words* to the server',
+                      help='Requires **Manage Messages** or **Manage Channels** or **Manage Guild** permission\n*words* are words separated by a space',
+                      brief='Adds banned words')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True),
                         commands.has_permissions(manage_guild=True))
-    async def addbannedword(self, ctx, *words):
+    async def addbannedwords(self, ctx, *words):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         db = UTILS.get_server_db(ctx)
@@ -355,12 +380,15 @@ class Admin(commands.Cog):
                 db.insert_row(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD), (ADMIN_TABLE_COL2[0], w))
         await ctx.send(f'Added `{len(words)}` banned words.')
 
-    @commands.command(aliases=['dbw'])
+    @commands.command(aliases=['dbw'],
+                      description='Deletes banned *words* from the server',
+                      help='Requires **Manage Messages** or **Manage Channels** or **Manage Guild** permission\n*words* are words separated by a space',
+                      brief='Deletes banned words')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True),
                         commands.has_permissions(manage_guild=True))
-    async def deletebannedword(self, ctx, *words):
+    async def deletebannedwords(self, ctx, *words):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         db = UTILS.get_server_db(ctx)
@@ -368,7 +396,10 @@ class Admin(commands.Cog):
             db.delete_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD), (ADMIN_TABLE_COL2[0], w.lower()))
         await ctx.send(f'Deleted `{len(words)}` words.')
 
-    @commands.command(aliases=['bw'])
+    @commands.command(aliases=['bw'],
+                      description='Shows banned *words* for the server',
+                      help='Requires **Manage Messages** or **Manage Channels** or **Manage Guild** permission',
+                      brief='Shows banned words')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True),
@@ -378,7 +409,9 @@ class Admin(commands.Cog):
             return
         db = UTILS.get_server_db(ctx)
         words = [f'`{r[1]}`' for r in db.get_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD))]
-        await ctx.send('Banned words: %s' % f'{" ".join(words)}')
+        await ctx.send(embed=discord.Embed(
+            title='Banned Words',
+            description=' '.join(words)))
 
 
 def setup(bot):

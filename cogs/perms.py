@@ -19,6 +19,8 @@ SELF_COG_NAME = 'perms'
 
 
 class Perms(commands.Cog):
+    """Handles enabled/disabled cogs, and channels for specific cogs"""
+
     def __init__(self, bot):
         self.bot = bot
         for guild in bot.guilds:
@@ -53,7 +55,10 @@ class Perms(commands.Cog):
     SERVER COG PERMS
     """
 
-    @commands.command(aliases=['sc'], ignore_extra=False)
+    @commands.command(aliases=['sc'], ignore_extra=False,
+                      description='Show server cogs that are enabled or disabled',
+                      help='Requires **Manage Guild** permission\n:o: = Enabled\n:x: = Disabled',
+                      brief='Server cogs')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def server_cogs(self, ctx):
@@ -83,7 +88,10 @@ class Perms(commands.Cog):
                               (COGS_TABLE_COL2[0], enable))
                 return True
 
-    @commands.command(aliases=['ec'])
+    @commands.command(aliases=['ec'],
+                      description='Enable a server cog',
+                      help='Requires **Manage Guild** permission',
+                      brief='Enable cog')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def enable_cog(self, ctx, *, cog_name):
@@ -94,7 +102,10 @@ class Perms(commands.Cog):
         else:
             await ctx.send('Invalid cog.')
 
-    @commands.command(aliases=['dc'])
+    @commands.command(aliases=['dc'],
+                      description='Disable a server cog',
+                      help='Requires **Manage Guild** permission',
+                      brief='Dsiable cog')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def disable_cog(self, ctx, *, cog_name):
@@ -105,7 +116,10 @@ class Perms(commands.Cog):
         else:
             await ctx.send('Invalid cog.')
 
-    @commands.command(aliases=['dac'])
+    @commands.command(aliases=['dac'],
+                      description='Disable all server cogs',
+                      help='Requires **Manage Guild** permission',
+                      brief='Disable all cogs')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def disable_all_cogs(self, ctx):
@@ -115,7 +129,10 @@ class Perms(commands.Cog):
             self._enable_cog(ctx.guild, cog, 0)
         await ctx.send('Disabled all cogs.')
 
-    @commands.command(aliases=['eac'])
+    @commands.command(aliases=['eac'],
+                      description='Enable all server cogs',
+                      help='Requires **Manage Guild** permission',
+                      brief='Enable all cogs')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def enable_all_cogs(self, ctx):
@@ -129,7 +146,10 @@ class Perms(commands.Cog):
     COG CHANNEL PERMS
     """
 
-    @commands.command(aliases=['acch'])
+    @commands.command(aliases=['acch'],
+                      description='Add a channel to a cog',
+                      help='Requires **Manage Guild** permission',
+                      brief='Add cog channel')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def add_cog_channel(self, ctx, cog_name, *channels):
@@ -155,7 +175,10 @@ class Perms(commands.Cog):
         else:
             await ctx.send('Invalid cog.')
 
-    @commands.command(aliases=['dcch'])
+    @commands.command(aliases=['dcch'],
+                      description='Delete a channel from a cog',
+                      help='Requires **Manage Guild** permission',
+                      brief='Delete cog channel')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def delete_cog_channel(self, ctx, cog_name, *channels):
@@ -178,7 +201,10 @@ class Perms(commands.Cog):
         else:
             await ctx.send('Invalid cog.')
 
-    @commands.command(aliases=['rcch'])
+    @commands.command(aliases=['rcch'],
+                      description='Reset a cogs channels',
+                      help='Requires **Manage Guild** permission\nSets the cog channels back to "all"',
+                      brief='Reset cog channels')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def reset_cog_channels(self, ctx, *, cog_name):
@@ -196,7 +222,10 @@ class Perms(commands.Cog):
         else:
             await ctx.send('Invalid cog.')
 
-    @commands.command(aliases=['cch'])
+    @commands.command(aliases=['cch'],
+                      description='Show channels for a cog in the server',
+                      help='Requires **Manage Guild** permission',
+                      brief='Show cog channels')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True))
     async def server_cog_channels(self, ctx, *, cog_name):

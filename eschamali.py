@@ -5,7 +5,7 @@ import traceback
 import sys
 import discord
 import sqlite3
-from discord import Game, DMChannel
+from discord import Game, DMChannel, Embed
 from discord.ext import commands
 from discord.ext.commands import Bot
 from datetime import datetime
@@ -24,13 +24,14 @@ class Eschamali(commands.Bot):
             self.config = json.load(f)
         super().__init__(command_prefix=self.pm.get_prefix,
                          owner_ids=self.config['owners'],
-                         activity=Game(self.config['status']))
+                         activity=Game(self.config['status']),
+                         help_command=None)
 
     def all_cogs(self):
         return [file.replace('.py', '') for file in os.listdir(COGS_DIR) if file.endswith('.py')]
 
-    def loaded_cogs(self):
-        return [c.lower() for c in self.cogs]
+    def loaded_cogs(self, lower=True):
+        return [c.lower() if lower else c for c in self.cogs]
 
     def load_cogs(self):
         for cog in self.all_cogs():
@@ -53,15 +54,15 @@ class Eschamali(commands.Bot):
     async def on_message(self, msg):
         process = True
         m = msg.content
-        if m.startswith(self.pm.default_prefix):
-            cmd = m.split(' ')[0].split(self.pm.default_prefix)[1]
-            if not cmd in self.pm.cmd_prefixes['Base']:
+        if m.startswith(self.pm.prefix):
+            cmd = m.split(' ')[0].split(self.pm.prefix)[1]
+            if not cmd in self.pm.cmd_prefixes['Base'] or cmd == 'help':
                 process = False
         if msg.guild:
             channel = f'[{msg.guild.id}]'
         elif isinstance(msg.channel, DMChannel):
             channel = f'({msg.channel.recipient})'
-            if not m.startswith(self.pm.default_prefix):
+            if not m.startswith(self.pm.prefix):
                 process = False
             elif not msg.author.id in self.owner_ids:
                 process = False
@@ -106,13 +107,98 @@ class Eschamali(commands.Bot):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
-@commands.command()
+"""
+HELP COMMAND FUNCTIONS
+"""
+
+
+@commands.command(description='Look at help for cogs and commands',
+                  help='*args* can be a cog or command name, not case-sensitive')
+async def help(ctx, *, args=None):
+    if not args:
+        return await send_bot_help(ctx)
+    else:
+        args = args.lower()
+        for name, cog in ctx.bot.cogs.items():
+            if name.lower() == args:
+                return await send_cog_help(ctx, cog)
+        for command in ctx.bot.commands:
+            if args == command.name or (command.aliases and args in command.aliases):
+                try:
+                    if command.commands:
+                        return await send_group_help(ctx, command)
+                except:
+                    return await send_cmd_help(ctx, command)
+    await ctx.send('Invalid cog or command.')
+
+
+async def send_bot_help(ctx):
+    e = Embed(title='Eschamali Help')
+    e.description = '\n'.join(sorted(ctx.bot.loaded_cogs(lower=False)))
+    e.set_footer(text=f'{ctx.bot.pm.help_prefix}help <cog>')
+    e.colour = discord.Colour.purple()
+    await ctx.send(embed=e)
+
+
+async def send_cog_help(ctx, cog):
+    e = Embed(title=f'[{_get_cog_prefix(ctx, cog)}]{cog.qualified_name} Help')
+    e.description = (cog.description + '\n' if cog.description else '') + \
+        '\n'.join([f'**{c.name}** {c.brief if c.brief else ""}' for c in cog.get_commands()])
+    e.set_footer(text=f'{ctx.bot.pm.help_prefix}help <cmd>')
+    e.colour = discord.Colour.purple()
+    await ctx.send(embed=e)
+
+
+async def send_group_help(ctx, group):
+    prefix = _get_cog_prefix(ctx, group.cog)
+    e = Embed(title=f'{prefix}{group.name} subcommands')
+    e.description = group.description
+    for c in group.commands:
+        e.add_field(name=f'{prefix}{group.name} {c.name}',
+                    value=c.description + ('\nAliases: ' + ' '.join(c.aliases)) if c.aliases else '',
+                    inline=True)
+    e.colour = discord.Colour.purple()
+    await ctx.send(embed=e)
+
+
+async def send_cmd_help(ctx, command):
+    prefix = _get_cog_prefix(ctx, command.cog) if command.name != 'help' else ctx.bot.pm.help_prefix
+    e = Embed(title=f'{prefix}{command.name} {command.signature}')
+    e.add_field(name='Description',
+                value=command.description,
+                inline=True)
+    e.add_field(name='Help',
+                value=command.help,
+                inline=False)
+    if command.aliases:
+        e.set_footer(text=f'Aliases: {" ".join(command.aliases)}')
+    e.colour = discord.Colour.purple()
+    await ctx.send(embed=e)
+
+
+def _get_cog_prefix(ctx, cog):
+    if cog and cog.qualified_name in ctx.bot.pm.cog_prefixes:
+        return ctx.bot.pm.cog_prefixes[cog.qualified_name]
+    return ctx.bot.pm.prefix
+
+
+"""
+OWNER FUNCTIONS
+"""
+
+
+@commands.command(description='Shows how long the bot has been running',
+                  help='Owners only',
+                  brief='Show bot uptime')
 @commands.is_owner()
 async def uptime(ctx):
     await ctx.send(str(datetime.now() - ctx.bot.start_time).split('.')[0])
 
 
-@commands.command(aliases=['guilds'])
+@commands.command(aliases=['guilds'],
+                  description='Shows servers the bot is in',
+                  help='Owners only',
+                  brief='Show bot servers')
 @commands.is_owner()
 async def servers(ctx):
     guilds = sorted(ctx.bot.guilds, key=lambda g: g.id)
@@ -128,13 +214,19 @@ async def servers(ctx):
     await ctx.send(output)
 
 
-@commands.command(aliases=['cs'])
+@commands.command(aliases=['cs'],
+                  description='Change bot status for this session',
+                  help='Owners only',
+                  brief='Change bot status')
 @commands.is_owner()
 async def changestatus(ctx, *, msg):
     await ctx.bot.change_presence(activity=Game(msg))
 
 
-@commands.command(aliases=['cds'])
+@commands.command(aliases=['cds'],
+                  description='Change default bot status for current and future sessions',
+                  help='Owners only',
+                  brief='Change default bot status')
 @commands.is_owner()
 async def changedefaultstatus(ctx, *, msg):
     ctx.bot.config['status'] = msg
@@ -144,16 +236,20 @@ async def changedefaultstatus(ctx, *, msg):
     await ctx.send('Changed default status to ' + msg)
 
 
-@commands.command()
+@commands.command(description='Shutdown the bot',
+                  help='Owners only',
+                  brief='Shutdown bot')
 @commands.is_owner()
 async def shutdown(ctx):
     await ctx.send('Shutting down...')
     await ctx.bot.logout()
 
 
-@commands.command(aliases=['git'])
+@commands.command(description='Update bot files with latest from github',
+                  help='Owners only',
+                  brief='Update from github')
 @commands.is_owner()
-async def gitup(ctx):
+async def git(ctx):
     stream = os.popen('git pull origin master')
     output = stream.read()
     await ctx.send(f'```{output}```')
@@ -161,5 +257,5 @@ async def gitup(ctx):
         await ctx.bot.cogs['General']._reload_all(ctx)
 
 
-DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown, gitup]
+DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown, git, help]
 Eschamali()._run()

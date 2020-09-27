@@ -10,6 +10,8 @@ CHANNELS_TABLE_COL2 = PERMS.CHANNELS_TABLE_COL2
 
 
 class JoinLeave(commands.Cog):
+    """Show who joins/leaves in set channels\nSet channels with the "Perms" cog"""
+
     def __init__(self, bot):
         self.bot = bot
 

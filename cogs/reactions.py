@@ -19,6 +19,8 @@ enk = [
 
 
 class Reactions(commands.Cog):
+    """Random situations the bot reacts to"""
+
     def __init__(self, bot):
         self.bot = bot
 

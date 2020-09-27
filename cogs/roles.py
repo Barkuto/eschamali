@@ -18,6 +18,8 @@ INVALID_ROLE = 'Invalid role.'
 
 
 class Roles(commands.Cog):
+    """Role management commands"""
+
     def __init__(self, bot):
         self.bot = bot
         for guild in bot.guilds:
@@ -57,7 +59,9 @@ class Roles(commands.Cog):
         if autorole:
             await member.add_roles(autorole)
 
-    @commands.command()
+    @commands.command(description='Show or set the autorole',
+                      help='Requires **Manage Guild** or **Manage Roles** permission',
+                      brief='Autorole')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True),
                         commands.has_permissions(manage_roles=True))
@@ -81,7 +85,10 @@ class Roles(commands.Cog):
             description=role.mention if role else 'None.',
             colour=role.colour if role else 0))
 
-    @commands.command(aliases=['raa'])
+    @commands.command(aliases=['raa'],
+                      description='Remove the autorole',
+                      help='Requires **Manage Guild** or **Manage Roles** permission',
+                      brief='Remove autorole')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True),
                         commands.has_permissions(manage_roles=True))
@@ -95,7 +102,10 @@ class Roles(commands.Cog):
     BASIC ROLE FUNCTIONS
     """
 
-    @commands.command(aliases=['ar'])
+    @commands.command(aliases=['ar'],
+                      description='Add *role* to *user*',
+                      help='Requires **Manage Guild** or **Manage Roles** permission',
+                      brief='Add role')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True),
                         commands.has_permissions(manage_roles=True))
@@ -110,7 +120,10 @@ class Roles(commands.Cog):
                 await u.add_roles(r)
                 await UTILS.confirm(ctx)
 
-    @commands.command(aliases=['rr'])
+    @commands.command(aliases=['rr'],
+                      description='Remove *role* from *user*',
+                      help='Requires **Manage Guild** or **Manage Roles** permission',
+                      brief='Remove role')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True),
                         commands.has_permissions(manage_roles=True))
@@ -125,7 +138,9 @@ class Roles(commands.Cog):
                 await u.remove_roles(r)
                 await UTILS.confirm(ctx)
 
-    @commands.command()
+    @commands.command(description='Check users in *role*',
+                      help='*role* can be the role name or id',
+                      brief='Check role')
     async def inrole(self, ctx, *, role=None):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -136,7 +151,9 @@ class Roles(commands.Cog):
             description=' '.join(in_role),
             colour=r.colour))
 
-    @commands.command()
+    @commands.command(description='Check roles of *user*',
+                      help='No arguments gives self roles\n*user* can be mention, name, nickname, name#discriminator, or id',
+                      brief='Check role')
     async def roles(self, ctx, *, user=None):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -188,15 +205,21 @@ class Roles(commands.Cog):
         else:
             await ctx.send(INVALID_ROLE)
 
-    @commands.command()
+    @commands.command(description='Add a self-assignable *role* to self',
+                      help='*role* can be the role name, or id',
+                      brief='Add self-role')
     async def iam(self, ctx, *, role=None):
         await self._add_remove_sar(ctx, role, 1)
 
-    @commands.command()
+    @commands.command(description='Remove a self-assignable *role* from self',
+                      help='*role* can be the role name or id',
+                      brief='Remove self-role')
     async def iamn(self, ctx, *, role=None):
         await self._add_remove_sar(ctx, role, 0)
 
-    @commands.command()
+    @commands.command(description='List all self-assignable roles for the server',
+                      help='Listed roles can be added/removed with "iam" command',
+                      brief='List self-roles')
     async def lsar(self, ctx):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -206,7 +229,9 @@ class Roles(commands.Cog):
             description=' '.join([r.mention for r in sars]),
             colour=sars[0].colour if sars else 0))
 
-    @commands.command()
+    @commands.command(description='Add a self-assignable *role* to the server',
+                      help='Requires **Manage Guild** or **Manage Roles** permission\n*role* can be the role name or id',
+                      brief='Add server self-role')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True),
                         commands.has_permissions(manage_roles=True))
@@ -224,7 +249,9 @@ class Roles(commands.Cog):
         else:
             await ctx.send(INVALID_ROLE)
 
-    @commands.command()
+    @commands.command(description='Remove a self-assignable *role* from the server',
+                      help='Requires **Manage Guild** or **Manage Roles** permission\n*role* can be the role name or id',
+                      brief='Remove server self-role')
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_guild=True),
                         commands.has_permissions(manage_roles=True))
