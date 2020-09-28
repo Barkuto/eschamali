@@ -33,7 +33,7 @@ ANSWERS = [
 ]
 
 PICKS = {
-    0: ':moyai:',
+    0: ':rock:',
     1: ':newspaper:',
     2: ':scissors:'
 }
