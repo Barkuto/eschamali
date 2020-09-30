@@ -37,6 +37,16 @@ class DB():
         else:
             self.db_path = db_path + '.db'
 
+    def execute_one(self, sql):
+        try:
+            conn = sqlite3.connect(self.db_path)
+            return conn.execute(sql).fetchone()[0]
+        except sqlite3.Error as e:
+            raise e
+        finally:
+            conn.close()
+        return None
+
     def create_table(self, table_name, *columns):
         table_name, columns = _sanitize(table_name, columns)
         if not columns:

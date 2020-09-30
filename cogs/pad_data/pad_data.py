@@ -189,7 +189,7 @@ def get_monster(query, region):
 
 def get_monsters(query, region):
     if query and verify_region(region):
-        if query.isdigit():
+        if isinstance(query, int) or query.isdigit():
             m = _get_monster(int(query), region)
             return [m] if m else []
         else:

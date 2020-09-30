@@ -20,7 +20,6 @@ Awakening = PAD_DATA.Awakening
 
 NA = PAD_DATA.NA
 JP = PAD_DATA.JP
-MAX_MONS = 6493
 
 LEFT_ARROW = '⬅️'
 RIGHT_ARROW = '➡️'
@@ -39,9 +38,27 @@ class PAD(commands.Cog):
         self.use_emotes = False
         self.updating = False
         self.load_emotes.start()  # pylint: disable=no-member
+        self.max_mons = 6500
+        self._update_max_mons()
 
     def cog_unload(self):
         self.load_emotes.cancel()  # pylint: disable=no-member
+
+    def _update_max_mons(self):
+        jp_db = UTILS.DB(PAD_DATA.CARDS_DB % JP)
+        if jp_db.table_exists('monsters'):
+            try:
+                self.max_mons = jp_db.execute_one('SELECT MAX(id) AS max_id FROM monsters')
+            except:
+                pass
+
+    def _get_rdm_mons(self):
+        m = None
+        while not m:
+            m1 = PAD_DATA.get_monster(random.randint(1, self.max_mons), NA)
+            m2 = PAD_DATA.get_monster(random.randint(1, self.max_mons), JP)
+            m = m1 or m2
+        return m
 
     """
     LISTENERS/TASKS
@@ -118,6 +135,7 @@ class PAD(commands.Cog):
 
     async def _update_db(self):
         await asyncio.get_event_loop().run_in_executor(ThreadPoolExecutor(), PAD_DATA.update_monsters)
+        self._update_max_mons()
 
     @commands.command(description='Update the internal PAD DB data',
                       help='Takes roughly 2 minutes',
@@ -138,7 +156,7 @@ class PAD(commands.Cog):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         if not query:
-            query = str(random.randint(1, MAX_MONS))
+            query = str(self._get_rdm_mons().id)
         e = self._info_embed(query, region)
         if not e:
             region = self._flip_region(region)
@@ -164,6 +182,8 @@ class PAD(commands.Cog):
     async def _pic(self, ctx, query, region):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
+        if not query:
+            query = str(self._get_rdm_mons().id)
         e = self._pic_embed(query, region)
         if not e:
             new_region = self._flip_region(region)
@@ -177,7 +197,7 @@ class PAD(commands.Cog):
                       description='Show pictures for monster from *query*',
                       help='If animated, will also display MP4 and GIF(JIF) links',
                       brief='Show picture')
-    async def pic(self, ctx, *, query):
+    async def pic(self, ctx, *, query=None):
         await self._pic(ctx, query, NA)
 
     @commands.command(aliases=['pj'],
