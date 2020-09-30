@@ -165,6 +165,9 @@ class PAD(commands.Cog):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         e = self._pic_embed(query, region)
+        if not e:
+            new_region = self._flip_region(region)
+            e = self._pic_embed(query, new_region)
         if e:
             await ctx.send(embed=e)
         else:
@@ -324,12 +327,12 @@ class PAD(commands.Cog):
     def _pic_embed(self, query, region):
         m = PAD_DATA.get_monster(query, region)
         url = PAD_DATA.get_picture_url(m, region)
-        desc = ''
-        if m.is_animated:
-            mp4 = PAD_DATA.get_animated_mp4_url(m, region)
-            gif = PAD_DATA.get_animated_gif_url(m, region)
-            desc = (f'[MP4]({mp4})' if mp4 else '') + (f' | [GIF]({gif})' if gif else '')
-        if m:
+        if m and url:
+            desc = ''
+            if m.is_animated:
+                mp4 = PAD_DATA.get_animated_mp4_url(m, region)
+                gif = PAD_DATA.get_animated_gif_url(m, region)
+                desc = (f'[MP4]({mp4})' if mp4 else '') + (f' | [GIF]({gif})' if gif else '')
             return Embed(title=f'No.{m.id} {m.name}',
                          description=desc).set_image(url=url)
         return None
