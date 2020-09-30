@@ -232,7 +232,7 @@ class PAD(commands.Cog):
         latent_slots = m.latent_slots
 
         att1 = Attribute.from_id(m.attribute_1_id)
-        embed_colour = Colour.greyple()
+        embed_colour = Colour.from_rgb(255, 255, 254)
         if att1 == Attribute.FIRE:
             embed_colour = Colour.from_rgb(255, 116, 75)
         elif att1 == Attribute.WATER:
