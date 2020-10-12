@@ -12,7 +12,7 @@ UTILS = importlib.import_module('.utils', 'util')
 PAD_DATA = importlib.import_module('.pad_data', 'cogs.pad_data')
 LOGGER = UTILS.VARS.LOGGER
 
-importlib.reload(PAD_DATA)
+importlib.reload(PAD_DATA)  # remove?
 
 Attribute = PAD_DATA.Attribute
 Type = PAD_DATA.Type
@@ -107,13 +107,20 @@ class PAD(commands.Cog):
                                                       or r.emoji == REGIONAL_INDICATOR_J)
                                                      and r.me,
                                                      msg.reactions)]
-            region = NA if JP in all_reactions else NA
+            region = NA if REGIONAL_INDICATOR_J in all_reactions else JP
             num = int(title.replace('No.', '').split(' ')[0])
+            m = PAD_DATA.get_monster(num, region)
             new_num = num
             if e == LEFT_ARROW:
-                new_num -= 1
+                for n in reversed(m.evolutions):
+                    if n < num:
+                        new_num = n
+                        break
             elif e == RIGHT_ARROW:
-                new_num += 1
+                for n in m.evolutions:
+                    if n > num:
+                        new_num = n
+                        break
             elif e == REGIONAL_INDICATOR_J or e == REGIONAL_INDICATOR_N:
                 new_region = self._flip_region(region)
                 await msg.edit(embed=self._info_embed(str(num), new_region))

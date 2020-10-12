@@ -380,8 +380,9 @@ class General(commands.Cog):
                 await ctx.send(f'Error unloading `{cog_name}`')
                 raise e
 
-    async def _reload_all(self, ctx):
-        all_cogs = ctx.bot.all_cogs()
+    async def _reload_all(self, ctx, all_cogs=[]):
+        if not all_cogs:
+            all_cogs = ctx.bot.all_cogs()
         reloaded = []
         not_reloaded = []
         for cog in all_cogs:

@@ -254,7 +254,15 @@ async def git(ctx):
     output = stream.read()
     await ctx.send(f'```{output}```')
     if not output.startswith('Already up to date.'):
-        await ctx.bot.cogs['General']._reload_all(ctx)
+        to_reload = []
+        for line in output.split('\n'):
+            if line.strip().startswith('cogs/'):
+                cog = line.strip().split(' ')[0].split('/')[1].split('.')[0]
+                to_reload.append(cog)
+        if to_reload:
+            await ctx.bot.cogs['General']._reload_all(ctx, to_reload)
+        else:
+            await ctx.send('No cogs to reload. Might require restart.')
 
 
 DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown, git, help]
