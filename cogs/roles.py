@@ -145,6 +145,8 @@ class Roles(commands.Cog):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         r = UTILS.find_role(ctx.guild, role)
+        if not r:
+            return await ctx.send('Invalid role.')
         in_role = [m.mention for m in ctx.guild.members if r in m.roles]
         await ctx.send(embed=Embed(
             title=f'`{r.name}`',
