@@ -39,6 +39,7 @@ def _process_db():
         for r in db.get_all('series', factory=True):
             series[r['series_id']] = r[f'name_{schema_to_region[region]}']
         for r in db.get_rows('monsters', (f'on_{region}', 1), factory=True):
+            mons_id = r['monster_id']
             m = {
                 'id': r[f'monster_no_{region}'],
                 'name': r[f'name_{schema_to_region[region]}'],
@@ -88,7 +89,7 @@ def _process_db():
                     'turn_min': as_row['turn_min'],
                 }
 
-            awakenings = db.get_rows('awakenings', ('monster_id', m['id']), factory=True)
+            awakenings = db.get_rows('awakenings', ('monster_id', mons_id), factory=True)
             for aw_row in awakenings:
                 awoken_skill_id = aw_row['awoken_skill_id']
                 is_super = aw_row['is_super']
@@ -100,8 +101,8 @@ def _process_db():
             m['supers'] = [s[1] for s in sorted(m['supers'], key=lambda t:t[0])]
             m['awakenings'] = [s[1] for s in sorted(m['awakenings'], key=lambda t:t[0])]
 
-            evos_from = db.get_rows('evolutions', ('from_id', m['id']), factory=True)
-            evos_to = db.get_rows('evolutions', ('to_id', m['id']), factory=True)
+            evos_from = db.get_rows('evolutions', ('from_id', mons_id), factory=True)
+            evos_to = db.get_rows('evolutions', ('to_id', mons_id), factory=True)
             queue = [e['to_id'] for e in evos_from] + [e['from_id'] for e in evos_to]
 
             all_evos = []
@@ -112,8 +113,8 @@ def _process_db():
                     queue += [r['from_id'] for r in db.get_rows('evolutions', ('to_id', n), factory=True)]
                     all_evos.append(n)
             if all_evos:
-                all_evos.remove(m['id'])
-            all_evos = [e - 10000 if e >= 10000 else e for e in all_evos]
+                all_evos.remove(mons_id)
+            all_evos = [db.get_value('monsters', f'monster_no_{region}', ('monster_id', e)) for e in all_evos]
             m['evolutions'] = sorted(all_evos)
 
             mons.append(Monster(m))
