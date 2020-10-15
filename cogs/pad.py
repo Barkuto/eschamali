@@ -12,8 +12,6 @@ UTILS = importlib.import_module('.utils', 'util')
 PAD_DATA = importlib.import_module('.pad_data', 'cogs.pad_data')
 LOGGER = UTILS.VARS.LOGGER
 
-importlib.reload(PAD_DATA)  # remove?
-
 Attribute = PAD_DATA.Attribute
 Type = PAD_DATA.Type
 Awakening = PAD_DATA.Awakening
@@ -28,6 +26,8 @@ REGIONAL_INDICATOR_J = '🇯'
 X = '❌'
 LEFT_TRIANGLE = '◀️'
 RIGHT_TRIANGLE = '▶️'
+
+PDX_LINK = 'http://puzzledragonx.com/en/monster.asp?n=%d'
 
 
 class PAD(commands.Cog):
@@ -307,12 +307,12 @@ class PAD(commands.Cog):
         rcv = str(m.rcv_max) + (f' | {m.lb_rcv()}' if m.lb_mult else '')
         stats = '\n**HP** %s\n**ATK** %s\n**RCV** %s\n**XP** %s' % (hp, atk, rcv, m.exp)
 
-        similar = [str(m.id) for m in PAD_DATA.get_monsters(query, region)]
-        similar.remove(str(m.id))
+        similar = [m.id for m in PAD_DATA.get_monsters(query, region)]
+        similar.remove(m.id)
 
         e = Embed()
         e.title = f'No.{m.id} {m.name}'
-        e.url = f'http://puzzledragonx.com/en/monster.asp?n={m.id}'
+        e.url = PDX_LINK % m.id
         e.description = f'**{desc}**'
         e.colour = embed_colour
 
@@ -329,10 +329,10 @@ class PAD(commands.Cog):
                         value=leader.desc,
                         inline=False)
         if evolutions:
-            e.add_field(name='Other Evos', value=', '.join([str(e) for e in evolutions]), inline=True)
+            e.add_field(name='Other Evos', value=', '.join([f'[{e}]({PDX_LINK % e})' for e in evolutions]), inline=True)
         if similar:
             e.add_field(name='Similar Names',
-                        value=', '.join(similar) if len(similar) <= 10 else 'Too many to show.',
+                        value=', '.join([f'[{s}]({PDX_LINK % s})' for s in similar]) if len(similar) <= 10 else 'Too many to show.',
                         inline=True)
         if not m.series.lower() == 'unsorted':
             e.set_footer(text=f'Series: {m.series}')
@@ -481,7 +481,8 @@ class AwakeningEmoji(Enum):
             if g:
                 for g_e in g.emojis:
                     if g_e.name in emojis_to_find:
-                        awakening_emojis[AwakeningEmoji.from_str(g_e.name).id()] = g_e
+                        awakening_emojis[AwakeningEmoji.from_str(
+                            g_e.name).id()] = g_e
         if len(awakening_emojis) < len(emojis_to_find):
             LOGGER.error('Not all awakening emojis were loaded.')
             pad_cog.use_emotes = False
