@@ -307,7 +307,8 @@ class PAD(commands.Cog):
         rcv = str(m.rcv_max) + (f' | {m.lb_rcv()}' if m.lb_mult else '')
         stats = '\n**HP** %s\n**ATK** %s\n**RCV** %s\n**XP** %s' % (hp, atk, rcv, m.exp)
 
-        similar = [m.id for m in PAD_DATA.get_monsters(query, region)]
+        similar = [mons.id for mons in PAD_DATA.get_monsters(query, region)]
+        similar = [n for n in filter(lambda n: not n in evolutions, similar)]
         similar.remove(m.id)
 
         e = Embed()
