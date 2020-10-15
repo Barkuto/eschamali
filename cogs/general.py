@@ -390,9 +390,8 @@ class General(commands.Cog):
                 ctx.bot.reload_extension(f'{VARS.COGS_DIR_NAME}.{cog}')
                 ctx.bot.pm.load_cog_cmd_prefixes(cog)
                 reloaded.append(cog)
-            except ExtensionError as e:
+            except ExtensionError:
                 not_reloaded.append(cog)
-                raise e
         reloaded = [f'`{c}`' for c in reloaded]
         not_reloaded = [f'`{c}`' for c in not_reloaded]
         await ctx.send(f'Reloaded {" ".join(reloaded)}')
