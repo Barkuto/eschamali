@@ -112,6 +112,7 @@ def _process_db():
                     queue += [r['to_id'] for r in db.get_rows('evolutions', ('from_id', n), factory=True)]
                     queue += [r['from_id'] for r in db.get_rows('evolutions', ('to_id', n), factory=True)]
                     all_evos.append(n)
+            all_evos = [e for e in filter(lambda e: db.get_row('monsters', ('monster_id', e), (f'on_{region}', 1)), all_evos)]
             if all_evos:
                 all_evos.remove(mons_id)
             all_evos = [db.get_value('monsters', f'monster_no_{region}', ('monster_id', e)) for e in all_evos]
