@@ -1,4 +1,5 @@
 import importlib
+from datetime import datetime
 from discord import Embed, DMChannel
 from discord.ext import commands
 
@@ -44,6 +45,8 @@ class CustomCommands(commands.Cog):
             cmd = split[0].split(self.prefix)[1].lower()
             for c_name, c_text in cmds:
                 if c_name == cmd:
+                    c_text = c_text.replace('{author}', ctx.author.mention)
+                    c_text = c_text.replace('{time}', datetime.now().strftime('%b %d, %Y %I:%M %p'))
                     return await ctx.send(c_text)
 
     @commands.command(aliases=['acc'],
