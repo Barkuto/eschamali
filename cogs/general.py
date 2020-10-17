@@ -380,22 +380,25 @@ class General(commands.Cog):
                 await ctx.send(f'Error unloading `{cog_name}`')
                 raise e
 
-    async def _reload_all(self, ctx, all_cogs=[]):
-        if not all_cogs:
-            all_cogs = ctx.bot.all_cogs()
+    async def _reload_all(self, ctx, reload_cogs=[]):
+        all_cogs = ctx.bot.all_cogs()
+        if not reload_cogs:
+            reload_cogs = all_cogs
         reloaded = []
         not_reloaded = []
-        for cog in all_cogs:
-            try:
-                ctx.bot.reload_extension(f'{VARS.COGS_DIR_NAME}.{cog}')
-                ctx.bot.pm.load_cog_cmd_prefixes(cog)
-                reloaded.append(cog)
-            except ExtensionError:
-                not_reloaded.append(cog)
+        for cog in reload_cogs:
+            if cog in all_cogs:
+                try:
+                    ctx.bot.reload_extension(f'{VARS.COGS_DIR_NAME}.{cog}')
+                    ctx.bot.pm.load_cog_cmd_prefixes(cog)
+                    reloaded.append(cog)
+                except ExtensionError:
+                    not_reloaded.append(cog)
         reloaded = [f'`{c}`' for c in reloaded]
         not_reloaded = [f'`{c}`' for c in not_reloaded]
-        await ctx.send(f'Reloaded {" ".join(reloaded)}')
-        if(not_reloaded):
+        if reloaded:
+            await ctx.send(f'Reloaded {" ".join(reloaded)}')
+        if not_reloaded:
             await ctx.send(f'Could not reload {" ".join(not_reloaded)}')
 
     @commands.command(description='Shows all cogs',
