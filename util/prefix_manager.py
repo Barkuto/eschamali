@@ -7,7 +7,8 @@ DEFAULT_PREFIXES = {
     'Games': '>',
     'CustomCommands': '!',
     'Roles': '.',
-    'PAD': '&'
+    'PAD': '&',
+    'Misc': '!'
 }
 
 
