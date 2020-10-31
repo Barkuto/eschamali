@@ -111,7 +111,7 @@ class Games(commands.Cog):
             return
 
     @rps.command(aliases=['r'],
-                 description=':moyai:')
+                 description=':rock:')
     async def rock(self, ctx):
         await self.determine_rps_winner(ctx, 0)
 
