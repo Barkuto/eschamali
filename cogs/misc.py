@@ -24,7 +24,7 @@ class Misc(commands.Cog):
                 await self.inhouse(ctx, *voice_members)
             else:
                 await ctx.send('You must be in a voice channel.')
-        elif players:
+        else:
             choice = random.randint(0, len(maps) - 1)
             map_choice = maps[choice]
             map_color = colors[choice]
@@ -45,8 +45,6 @@ class Misc(commands.Cog):
                                 value='\n'.join(teams[i]),
                                 inline=True)
             await ctx.send(embed=embed)
-        else:
-            await ctx.send('Players not a multiple of 5.')
 
     @commands.command(description='Shortcut for \'inhouse voice\' command',
                       help='See \'inhouse\' help.',
