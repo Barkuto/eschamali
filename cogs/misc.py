@@ -9,6 +9,21 @@ class Misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if user == self.bot.user:
+            return
+        if not self.bot.user in [u async for u in reaction.users()]:
+            return
+        e = reaction.emoji
+        players = []
+        if e == '🛑':
+            async for user in reaction.users():
+                if not user == self.bot.user:
+                    players += [user.mention]
+            ctx = await self.bot.get_context(reaction.message)
+            await self.inhouse(ctx, *players)
+
     @commands.command(aliases=['ih'],
                       description='Create an in-house from arguments',
                       help='List players separated by a space. Use \'voice\' to use current voice channel users.',
@@ -51,6 +66,14 @@ class Misc(commands.Cog):
                       brief='Voice in-house')
     async def ihv(self, ctx):
         await self.inhouse(ctx, 'voice')
+
+    @commands.command(description='Shortcut for \'inhouse reaction\' command',
+                      help='See \'inhouse\' help.',
+                      brief='Reaction in-house')
+    async def ihr(self, ctx):
+        msg = await ctx.send('```React with ✅ to join the in-house.```')
+        await msg.add_reaction('✅')
+        await msg.add_reaction('🛑')
 
 
 def setup(bot):
