@@ -10,6 +10,8 @@ class Misc(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    @commands.check_any(commands.is_owner(),
+                        commands.has_permissions(manage_messages=True))
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user:
             return
