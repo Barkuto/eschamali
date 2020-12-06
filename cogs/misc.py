@@ -15,13 +15,15 @@ class Misc(commands.Cog):
             return
         if not self.bot.user in [u async for u in reaction.users()]:
             return
+        msg = reaction.message
         e = reaction.emoji
         players = []
         if e == '🛑':
             async for user in reaction.users():
                 if not user == self.bot.user:
                     players += [user.mention]
-            ctx = await self.bot.get_context(reaction.message)
+            ctx = await self.bot.get_context(msg)
+            await msg.delete()
             await self.inhouse(ctx, *players)
 
     @commands.command(aliases=['ih'],
