@@ -1,6 +1,9 @@
+import importlib
 import random
 from discord import Embed, Colour
 from discord.ext import commands
+
+UTILS = importlib.import_module('.utils', 'util')
 
 
 class Misc(commands.Cog):
@@ -33,6 +36,8 @@ class Misc(commands.Cog):
                        help='List players separated by a space. Use \'voice\' to use current voice channel users.',
                        brief='Make in-house')
     async def inhouse(self, ctx, *players):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
         maps = ['Haven', 'Bind', 'Split', 'Ascent', 'Icebox']
         colors = [Colour.orange(), Colour.from_rgb(165, 42, 42), Colour.blue(), Colour.from_rgb(255, 255, 0), Colour.teal()]
         if len(players) == 1 and players[0].lower() == 'voice':
@@ -75,6 +80,8 @@ class Misc(commands.Cog):
                        help='See \'inhouse\' help.',
                        brief='Reaction in-house')
     async def ihr(self, ctx):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
         msg = await ctx.send('```React with ✅ to join the in-house.```')
         await msg.add_reaction('✅')
         await msg.add_reaction('🛑')
