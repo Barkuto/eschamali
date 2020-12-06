@@ -10,28 +10,28 @@ class Misc(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    @commands.check_any(commands.is_owner(),
-                        commands.has_permissions(manage_messages=True))
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user:
             return
         if not self.bot.user in [u async for u in reaction.users()]:
             return
         msg = reaction.message
-        e = reaction.emoji
-        players = []
-        if e == '🛑':
-            async for user in reaction.users():
-                if not user == self.bot.user:
-                    players += [user.mention]
-            ctx = await self.bot.get_context(msg)
-            await msg.delete()
-            await self.inhouse(ctx, *players)
+        ctx = await self.bot.get_context(msg)
+        allowed = await self.bot.is_owner(user) or user.permissions_in(ctx.channel).manage_messages
+        if reaction.emoji == '🛑' and allowed:
+            users = None
+            for r in msg.reactions:
+                if r.emoji == '✅':
+                    users = await r.users().flatten()
+            if users:
+                players = [u.mention for u in users if not u == self.bot.user]
+                await msg.delete()
+                await self.inhouse(ctx, *players)
 
-    @commands.command(aliases=['ih'],
-                      description='Create an in-house from arguments',
-                      help='List players separated by a space. Use \'voice\' to use current voice channel users.',
-                      brief='Make in-house')
+    @ commands.command(aliases=['ih'],
+                       description='Create an in-house from arguments',
+                       help='List players separated by a space. Use \'voice\' to use current voice channel users.',
+                       brief='Make in-house')
     async def inhouse(self, ctx, *players):
         maps = ['Haven', 'Bind', 'Split', 'Ascent', 'Icebox']
         colors = [Colour.orange(), Colour.from_rgb(165, 42, 42), Colour.blue(), Colour.from_rgb(255, 255, 0), Colour.teal()]
@@ -65,15 +65,15 @@ class Misc(commands.Cog):
                                 inline=True)
             await ctx.send(embed=embed)
 
-    @commands.command(description='Shortcut for \'inhouse voice\' command',
-                      help='See \'inhouse\' help.',
-                      brief='Voice in-house')
+    @ commands.command(description='Shortcut for \'inhouse voice\' command',
+                       help='See \'inhouse\' help.',
+                       brief='Voice in-house')
     async def ihv(self, ctx):
         await self.inhouse(ctx, 'voice')
 
-    @commands.command(description='Shortcut for \'inhouse reaction\' command',
-                      help='See \'inhouse\' help.',
-                      brief='Reaction in-house')
+    @ commands.command(description='Shortcut for \'inhouse reaction\' command',
+                       help='See \'inhouse\' help.',
+                       brief='Reaction in-house')
     async def ihr(self, ctx):
         msg = await ctx.send('```React with ✅ to join the in-house.```')
         await msg.add_reaction('✅')
