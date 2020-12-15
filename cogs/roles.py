@@ -182,7 +182,7 @@ class Roles(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role):
         db = UTILS.get_server_db(role.guild)
-        db.delete_rows(ROLES_TABLE, (ROLES_TABLE_COL1[0], AUTOROLE_FIELD), (ROLES_TABLE_COL2[0], role.id))
+        db.delete_rows(ROLES_TABLE, (ROLES_TABLE_COL1[0], SELFROLE_FIELD), (ROLES_TABLE_COL2[0], role.id))
         LOGGER.info('[%d] Removed deleted role %s from db.' % (role.guild.id, role.id))
 
     def _get_sars(self, guild):
