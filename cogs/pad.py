@@ -191,6 +191,10 @@ class PAD(commands.Cog):
             return
         if not query:
             query = str(self._get_rdm_mons().id)
+        elif query == 'sheen':
+            roll = random.randint(1, 100)
+            if roll >= 95:
+                return await ctx.send('http://i.imgur.com/oicGMFu.png')
         e = self._pic_embed(query, region)
         if not e:
             new_region = self._flip_region(region)
