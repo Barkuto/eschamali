@@ -5,12 +5,40 @@ from discord.ext import commands
 
 UTILS = importlib.import_module('.utils', 'util')
 
+TEAM_SIZE = 1
+STOP = '🛑'
+CHECK = '✅'
+REROLL = '🎲'
+MOVE = '↕️'
+
 
 class Misc(commands.Cog):
     """Misc commands"""
 
     def __init__(self, bot):
         self.bot = bot
+
+    async def get_reaction_users(self, msg, reaction):
+        users = None
+        for r in msg.reactions:
+            if r.emoji == reaction:
+                users = await r.users().flatten()
+        return users
+
+    def get_embed_teams(self, embed):
+        teams = []
+        for embed_proxy in embed.fields:
+            players = embed_proxy.value.split('\n')
+            if len(players) == TEAM_SIZE:
+                teams += [players]
+        return teams
+
+    def get_embed_players(self, embed):
+        players = []
+        for embed_proxy in embed.fields:
+            m = embed_proxy.value.split('\n')
+            players += m
+        return players
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -21,15 +49,33 @@ class Misc(commands.Cog):
         msg = reaction.message
         ctx = await self.bot.get_context(msg)
         allowed = await self.bot.is_owner(user) or user.permissions_in(ctx.channel).manage_messages
-        if reaction.emoji == '🛑' and allowed:
-            users = None
-            for r in msg.reactions:
-                if r.emoji == '✅':
-                    users = await r.users().flatten()
+        if reaction.emoji == STOP and allowed:
+            users = await self.get_reaction_users(msg, CHECK)
             if users:
                 players = [u.mention for u in users if not u == self.bot.user]
                 await msg.delete()
                 await self.inhouse(ctx, *players)
+        elif reaction.emoji == MOVE and allowed:
+            teams = self.get_embed_teams(msg.embeds[0])
+            voice_channels = msg.guild.voice_channels
+            voice_channels = [v for v in voice_channels if not v.members or v == user.voice.channel]
+            if len(teams) > len(voice_channels):
+                return await ctx.send('There are not enough empty voice channels to move people.')
+            for i in range(0, len(teams)):
+                players = teams[i]
+                try:
+                    players = [int(p.replace('<', '').replace('>', '').replace('!', '').replace('@', '')) for p in players]
+                except ValueError:
+                    return
+                for p in players:
+                    member = UTILS.find_member(ctx.guild, p)
+                    await member.move_to(voice_channels[i])
+        elif reaction.emoji == REROLL:
+            users = await self.get_reaction_users(msg, REROLL)
+            if users and msg.embeds:
+                players = self.get_embed_players(msg.embeds[0])
+                if len(users) - 1 >= len(players)//2:
+                    await self.inhouse(ctx, *players)
 
     @ commands.command(aliases=['ih'],
                        description='Create an in-house from arguments',
@@ -57,7 +103,7 @@ class Misc(commands.Cog):
             teams = []
             while len(shuffled_players) != 0:
                 team = []
-                for _ in range(0, 5):
+                for _ in range(0, TEAM_SIZE):
                     if shuffled_players:
                         team.append(shuffled_players.pop(0))
                 teams.append(team)
@@ -68,7 +114,9 @@ class Misc(commands.Cog):
                 embed.add_field(name='Team ' + str(i + 1),
                                 value='\n'.join(teams[i]),
                                 inline=True)
-            await ctx.send(embed=embed)
+            msg = await ctx.send(embed=embed)
+            await msg.add_reaction(REROLL)
+            await msg.add_reaction(MOVE)
 
     @ commands.command(description='Shortcut for \'inhouse voice\' command',
                        help='See \'inhouse\' help.',
@@ -83,8 +131,8 @@ class Misc(commands.Cog):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         msg = await ctx.send('```React with ✅ to join the in-house.```')
-        await msg.add_reaction('✅')
-        await msg.add_reaction('🛑')
+        await msg.add_reaction(CHECK)
+        await msg.add_reaction(STOP)
 
 
 def setup(bot):
