@@ -13,6 +13,19 @@ from datetime import datetime
 from util.prefix_manager import PrefixManager
 from util.vars import LOGGER, COGS_DIR_NAME, COGS_DIR, BASE_COGS_DIR_NAME, LOGS_INFO_DIR, LOGS_ERROR_DIR, DB_DIR, CONFIG_FILE
 
+intents = discord.Intents.none()
+intents.guilds = True
+intents.members = True
+intents.bans = True
+intents.emojis = True
+intents.voice_states = True
+intents.presences = True
+intents.messages = True
+intents.guild_messages = True
+intents.dm_messages = True
+intents.reactions = True
+intents.guild_reactions = True
+
 
 class Eschamali(commands.Bot):
     def __init__(self):
@@ -25,7 +38,8 @@ class Eschamali(commands.Bot):
         super().__init__(command_prefix=self.pm.get_prefix,
                          owner_ids=self.config['owners'],
                          activity=Game(self.config['status']),
-                         help_command=None)
+                         help_command=None,
+                         intents=intents)
 
     def all_cogs(self):
         return [file.replace('.py', '') for file in os.listdir(COGS_DIR) if file.endswith('.py')]

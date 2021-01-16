@@ -102,8 +102,7 @@ class General(commands.Cog):
         activity_str = f'**{status.name.upper()}**'
         for a in activities:
             if a.type == ActivityType.playing:
-                activity_str += '\nPlaying **%s %s**' % (
-                    a.name, '' if isinstance(a, Game) else ('- ' + a.details))
+                activity_str += '\nPlaying **%s %s**' % (a.name, '' if isinstance(a, Game) else ('- ' + a.details) if a.details else '')
             elif a.type == ActivityType.streaming:
                 activity_str += f'\nStreaming **{a.name}**'
             elif a.type == ActivityType.listening:
