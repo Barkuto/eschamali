@@ -110,7 +110,12 @@ class General(commands.Cog):
             elif a.type == ActivityType.watching:
                 activity_str += f'\nWatching **{a.name}**'
             elif a.type == ActivityType.custom:
-                activity_str += f'\n**{a.name}**'
+                activity_str += '\n**'
+                if a.emoji:
+                    activity_str += f'{a.emoji} '
+                if a.name:
+                    activity_str += a.name
+                activity_str += '**'
 
         fmt = '%b %d, %Y %I:%M %p'
         now = datetime.now().astimezone()
