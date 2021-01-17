@@ -10,6 +10,7 @@ STOP = '🛑'
 CHECK = '✅'
 REROLL = '🎲'
 MOVE = '↕️'
+RETURN = '⤴️'
 
 
 class Misc(commands.Cog):
@@ -76,6 +77,20 @@ class Misc(commands.Cog):
                 players = self.get_embed_players(msg.embeds[0])
                 if len(users) - 1 >= len(players)//2:
                     await self.inhouse(ctx, *players)
+        elif reaction.emoji == RETURN and allowed:
+            teams = self.get_embed_teams(msg.embeds[0])
+            voice_channels = msg.guild.voice_channels
+            voice_channels = [v for v in voice_channels if not v.members or v == user.voice.channel]
+            if len(voice_channels) < 1:
+                return await ctx.send('There are not enough empty voice channels to move people.')
+            for players in teams:
+                try:
+                    players = [int(p.replace('<', '').replace('>', '').replace('!', '').replace('@', '')) for p in players]
+                except ValueError:
+                    return
+                for p in players:
+                    member = UTILS.find_member(ctx.guild, p)
+                    await member.move_to(voice_channels[0])
 
     @ commands.command(aliases=['ih'],
                        description='Create an in-house from arguments',
@@ -117,6 +132,7 @@ class Misc(commands.Cog):
             msg = await ctx.send(embed=embed)
             await msg.add_reaction(REROLL)
             await msg.add_reaction(MOVE)
+            await msg.add_reaction(RETURN)
 
     @ commands.command(description='Shortcut for \'inhouse voice\' command',
                        help='See \'inhouse\' help.',
