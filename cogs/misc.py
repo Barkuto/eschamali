@@ -80,7 +80,7 @@ class Misc(commands.Cog):
         elif reaction.emoji == RETURN and allowed:
             teams = self.get_embed_teams(msg.embeds[0])
             voice_channels = msg.guild.voice_channels
-            voice_channels = [v for v in voice_channels if not v.members or v == user.voice.channel]
+            voice_channels = [v for v in voice_channels if not v.members or (user.voice and v == user.voice.channel)]
             if len(voice_channels) < 1:
                 return await ctx.send('There are not enough empty voice channels to move people.')
             for players in teams:
