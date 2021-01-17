@@ -5,7 +5,7 @@ from discord.ext import commands
 
 UTILS = importlib.import_module('.utils', 'util')
 
-TEAM_SIZE = 1
+TEAM_SIZE = 5
 STOP = '🛑'
 CHECK = '✅'
 REROLL = '🎲'
