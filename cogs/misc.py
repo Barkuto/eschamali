@@ -70,7 +70,10 @@ class Misc(commands.Cog):
                     return
                 for p in players:
                     member = UTILS.find_member(ctx.guild, p)
-                    await member.move_to(voice_channels[i])
+                    try:
+                        await member.move_to(voice_channels[i])
+                    except:
+                        pass
         elif reaction.emoji == REROLL:
             users = await self.get_reaction_users(msg, REROLL)
             if users and msg.embeds:
@@ -90,7 +93,10 @@ class Misc(commands.Cog):
                     return
                 for p in players:
                     member = UTILS.find_member(ctx.guild, p)
-                    await member.move_to(voice_channels[0])
+                    try:
+                        await member.move_to(voice_channels[0])
+                    except:
+                        pass
 
     @ commands.command(aliases=['ih'],
                        description='Create an in-house from arguments',
