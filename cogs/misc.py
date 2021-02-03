@@ -78,7 +78,8 @@ class Misc(commands.Cog):
             users = await self.get_reaction_users(msg, REROLL)
             if users and msg.embeds:
                 players = self.get_embed_players(msg.embeds[0])
-                if len(users) - 1 >= len(players)//2:
+                if len(users) - 1 >= len(players) // 2:
+                    await msg.clear_reaction(REROLL)
                     await self.inhouse(ctx, *players)
         elif reaction.emoji == RETURN and allowed:
             teams = self.get_embed_teams(msg.embeds[0])
