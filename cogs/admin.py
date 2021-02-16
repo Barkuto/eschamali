@@ -352,6 +352,8 @@ class Admin(commands.Cog):
             return
         if not UTILS.can_cog_in(self, msg.channel):
             return
+        if msg.author.bot:
+            return
         await self.check_for_banned_words(msg)
 
     @commands.Cog.listener()

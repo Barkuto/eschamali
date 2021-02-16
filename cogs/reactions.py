@@ -30,6 +30,8 @@ class Reactions(commands.Cog):
             return
         if not UTILS.can_cog_in(self, msg.channel) and msg.author.id != self.bot.user.id:
             return
+        if msg.author.bot:
+            return
         await self.check_for_reaction(await self.bot.get_context(msg), msg)
 
     async def check_for_reaction(self, ctx, msg):

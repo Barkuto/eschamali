@@ -37,6 +37,8 @@ class CustomCommands(commands.Cog):
         ctx = await self.bot.get_context(msg)
         if not UTILS.can_cog_in(self, ctx.channel):
             return
+        if msg.author.bot:
+            return
         m = msg.content
         split = m.split(' ')
         if m.startswith(self.prefix) and len(split) == 1:
