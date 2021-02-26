@@ -452,6 +452,13 @@ class AwakeningEmoji(Enum):
     JAMMERBLESSING = (71, "JammerBlessing")
     POISONBLESSING = (72, "PoisonBlessing")
 
+    FIRECOMBO = (73, "FireCombo")
+    WATERCOMBO = (74, "WaterCombo")
+    WOODCOMBO = (75, "WoodCombo")
+    LIGHTCOMBO = (76, "LightCombo")
+    DARKCOMBO = (77, "DarkCombo")
+    CROSSATTACK = (78, "CrossAttack")
+
     def id(self):
         return self.value[0]  # pylint: disable=unsubscriptable-object
 
@@ -469,14 +476,14 @@ class AwakeningEmoji(Enum):
         for ae in cls:
             if s == ae.emote():
                 return ae
-        return Attribute.UNKNOWN
+        return AwakeningEmoji.UNKNOWN
 
     @ classmethod
     def from_id(cls, i):
         for ae in cls:
             if i == ae.id():
                 return ae
-        return Attribute.UNKNOWN
+        return AwakeningEmoji.UNKNOWN
 
     @ classmethod
     def load_emojis(cls, pad_cog, bot, servers):
