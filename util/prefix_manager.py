@@ -8,7 +8,8 @@ DEFAULT_PREFIXES = {
     'CustomCommands': '!',
     'Roles': '.',
     'PAD': '&',
-    'Misc': '!'
+    'Misc': '!',
+    'Genshin': '*'
 }
 
 
