@@ -19,6 +19,9 @@ GENSHIN_TABLE_COL2 = ('genshin_id', DB_MOD.INTEGER)
 GENSHIN_TABLE_COL3 = ('community_id', DB_MOD.INTEGER)
 DB_PATH = os.path.join(os.path.dirname(__file__), 'genshinstats', 'genshin_binds.db')
 
+NOT_BINDED_MSG = 'You have not binded a Genshin ID yet. See `!help bind` for details.'
+NOT_PUBLIC_MSG = 'Your Hoyolab profile lab is not public.'
+
 regions = {
     'os_usa': 'NA',
     'os_euro': 'EU',
@@ -120,6 +123,8 @@ class Genshin(commands.Cog):
         if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         (gid, cid) = self._get_genshin_id(ctx.author)
+        if not gid or not cid:
+            return await ctx.send(NOT_BINDED_MSG)
         self._set_cookies()
         info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
         stats = GS.get_user_info(gid)['stats']
@@ -177,9 +182,14 @@ class Genshin(commands.Cog):
         if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         (gid, cid) = self._get_genshin_id(ctx.author)
+        if not gid or not cid:
+            return await ctx.send(NOT_BINDED_MSG)
         self._set_cookies()
         info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
-        characters = GS.get_all_characters(gid)
+        try:
+            characters = GS.get_all_characters(gid)
+        except GS.errors.DataNotPublic:
+            return await ctx.send(NOT_PUBLIC_MSG)
 
         name = info['list'][0]['nickname']
 
