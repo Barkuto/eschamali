@@ -127,9 +127,12 @@ class Genshin(commands.Cog):
         if not gid or not cid:
             return await ctx.send(NOT_BINDED_MSG)
         self._set_cookies()
-        info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
-        stats = GS.get_user_info(gid)['stats']
-        explorations = GS.fetch_endpoint('game_record/genshin/api/index', server=GS.recognize_server(gid), role_id=gid)['world_explorations']
+        try:
+            info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
+            stats = GS.get_user_info(gid)['stats']
+            explorations = GS.fetch_endpoint('game_record/genshin/api/index', server=GS.recognize_server(gid), role_id=gid)['world_explorations']
+        except GS.errors.DataNotPublic:
+            return await ctx.send(NOT_PUBLIC_MSG)
 
         name = info['list'][0]['nickname']
         region = regions[info['list'][0]['region']]
@@ -326,9 +329,9 @@ class Genshin(commands.Cog):
             info_stats = [ranks['most_chambers_won'][:4], ranks['most_chambers_lost'][:4],
                           ranks['most_damage_taken'][:4], ranks['most_bursts_used'][:4],
                           ranks['most_skills_used'][:4], ranks['strongest_hit'][:4]]
-            info_stats = ['\n'.join(['{:<10}({})'.format(o['name'], o['value']) for o in stat])
-                          for stat in info_stats]
 
+            info_stats = ['\n'.join(['{:<10}({})'.format(o['name'], o['value']) for o in stat]) for stat in info_stats]
+            info_stats = [s if s else 'No Info' for s in info_stats]
             for i in range(len(names) - 1):
                 e.add_field(name=names[i], value=info_stats[i])
             e.add_field(name=names[5], value=info_stats[5], inline=False)
