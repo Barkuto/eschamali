@@ -349,6 +349,7 @@ class Genshin(commands.Cog):
             e.add_field(name='\u200b', value='\u200b')
             e.add_field(name=names[2], value=floor_infos[2])
             e.add_field(name=names[3], value=floor_infos[3])
+            e.add_field(name='\u200b', value='\u200b')
         else:
             floors = spiral_abyss['floors']
             found_floor = [f for f in floors if f['floor'] == query]
