@@ -70,6 +70,8 @@ class Genshin(commands.Cog):
         AVATAR_URL = 'https://upload-os-bbs.mihoyo.com/game_record/genshin/character_icon/UI_AvatarIcon_%s.png'
         if name.lower() == 'hu tao':
             return AVATAR_URL % 'Hutao'
+        elif name.lower() == 'noelle':
+            return AVATAR_URL % 'Noel'
         return AVATAR_URL % name
 
     def _make_rarity_str(self, rarity, max_rarity=5):
