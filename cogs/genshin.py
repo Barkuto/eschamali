@@ -71,9 +71,9 @@ class Genshin(commands.Cog):
             return AVATAR_URL % 'Hutao'
         return AVATAR_URL % name
 
-    def _make_rarity_str(self, rarity):
+    def _make_rarity_str(self, rarity, max_rarity=5):
         rarity_string = ''.join([':star:' for _ in range(rarity)])
-        rarity_string += ''.join([':heavy_multiplication_x:' for _ in range(5 - rarity)])
+        rarity_string += ''.join([':heavy_multiplication_x:' for _ in range(max_rarity - rarity)])
         return rarity_string
 
     @commands.command(description='Bind Genshin ID to Discord account to see info of account',
@@ -174,9 +174,9 @@ class Genshin(commands.Cog):
 
         await ctx.send(embed=e)
 
-    @commands.command(description='See stats for your Genshin Account',
+    @commands.command(description='See characters of your Genshin Account',
                       help='Need to use the bind command to bind IDs to Discord account first.',
-                      brief='See Genshin Stats',
+                      brief='See Genshin Characters',
                       aliases=['characters', 'chars', 'char', 'c'])
     async def character(self, ctx, *, query=None):
         if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
@@ -274,6 +274,99 @@ class Genshin(commands.Cog):
                 e.set_thumbnail(url=self._get_avatar_url(char['name']))
                 e.set_footer(text=name)
 
+        await ctx.send(embed=e)
+
+    @commands.command(description='See abyss info for your Genshin Account',
+                      help='Need to use the bind command to bind IDs to Discord account first.\nNo parameters to see stats, use a number(9,10,etc) to see teams for the floor.',
+                      brief='See Genshin Abyss Info',
+                      aliases=['a', 'spiralabyss', 'sa'])
+    async def abyss(self, ctx, query: int = None):
+        if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
+            return
+        (gid, cid) = self._get_genshin_id(ctx.author)
+        if not gid or not cid:
+            return await ctx.send(NOT_BINDED_MSG)
+        self._set_cookies()
+        info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
+        try:
+            spiral_abyss = GS.get_spiral_abyss(gid, previous=False)
+            print(spiral_abyss)
+        except GS.errors.DataNotPublic:
+            return await ctx.send(NOT_PUBLIC_MSG)
+
+        name = info['list'][0]['nickname']
+
+        e = Embed()
+        e.title = f"Spiral Abyss Season {spiral_abyss['season']}"
+
+        if not query:
+            # e.description = f"{spiral_abyss['season_start_time']} - {spiral_abyss['season_end_time']}\n"
+
+            stats = "Total Battles: {}\nTotal Wins: {}\nMax Floor: {}\nTotal Stars: {}".format(
+                spiral_abyss['stats']['total_battles'], spiral_abyss['stats']['total_wins'],
+                spiral_abyss['stats']['max_floor'], spiral_abyss['stats']['total_stars'])
+            e.add_field(name='Stats', value=stats)
+
+            ranks = spiral_abyss['character_ranks']
+            names = ['Most Chambers Won', 'Most Chambers Lost',
+                     'Most Damage Taken', 'Most Bursts Used',
+                     'Most Skills Used', 'Strongest Hit']
+            info_stats = [ranks['most_chambers_won'][:4], ranks['most_chambers_lost'][:4],
+                          ranks['most_damage_taken'][:4], ranks['most_bursts_used'][:4],
+                          ranks['most_skills_used'][:4], ranks['strongest_hit'][:4]]
+            info_stats = ['\n'.join(['{:<10}({})'.format(o['name'], o['value']) for o in stat])
+                          for stat in info_stats]
+
+            for i in range(len(names) - 1):
+                e.add_field(name=names[i], value=info_stats[i])
+            e.add_field(name=names[5], value=info_stats[5], inline=False)
+
+            floors = spiral_abyss['floors']
+            fl9 = fl10 = fl11 = fl12 = None
+            for f in floors:
+                if f['floor'] == 9:
+                    fl9 = f
+                elif f['floor'] == 10:
+                    fl10 = f
+                elif f['floor'] == 11:
+                    fl11 = f
+                elif f['floor'] == 12:
+                    fl12 = f
+            names = ['Floor 9', 'Floor 10', 'Floor 11', 'Floor 12']
+            floor_infos = [fl9, fl10, fl11, fl12]
+            for i in range(len(floor_infos)):
+                if floor_infos[i]:
+                    info = '\n'.join(['`Chamber {}:` {}'.format(l['chamber'], self._make_rarity_str(l['stars'], 3))
+                                      for l in floor_infos[i]['levels']])
+                    floor_infos[i] = info
+                else:
+                    floor_infos[i] = 'Not yet attempted.'
+            e.add_field(name=names[0], value=floor_infos[0])
+            e.add_field(name=names[1], value=floor_infos[1])
+            e.add_field(name='\u200b', value='\u200b')
+            e.add_field(name=names[2], value=floor_infos[2])
+            e.add_field(name=names[3], value=floor_infos[3])
+        else:
+            floors = spiral_abyss['floors']
+            found_floor = [f for f in floors if f['floor'] == query]
+            if found_floor:
+                found_floor = found_floor[0]
+                e.description = f"**Floor {found_floor['floor']}**\n"
+
+                chambers = found_floor['levels']
+                e.description += '\n'.join([f"`Chamber {s['chamber']}:`" + self._make_rarity_str(s['stars'], 3) for s in chambers])
+
+                info = '`Chamber Half {:<50}\n'.format('Team')
+                for c in chambers:
+                    for b in c['battles']:
+                        info += '{:^7} {:^4} {:<50}\n'.format(
+                            c['chamber'], b['half'],
+                            '/'.join([chars['name'] for chars in b['characters']]))
+                e.add_field(name='Info', value=info + '`')
+            else:
+                return await ctx.send('There is no data for that floor in this season yet.')
+
+        e.set_footer(text=name)
         await ctx.send(embed=e)
 
 
