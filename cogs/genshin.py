@@ -282,6 +282,16 @@ class Genshin(commands.Cog):
                       brief='See Genshin Abyss Info',
                       aliases=['a', 'spiralabyss', 'sa'])
     async def abyss(self, ctx, query: int = None):
+        await self._abyss(ctx, query)
+
+    @commands.command(description='See previous abyss info for your Genshin Account',
+                      help='Need to use the bind command to bind IDs to Discord account first.\nNo parameters to see stats, use a number(9,10,etc) to see teams for the floor.',
+                      brief='See Previous Genshin Abyss Info',
+                      aliases=['pa', 'prevspiralabyss', 'psa'])
+    async def prevabyss(self, ctx, query: int = None):
+        await self._abyss(ctx, query, True)
+
+    async def _abyss(self, ctx, query: int = None, previous=False):
         if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         (gid, cid) = self._get_genshin_id(ctx.author)
@@ -290,8 +300,7 @@ class Genshin(commands.Cog):
         self._set_cookies()
         info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
         try:
-            spiral_abyss = GS.get_spiral_abyss(gid, previous=False)
-            print(spiral_abyss)
+            spiral_abyss = GS.get_spiral_abyss(gid, previous=previous)
         except GS.errors.DataNotPublic:
             return await ctx.send(NOT_PUBLIC_MSG)
 
