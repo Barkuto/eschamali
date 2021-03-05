@@ -2,6 +2,7 @@
 import os
 import importlib
 import random
+from datetime import datetime
 from collections import Counter
 from discord import Colour
 from discord import Embed
@@ -300,7 +301,9 @@ class Genshin(commands.Cog):
         e.title = f"Spiral Abyss Season {spiral_abyss['season']}"
 
         if not query:
-            # e.description = f"{spiral_abyss['season_start_time']} - {spiral_abyss['season_end_time']}\n"
+            start_time = datetime.fromtimestamp(spiral_abyss['season_start_time']).strftime('%b %d, %Y %I:%M %p')
+            end_time = datetime.fromtimestamp(spiral_abyss['season_end_time']).strftime('%b %d, %Y %I:%M %p')
+            e.description = f"{start_time} - {end_time}\n"
 
             stats = "Total Battles: {}\nTotal Wins: {}\nMax Floor: {}\nTotal Stars: {}".format(
                 spiral_abyss['stats']['total_battles'], spiral_abyss['stats']['total_wins'],
