@@ -104,6 +104,11 @@ def _process_db():
             evos_from = db.get_rows('evolutions', ('from_id', mons_id), factory=True)
             evos_to = db.get_rows('evolutions', ('to_id', mons_id), factory=True)
             queue = [e['to_id'] for e in evos_from] + [e['from_id'] for e in evos_to]
+            linked_mons_from = db.get_rows('monsters', ('linked_monster_id', mons_id), factory=True)
+            if r['linked_monster_id']:
+                queue += [r['linked_monster_id']]
+            if linked_mons_from:
+                queue += [r['monster_id'] for r in linked_mons_from]
 
             all_evos = []
             while queue:
@@ -111,9 +116,11 @@ def _process_db():
                 if not n in all_evos:
                     queue += [r['to_id'] for r in db.get_rows('evolutions', ('from_id', n), factory=True)]
                     queue += [r['from_id'] for r in db.get_rows('evolutions', ('to_id', n), factory=True)]
+                    queue += [r['linked_monster_id'] for r in db.get_rows('monsters', ('monster_id', n), factory=True)]
+                    queue += [r['monster_id'] for r in db.get_rows('monsters', ('linked_monster_id', n), factory=True)]
                     all_evos.append(n)
             all_evos = [e for e in filter(lambda e: db.get_row('monsters', ('monster_id', e), (f'on_{region}', 1)), all_evos)]
-            if all_evos:
+            if mons_id in all_evos:
                 all_evos.remove(mons_id)
             all_evos = [db.get_value('monsters', f'monster_no_{region}', ('monster_id', e)) for e in all_evos]
             m['evolutions'] = sorted(all_evos)
