@@ -2,6 +2,7 @@ import os
 import importlib
 import random
 import re
+from datetime import datetime, timedelta
 from discord import Embed, User, Colour
 from discord.ext import commands
 
@@ -76,6 +77,9 @@ RAISE = '⏫'
 GAMES_TABLE = 'games'
 GAMES_TABLE_COL1 = ('discord_id', DB_MOD.INTEGER)
 GAMES_TABLE_COL2 = ('credits', DB_MOD.INTEGER)
+DAILIES_TABLE = 'daily'
+DAILIES_TABLE_COL1 = ('discord_id', DB_MOD.INTEGER)
+DAILIES_TABLE_COL2 = ('timestamp', DB_MOD.INTEGER)
 DB_PATH = os.path.join(os.path.dirname(__file__),  'games.db')
 
 
@@ -90,6 +94,8 @@ class Games(commands.Cog):
         db = DB(DB_PATH)
         if not db.create_table(GAMES_TABLE, GAMES_TABLE_COL1, GAMES_TABLE_COL2):
             LOGGER.error('Could not create games table.')
+        if not db.create_table(DAILIES_TABLE, DAILIES_TABLE_COL1, DAILIES_TABLE_COL2):
+            LOGGER.error('Could not create dailies table.')
         self._get_user_creds(self.bot.user, 100000)
 
     def _get_db(self):
@@ -375,6 +381,33 @@ class Games(commands.Cog):
     """
     Other Game Methods
     """
+    @commands.command(aliases=['d'],
+                      description='Get Daily Credits for Games',
+                      help='24h Reset',
+                      brief='Credits Daily')
+    async def daily(self, ctx):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        user = ctx.author
+        db = self._get_db()
+        last_daily = db.get_value(DAILIES_TABLE, DAILIES_TABLE_COL2[0], (DAILIES_TABLE_COL1[0], user.id))
+        e = Embed(colour=Colour.green())
+        e.title = 'Games Daily'
+        now = datetime.now().timestamp()
+        give = False
+        if not last_daily:
+            give = True
+            last_daily = now
+            db.insert_row(DAILIES_TABLE, (DAILIES_TABLE_COL1[0], user.id), (DAILIES_TABLE_COL2[0], now))
+
+        if give or (last_daily + (24 * 60 * 60)) - now <= 0:
+            self._add_user_creds(user, 1000)
+            e.description = f'You have gained 1000 Credits!\nCredits: {self._get_user_creds(user)}'
+        else:
+            diff = str(datetime.fromtimestamp(last_daily + (24 * 60 * 60)) - datetime.fromtimestamp(now))
+            diff = diff.split('.')[0]
+            e.description = f'Time until daily - {diff}'
+        await ctx.send(embed=e)
 
     @commands.command(aliases=['8', '8ball', '8b'],
                       description='Ask the magic eight-ball a *question*',
