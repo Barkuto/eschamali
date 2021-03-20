@@ -65,7 +65,7 @@ card_emojis = {
 
 emoji_cards = {v: k for k, v in card_emojis.items()}
 
-
+NUM_DECKS = 4
 HIT = '👋'
 HOLD = '🛑'
 ONE = '1️⃣'
@@ -123,16 +123,16 @@ class Games(commands.Cog):
         if not db.update_row(GAMES_TABLE, (GAMES_TABLE_COL1[0], user.id), (GAMES_TABLE_COL2[0], creds)):
             LOGGER.error(f'Could not update games entry for {user}({user.id})')
 
-    def _make_deck(self, existing_cards=[], with_suits=False):
+    def _make_deck(self, existing_cards=[], with_suits=False, num_decks=1):
         nums = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King']
         suits = ['Spades', 'Clubs', 'Diamonds', 'Hearts']
         deck = []
         for s in suits:
             for n in nums:
                 if with_suits:
-                    deck += [(n, s)]
+                    deck += [(n, s)] * num_decks
                 else:
-                    deck += [n]
+                    deck += [n] * num_decks
         for c in existing_cards:
             deck.remove(c)
         random.shuffle(deck)
@@ -179,7 +179,7 @@ class Games(commands.Cog):
             'bet': int(embed.description.split(' ')[3]),
             'bot': bot_cards,
             'user': user_cards,
-            'deck': self._make_deck(bot_cards+user_cards)
+            'deck': self._make_deck(bot_cards+user_cards, num_decks=NUM_DECKS)
         }
 
     def _is_busted(self, cards):
@@ -196,9 +196,7 @@ class Games(commands.Cog):
         return ' '.join([card_emojis[c] for c in cards])
 
     def _cards_to_embed_sum_name(self, user, cards):
-        card_sum = self._calc_sums(cards)
-        card_sum = str(card_sum).replace(',', '') if len(card_sum) == 1 else str(card_sum).replace(',', '/').replace(' ', '')
-        return f'{user.name} {card_sum}'
+        return f'{user.name} ({self._best_sum(cards)})'
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -231,19 +229,20 @@ class Games(commands.Cog):
             else:
                 await msg.remove_reaction(reaction, user)
         elif e == HOLD:
-            busted = self._is_busted(bot_cards)
-            while not busted:
-                new_bot_cards = bot_cards + [deck.pop(0)]
-                busted = self._is_busted(new_bot_cards)
-                if not busted:
-                    bot_cards = new_bot_cards
+            bot_sum = self._best_sum(bot_cards)
+            while bot_sum < 17:
+                bot_cards = bot_cards + [deck.pop(0)]
+                bot_sum = self._best_sum(bot_cards)
             embed.set_field_at(0, name=self._cards_to_embed_sum_name(self.bot.user, bot_cards),
                                value=self._cards_to_embed_str(bot_cards))
 
-            bot_sum = self._best_sum(bot_cards)
             user_sum = self._best_sum(user_cards)
             result_value = ''
-            if bot_sum > user_sum:
+            if bot_sum > 21:
+                result_value = 'Bot Busted, You Won!'
+                self._add_user_creds(self.bot.user, -bet)
+                self._add_user_creds(user, 2*bet)
+            elif bot_sum > user_sum:
                 result_value = 'You Lost!'
                 self._add_user_creds(self.bot.user, bet)
             elif bot_sum < user_sum:
@@ -349,8 +348,8 @@ class Games(commands.Cog):
         user_creds = self._get_user_creds(user)
         if user_creds < bet:
             return await ctx.send('You do not have enough credits for that bet.')
-        deck = self._make_deck()
-        bot_hand = [deck.pop(0), deck.pop(1)]
+        deck = self._make_deck(num_decks=NUM_DECKS)
+        bot_hand = [deck.pop(0)]
         user_hand = [deck.pop(0), deck.pop(0)]
 
         roles = [r for r in sorted(user.roles, reverse=True) if not r.name == '@everyone']
