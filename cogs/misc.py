@@ -99,10 +99,10 @@ class Misc(commands.Cog):
                     except:
                         pass
 
-    @ commands.command(aliases=['ih'],
-                       description='Create an in-house from arguments',
-                       help='List players separated by a space. Use \'voice\' to use current voice channel users.',
-                       brief='Make in-house')
+    @commands.command(aliases=['ih'],
+                      description='Create an in-house from arguments',
+                      help='List players separated by a space. Use \'voice\' to use current voice channel users.',
+                      brief='Make in-house')
     async def inhouse(self, ctx, *players):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
@@ -141,15 +141,15 @@ class Misc(commands.Cog):
             await msg.add_reaction(MOVE)
             await msg.add_reaction(RETURN)
 
-    @ commands.command(description='Shortcut for \'inhouse voice\' command',
-                       help='See \'inhouse\' help.',
-                       brief='Voice in-house')
+    @commands.command(description='Shortcut for \'inhouse voice\' command',
+                      help='See \'inhouse\' help.',
+                      brief='Voice in-house')
     async def ihv(self, ctx):
         await self.inhouse(ctx, 'voice')
 
-    @ commands.command(description='Shortcut for \'inhouse reaction\' command',
-                       help='See \'inhouse\' help.',
-                       brief='Reaction in-house')
+    @commands.command(description='Shortcut for \'inhouse reaction\' command',
+                      help='See \'inhouse\' help.',
+                      brief='Reaction in-house')
     async def ihr(self, ctx):
         if not UTILS.can_cog_in(self, ctx.channel):
             return

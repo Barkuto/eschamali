@@ -124,7 +124,7 @@ class General(commands.Cog):
         e = Embed(
             title=f'{name}#{disc}' + (f' AKA {nick}' if nick else ''),
             description=activity_str,
-            color=roles[0].colour if roles else 0
+            colour=roles[0].colour if roles else 0
         ).add_field(
             name='Account Created',
             value=f'{created.strftime(fmt)}\n{(now - created).days} days ago',
