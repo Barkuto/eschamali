@@ -291,11 +291,12 @@ class Games(commands.Cog):
                       description='Play Blackjack with Eschamali',
                       help='Good luck',
                       brief='Play Blackjack')
-    async def credits(self, ctx):
+    async def credits(self, ctx, user: User = None):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
-        user = ctx.author
-        creds = self._get_user_creds(ctx.author)
+        if not user:
+            user = ctx.author
+        creds = self._get_user_creds(user)
 
         e = Embed(colour=Colour.green())
         e.title = 'Games Balance'
@@ -329,13 +330,13 @@ class Games(commands.Cog):
 
         await ctx.send(embed=e)
 
-    @commands.command(description='Transfer credits from the bank to another user',
+    @commands.command(description='Transfer credits from one user to another user',
                       help='Requires bot ownage.',
                       brief='Transfer Credits')
     @commands.is_owner()
-    async def transfer(self, ctx, user: User, amount: int):
-        ctx.author = self.bot.user
-        await self.send(ctx, user, amount)
+    async def transfer(self, ctx, user1: User, user2: User, amount: int):
+        ctx.author = user1
+        await self.send(ctx, user2, amount)
 
     @commands.command(aliases=['bj'],
                       description='Play Blackjack with Eschamali',
