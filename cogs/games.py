@@ -66,7 +66,7 @@ card_emojis = {
 emoji_cards = {v: k for k, v in card_emojis.items()}
 
 NUM_DECKS = 4
-HIT = '👋'
+HIT = '☝️'
 HOLD = '🛑'
 ONE = '1️⃣'
 FIVE = '5️⃣'
