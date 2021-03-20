@@ -339,11 +339,13 @@ class Games(commands.Cog):
 
     @commands.command(aliases=['bj'],
                       description='Play Blackjack with Eschamali',
-                      help='Play Blackjack with Eschamali.\n👋 = Hit\n🛑 = Hold\n1️⃣ = +1\n5️⃣ = +5\n🔟 = +10\n💯 = +100\n⏫ = Raise Bet',
+                      help='Play Blackjack with Eschamali.\n☝️ = Hit\n🛑 = Hold\n1️⃣ = +1\n5️⃣ = +5\n🔟 = +10\n💯 = +100\n⏫ = Raise Bet',
                       brief='Play Blackjack')
     async def blackjack(self, ctx, bet: int = 100):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
+        if bet <= 0:
+            return await ctx.send('Invalid bet.')
         user = ctx.author
         user_creds = self._get_user_creds(user)
         if user_creds < bet:
