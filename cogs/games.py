@@ -1,7 +1,8 @@
-import os
 import importlib
+import os
 import random
 import re
+import threading
 from datetime import datetime, timedelta
 from discord import Embed, User, Colour
 from discord.ext import commands
@@ -68,11 +69,16 @@ emoji_cards = {v: k for k, v in card_emojis.items()}
 NUM_DECKS = 4
 HIT = '☝️'
 HOLD = '🛑'
-ONE = '1️⃣'
-FIVE = '5️⃣'
-TEN = '🔟'
-HUNDRED = '💯'
-RAISE = '⏫'
+DOUBLE = '🇩'
+SPLIT = '🇸'
+AGAIN = '🔄'
+
+ONGOING = 0
+WIN = 1
+LOSE = 2
+USER_BUST = 3
+BOT_BUST = 4
+DRAW = 5
 
 GAMES_TABLE = 'games'
 GAMES_TABLE_COL1 = ('discord_id', DB_MOD.INTEGER)
@@ -89,6 +95,7 @@ class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._init_db()
+        self.bj_states = {}
 
     def _init_db(self):
         db = DB(DB_PATH)
@@ -122,6 +129,10 @@ class Games(commands.Cog):
         creds += amount
         if not db.update_row(GAMES_TABLE, (GAMES_TABLE_COL1[0], user.id), (GAMES_TABLE_COL2[0], creds)):
             LOGGER.error(f'Could not update games entry for {user}({user.id})')
+
+    def _transfer_from_to(self, user1, user2, amount):
+        self._add_user_creds(user1, -amount)
+        self._add_user_creds(user2, amount)
 
     def _make_deck(self, existing_cards=[], with_suits=False, num_decks=1):
         nums = ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King']
@@ -169,18 +180,38 @@ class Games(commands.Cog):
             return sums[1]
         return sums[0]
 
-    def _get_bj_state(self, embed):
-        fields = embed.fields
-        bot_cards = fields[0].value.split('\n')[0]
-        user_cards = fields[1].value.split('\n')[0]
-        bot_cards = [emoji_cards[s] for s in bot_cards.split(' ')]
-        user_cards = [emoji_cards[s] for s in user_cards.split(' ')]
-        return {
-            'bet': int(embed.description.split(' ')[3]),
-            'bot': bot_cards,
-            'user': user_cards,
-            'deck': self._make_deck(bot_cards+user_cards, num_decks=NUM_DECKS)
-        }
+    def _determine_bj_winner(self, user, state):
+        bet = state['bet']
+        bot_cards = state['bot']
+        user_cards = state['user']
+        deck = state['deck']
+
+        user_sum = self._best_sum(user_cards)
+        bot_sum = self._best_sum(bot_cards)
+
+        if user_sum <= 21:
+            while bot_sum < 17:
+                bot_cards = bot_cards + [deck.pop(0)]
+                bot_sum = self._best_sum(bot_cards)
+
+        if user_sum > 21:
+            state['result'] = USER_BUST
+        elif bot_sum > 21:
+            state['result'] = BOT_BUST
+            self._transfer_from_to(self.bot.user, user, 2 * bet)
+        elif bot_sum > user_sum:
+            state['result'] = LOSE
+        elif bot_sum < user_sum:
+            state['result'] = WIN
+            self._transfer_from_to(self.bot.user, user, 2 * bet)
+        else:
+            state['result'] = DRAW
+            self._transfer_from_to(self.bot.user, user, bet)
+
+        state['bot'] = bot_cards
+        state['user'] = user_cards
+        state['deck'] = deck
+        return state
 
     def _is_busted(self, cards):
         sums = self._calc_sums(cards)
@@ -198,6 +229,50 @@ class Games(commands.Cog):
     def _cards_to_embed_sum_name(self, user, cards):
         return f'{user.name} ({self._best_sum(cards)})'
 
+    def _embed_from_bj_state(self, user, state):
+        user_creds = self._get_user_creds(user)
+        bet = state['bet']
+        bot_hand = state['bot']
+        user_hand = state['user']
+        result = state['result']
+
+        roles = [r for r in sorted(user.roles, reverse=True) if not r.name == '@everyone']
+        e = Embed(colour=roles[0].colour if roles else 0)
+
+        e.title = 'Blackjack'
+        e.description = f'Credits: {user_creds}\n' + f'Current Bet: {bet}'
+        e.set_thumbnail(url=user.avatar_url)
+
+        e.add_field(name=self._cards_to_embed_sum_name(self.bot.user, bot_hand),
+                    value=self._cards_to_embed_str(bot_hand))
+        e.add_field(name=self._cards_to_embed_sum_name(user, user_hand),
+                    value=self._cards_to_embed_str(user_hand))
+
+        result_value = ''
+        net = '0'
+        if result == WIN:
+            result_value = 'You Won!'
+            net = f'+{bet}'
+        elif result == LOSE:
+            result_value = 'You Lost!'
+            net = f'-{bet}'
+        elif result == USER_BUST:
+            result_value = 'You Busted!'
+            net = f'-{bet}'
+        elif result == BOT_BUST:
+            result_value = 'Bot Busted, You Won!'
+            net = f'+{bet}'
+        elif result == DRAW:
+            result_value = 'Draw!'
+            net = '+0'
+        if result_value:
+            e.description = f'Bet: {bet}'
+            e.add_field(name='Result', value=f'{result_value}\nCredits: {user_creds}({net})', inline=False)
+
+        e.set_footer(text=user.id)
+
+        return e
+
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user or not reaction.message.embeds:
@@ -210,82 +285,47 @@ class Games(commands.Cog):
             return
         if not self.bot.user in [u async for u in reaction.users()]:
             return
-        e = reaction.emoji
-        game_state = self._get_bj_state(embed)
-        bet = game_state['bet']
-        bot_cards = game_state['bot']
-        user_cards = game_state['user']
-        deck = game_state['deck']
-        if e == HIT:
-            user_cards += [deck.pop(0)]
-            busted = self._is_busted(user_cards)
-            embed.set_field_at(1, name=self._cards_to_embed_sum_name(user, user_cards),
-                               value=self._cards_to_embed_str(user_cards))
-            if busted:
-                self._add_user_creds(self.bot.user, bet)
-                embed.add_field(name='Result', value=f'You Busted!\nCredits: {self._get_user_creds(user)}', inline=False)
-            if busted:
-                await msg.clear_reactions()
-            else:
-                await msg.remove_reaction(reaction, user)
-        elif e == HOLD:
-            bot_sum = self._best_sum(bot_cards)
-            while bot_sum < 17:
-                bot_cards = bot_cards + [deck.pop(0)]
-                bot_sum = self._best_sum(bot_cards)
-            embed.set_field_at(0, name=self._cards_to_embed_sum_name(self.bot.user, bot_cards),
-                               value=self._cards_to_embed_str(bot_cards))
-
-            user_sum = self._best_sum(user_cards)
-            result_value = ''
-            if bot_sum > 21:
-                result_value = 'Bot Busted, You Won!'
-                self._add_user_creds(self.bot.user, -bet)
-                self._add_user_creds(user, 2*bet)
-            elif bot_sum > user_sum:
-                result_value = 'You Lost!'
-                self._add_user_creds(self.bot.user, bet)
-            elif bot_sum < user_sum:
-                result_value = 'You Won!'
-                self._add_user_creds(self.bot.user, -bet)
-                self._add_user_creds(user, 2*bet)
-            else:
-                result_value = 'Draw!'
-                self._add_user_creds(user, bet)
-            result_value += f'\nCredits: {self._get_user_creds(user)}'
-            embed.add_field(name='Result', value=result_value, inline=False)
-            await msg.clear_reactions()
-        elif e == RAISE:
-            valid = [ONE, FIVE, TEN, HUNDRED]
-            reactions = [r for r in msg.reactions if r.me and r.count > 1 and r.emoji in valid]
-            amt = 0
-            for r in reactions:
-                users = await r.users().flatten()
-                if user in users:
-                    if r.emoji == ONE:
-                        amt += 1
-                    elif r.emoji == FIVE:
-                        amt += 5
-                    elif r.emoji == TEN:
-                        amt += 10
-                    elif r.emoji == HUNDRED:
-                        amt += 100
-            creds = self._get_user_creds(user)
-            if amt > creds:
-                await msg.channel.send(f'You do not have enough credits to bet {amt} more')
-            else:
-                bet += amt
-                self._add_user_creds(user, -amt)
-                desc = embed.description.split('\n')
-                desc = [d.split(' ') for d in desc]
-                desc[0][1] = str(self._get_user_creds(user))
-                desc[1][2] = str(bet)
-                desc = [' '.join(d) for d in desc]
-                embed.description = '\n'.join(desc)
-            await msg.remove_reaction(reaction, user)
-        else:
-            return
-        await msg.edit(embed=embed)
+        if reaction.emoji in [HIT, HOLD, DOUBLE, SPLIT]:
+            state = self.bj_states[user.id]
+            lock = state['lock']
+            if not lock.acquire(blocking=False):
+                return
+            try:
+                action = reaction.emoji
+                split = state['split']
+                clear = False
+                if action in [HIT, DOUBLE]:
+                    state['user'] += [state['deck'].pop(0)]
+                    busted = self._is_busted(state['user'])
+                    if action == DOUBLE:
+                        self._transfer_from_to(user, self.bot.user, state['bet'])
+                        state['bet'] *= 2
+                        clear = True
+                    if busted:
+                        self.bj_states[user.id] = self._determine_bj_winner(user, state)
+                        clear = True
+                    else:
+                        await msg.remove_reaction(reaction, user)
+                        if action == DOUBLE:
+                            self.bj_states[user.id] = self._determine_bj_winner(user, state)
+                        elif action == HIT:
+                            await msg.clear_reaction(DOUBLE)
+                elif action == HOLD:
+                    self.bj_states[user.id] = self._determine_bj_winner(user, state)
+                    clear = True
+                elif action == SPLIT:
+                    pass
+                if clear:
+                    self.bj_states.pop(user.id, None)
+                    await msg.clear_reactions()
+                    await msg.add_reaction(AGAIN)
+                await msg.edit(embed=self._embed_from_bj_state(user, state))
+            finally:
+                lock.release()
+        elif reaction.emoji == AGAIN:
+            ctx = await self.bot.get_context(msg)
+            ctx.author = user
+            await self.blackjack(ctx)
 
     @commands.command(aliases=['creds', 'cred', 'cr', 'balance', 'bal'],
                       description='Play Blackjack with Eschamali',
@@ -322,8 +362,7 @@ class Games(commands.Cog):
         author_creds = self._get_user_creds(ctx.author)
         e = Embed(colour=Colour.green())
         if author_creds >= amount:
-            self._add_user_creds(user, amount)
-            self._add_user_creds(ctx.author, -amount)
+            self._transfer_from_to(ctx.author, user, amount)
             e.description = f'Sent {amount} credit(s) to {user.mention}'
         else:
             e.description = f'Insufficient credit(s) to send.'
@@ -340,45 +379,38 @@ class Games(commands.Cog):
 
     @commands.command(aliases=['bj'],
                       description='Play Blackjack with Eschamali',
-                      help='Play Blackjack with Eschamali.\n☝️ = Hit\n🛑 = Hold\n1️⃣ = +1\n5️⃣ = +5\n🔟 = +10\n💯 = +100\n⏫ = Raise Bet',
+                      help='Play Blackjack with Eschamali.\n☝️ = Hit\n🛑 = Hold\n🇩 = Double Bet and +1 Card',
                       brief='Play Blackjack')
     async def blackjack(self, ctx, bet: int = 100):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
+        user = ctx.author
+        if user.id in self.bj_states.keys():
+            return await ctx.send('You already have a Blackjack game running.')
         if bet <= 0:
             return await ctx.send('Invalid bet.')
-        user = ctx.author
         user_creds = self._get_user_creds(user)
         if user_creds < bet:
             return await ctx.send('You do not have enough credits for that bet.')
         deck = self._make_deck(num_decks=NUM_DECKS)
         bot_hand = [deck.pop(0)]
         user_hand = [deck.pop(0), deck.pop(0)]
+        game_state = {
+            'lock': threading.Lock(),
+            'split': False,
+            'bet': bet,
+            'bot': bot_hand,
+            'user': user_hand,
+            'deck': self._make_deck(bot_hand + user_hand, num_decks=NUM_DECKS),
+            'result': ONGOING
+        }
+        self.bj_states[user.id] = game_state
+        self._transfer_from_to(user, self.bot.user, bet)
 
-        roles = [r for r in sorted(user.roles, reverse=True) if not r.name == '@everyone']
-
-        e = Embed(colour=roles[0].colour if roles else 0)
-
-        e.title = 'Blackjack'
-        e.description = f'Credits: {user_creds - bet}\n' + f'Current Bet: {bet}'
-        e.set_thumbnail(url=user.avatar_url)
-
-        e.add_field(name=self._cards_to_embed_sum_name(self.bot.user, bot_hand),
-                    value=self._cards_to_embed_str(bot_hand))
-        e.add_field(name=self._cards_to_embed_sum_name(user, user_hand),
-                    value=self._cards_to_embed_str(user_hand))
-
-        e.set_footer(text=user.id)
-
-        msg = await ctx.send(embed=e)
-        self._add_user_creds(user, -bet)
+        msg = await ctx.send(embed=self._embed_from_bj_state(user, game_state))
         await msg.add_reaction(HIT)
         await msg.add_reaction(HOLD)
-        await msg.add_reaction(ONE)
-        await msg.add_reaction(FIVE)
-        await msg.add_reaction(TEN)
-        await msg.add_reaction(HUNDRED)
-        await msg.add_reaction(RAISE)
+        await msg.add_reaction(DOUBLE)
 
     """
     Other Game Methods
@@ -409,6 +441,39 @@ class Games(commands.Cog):
             diff = str(datetime.fromtimestamp(last_daily + (24 * 60 * 60)) - datetime.fromtimestamp(now))
             diff = diff.split('.')[0]
             e.description = f'Time until daily - {diff}'
+        await ctx.send(embed=e)
+
+    @commands.command(aliases=['gs'],
+                      description='Guess a number from 1-10',
+                      help='Guess a number between 1-10\nExact = 100\nWithin 1 = 50\nWithin 2 = 10\n4 or more = -20',
+                      brief='Guess Number Game')
+    async def guess(self, ctx, guess: int):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        low = 1
+        high = 10
+        if not (0 < guess <= 10):
+            return await ctx.send('Number must be 1-10')
+        num = random.randint(low, high)
+        diff = abs(guess - num)
+        e = Embed(colour=Colour.greyple())
+        e.set_thumbnail(url=ctx.author.avatar_url)
+
+        e.add_field(name='Bot Number', value=num)
+        e.add_field(name='Your Guess', value=guess)
+        gain = 0
+        if diff == 0:
+            gain = 100
+        elif diff == 1:
+            gain = 50
+        elif diff == 2:
+            gain = 10
+        elif diff >= 4:
+            gain = -20
+        self._transfer_from_to(self.bot.user, ctx.author, gain)
+        e.set_footer(text=f'Credits: {self._get_user_creds(ctx.author)}({"+" if gain > 0 else ""}{gain})')
+        e.title = 'Guess Game'
+
         await ctx.send(embed=e)
 
     @commands.command(aliases=['8', '8ball', '8b'],
