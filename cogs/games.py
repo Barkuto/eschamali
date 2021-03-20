@@ -102,10 +102,11 @@ class Games(commands.Cog):
     def _get_user_creds(self, user, default=1000):
         db = self._get_db()
         creds = db.get_value(GAMES_TABLE, GAMES_TABLE_COL2[0], (GAMES_TABLE_COL1[0], user.id))
-        if not creds:
+        if creds is None:
             if not db.insert_row(GAMES_TABLE, (GAMES_TABLE_COL1[0], user.id), (GAMES_TABLE_COL2[0], default)):
                 LOGGER.error(f'Could not create games entry for {user}({user.id})')
-        return creds or default
+            return default
+        return creds
 
     def _add_user_creds(self, user, amount):
         db = self._get_db()
@@ -214,8 +215,6 @@ class Games(commands.Cog):
         if e == HIT:
             user_cards += [deck.pop(0)]
             busted = self._is_busted(user_cards)
-            # embed.set_field_at(1, name=embed.fields[1].name,
-            #                    value=self._cards_to_embed_str(user_cards))
             embed.set_field_at(1, name=self._cards_to_embed_sum_name(user, user_cards),
                                value=self._cards_to_embed_str(user_cards))
             if busted:
@@ -335,7 +334,7 @@ class Games(commands.Cog):
 
     @commands.command(aliases=['bj'],
                       description='Play Blackjack with Eschamali',
-                      help='Play Blackjack with Eschamali. Use reactions to hit/hold/raise. Using this command automatically deducts credits from your balance!!!',
+                      help='Play Blackjack with Eschamali.\n👋 = Hit\n🛑 = Hold\n1️⃣ = +1\n5️⃣ = +5\n🔟 = +10\n💯 = +100\n⏫ = Raise Bet',
                       brief='Play Blackjack')
     async def blackjack(self, ctx, bet: int = 100):
         if not UTILS.can_cog_in(self, ctx.channel):
