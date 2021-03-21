@@ -295,6 +295,11 @@ class Games(commands.Cog):
                 split = state['split']
                 clear = False
                 if action in [HIT, DOUBLE]:
+                    creds = self._get_user_creds(user)
+                    if creds < state['bet']:
+                        ctx = await self.bot.get_context(msg)
+                        await msg.remove_reaction(reaction, user)
+                        return await ctx.send('Insufficient credit(s) to double down.')
                     state['user'] += [state['deck'].pop(0)]
                     busted = self._is_busted(state['user'])
                     if action == DOUBLE:
@@ -365,7 +370,7 @@ class Games(commands.Cog):
             self._transfer_from_to(ctx.author, user, amount)
             e.description = f'Sent {amount} credit(s) to {user.mention}'
         else:
-            e.description = f'Insufficient credit(s) to send.'
+            e.description = 'Insufficient credit(s) to send.'
 
         await ctx.send(embed=e)
 
@@ -441,6 +446,26 @@ class Games(commands.Cog):
             diff = str(datetime.fromtimestamp(last_daily + (24 * 60 * 60)) - datetime.fromtimestamp(now))
             diff = diff.split('.')[0]
             e.description = f'Time until daily - {diff}'
+        await ctx.send(embed=e)
+
+    @commands.command(aliases=['leader', 'board', 'lb'],
+                      description='Credits Leaderboard',
+                      help='None',
+                      brief='Leaderboard')
+    async def leaderboard(self, ctx):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        db = self._get_db()
+
+        e = Embed(colour=Colour.green())
+        e.title = 'Credit Leardboard'
+
+        rows = db.get_all(GAMES_TABLE)
+        for r in rows:
+            print(r[0], r[1])
+        text = '```'
+        text += '```'
+
         await ctx.send(embed=e)
 
     @commands.command(aliases=['gs'],
