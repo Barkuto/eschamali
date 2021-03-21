@@ -301,7 +301,7 @@ class Games(commands.Cog):
                 clear = False
                 if action in [HIT, DOUBLE]:
                     creds = self._get_user_creds(user)
-                    if creds < state['bet']:
+                    if creds < state['bet'] and action == DOUBLE:
                         ctx = await self.bot.get_context(msg)
                         await msg.remove_reaction(reaction, user)
                         return await ctx.send('Insufficient credit(s) to double down.')
