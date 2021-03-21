@@ -189,7 +189,7 @@ class Games(commands.Cog):
         user_sum = self._best_sum(user_cards)
         bot_sum = self._best_sum(bot_cards)
 
-        if not(user_sum == 21 and len(user_cards) == 2):
+        if not(user_sum == 21 and len(user_cards) == 2) and user_sum <= 21:
             while bot_sum < 17:
                 bot_cards = bot_cards + [deck.pop(0)]
                 bot_sum = self._best_sum(bot_cards)
