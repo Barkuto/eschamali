@@ -189,7 +189,7 @@ class Games(commands.Cog):
         user_sum = self._best_sum(user_cards)
         bot_sum = self._best_sum(bot_cards)
 
-        if user_sum <= 21:
+        if not(user_sum == 21 and len(user_cards) == 2):
             while bot_sum < 17:
                 bot_cards = bot_cards + [deck.pop(0)]
                 bot_sum = self._best_sum(bot_cards)
@@ -273,6 +273,11 @@ class Games(commands.Cog):
 
         return e
 
+    async def _finalize_bj(self, user, msg, embed):
+        self.bj_states.pop(user.id, None)
+        await msg.clear_reactions()
+        await msg.add_reaction(AGAIN)
+
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user or not reaction.message.embeds:
@@ -321,9 +326,7 @@ class Games(commands.Cog):
                 elif action == SPLIT:
                     pass
                 if clear:
-                    self.bj_states.pop(user.id, None)
-                    await msg.clear_reactions()
-                    await msg.add_reaction(AGAIN)
+                    await self._finalize_bj(user, msg, embed)
                 await msg.edit(embed=self._embed_from_bj_state(user, state))
             finally:
                 lock.release()
@@ -353,7 +356,6 @@ class Games(commands.Cog):
     @commands.command(description='See credit amount in the "bank"',
                       help='Requires bot ownage.',
                       brief='Check "bank"')
-    @commands.is_owner()
     async def bank(self, ctx):
         ctx.author = self.bot.user
         await self.credits(ctx)
@@ -412,10 +414,16 @@ class Games(commands.Cog):
         self.bj_states[user.id] = game_state
         self._transfer_from_to(user, self.bot.user, bet)
 
-        msg = await ctx.send(embed=self._embed_from_bj_state(user, game_state))
-        await msg.add_reaction(HIT)
-        await msg.add_reaction(HOLD)
-        await msg.add_reaction(DOUBLE)
+        user_sum = self._best_sum(user_hand)
+        if user_sum == 21:
+            self.bj_states[user.id] = self._determine_bj_winner(user, game_state)
+            msg = await ctx.send(embed=self._embed_from_bj_state(user, self.bj_states[user.id]))
+            await self._finalize_bj(user, msg, msg.embeds[0])
+        else:
+            msg = await ctx.send(embed=self._embed_from_bj_state(user, game_state))
+            await msg.add_reaction(HIT)
+            await msg.add_reaction(HOLD)
+            await msg.add_reaction(DOUBLE)
 
     """
     Other Game Methods
@@ -452,19 +460,35 @@ class Games(commands.Cog):
                       description='Credits Leaderboard',
                       help='None',
                       brief='Leaderboard')
-    async def leaderboard(self, ctx):
+    async def leaderboard(self, ctx, page=1):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         db = self._get_db()
 
         e = Embed(colour=Colour.green())
-        e.title = 'Credit Leardboard'
+        e.title = 'Credit Leaderboard'
 
         rows = db.get_all(GAMES_TABLE)
+        rows = [r for r in rows if r[0] != self.bot.user.id]
+        max_pages = len(rows) // 10 + 1
+        page = max_pages if page > max_pages else page
+        rows.sort(key=lambda r: r[1], reverse=True)
+        rows = rows[10 * (page - 1):10 * page]
+        line_template = '{:^8}|{:^11}|{:<20}\n'
+        rank = 10 * (page - 1) + 1
+        text = '```' + line_template.format('Rank', 'Credits', 'Name')
         for r in rows:
-            print(r[0], r[1])
-        text = '```'
+            user = None
+            for g in self.bot.guilds:
+                user = g.get_member(r[0])
+                if user:
+                    break
+            text += line_template.format(rank, r[1], f'{user.name[0:15]}#{user.discriminator}' if user else r[0])
+            rank += 1
         text += '```'
+
+        e.description = text
+        e.set_footer(text=f'{page}/{max_pages}')
 
         await ctx.send(embed=e)
 
