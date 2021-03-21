@@ -470,7 +470,9 @@ class Games(commands.Cog):
             gain = 10
         elif diff >= 4:
             gain = -20
-        self._transfer_from_to(self.bot.user, ctx.author, gain)
+        creds = self._get_user_creds(ctx.author)
+        if (creds + gain) > 0:
+            self._transfer_from_to(self.bot.user, ctx.author, gain)
         e.set_footer(text=f'Credits: {self._get_user_creds(ctx.author)}({"+" if gain > 0 else ""}{gain})')
         e.title = 'Guess Game'
 
