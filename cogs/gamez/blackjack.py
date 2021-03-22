@@ -114,6 +114,8 @@ class Blackjack():
                         self.turn = HOUSE
                         if len(self.player_cards) > 1:
                             self.hit()
+                        else:
+                            self._determine_state()
         elif curr_state == PLAYER_DONE:
             # House Turn
             house_sum = best_sum(self.house_cards)

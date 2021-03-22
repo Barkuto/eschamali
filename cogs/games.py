@@ -76,6 +76,8 @@ DOUBLE = '🇩'
 SPLIT = '🇸'
 AGAIN = '🔄'
 
+DEFAULT_BET = 100
+
 
 class Games(commands.Cog):
     """Fun commands"""
@@ -160,7 +162,8 @@ class Games(commands.Cog):
     async def _finalize_bj(self, user, msg, embed):
         self.bj_states.pop(user.id, None)
         await msg.clear_reactions()
-        await msg.add_reaction(AGAIN)
+        if self.cr.get_user_creds(user) >= DEFAULT_BET:
+            await msg.add_reaction(AGAIN)
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -261,7 +264,7 @@ class Games(commands.Cog):
                       description='Play Blackjack with Eschamali',
                       help='Play Blackjack with Eschamali.\n☝️ = Hit\n🛑 = Hold\n🇩 = Double Bet and +1 Card',
                       brief='Play Blackjack')
-    async def blackjack(self, ctx, bet: int = 100):
+    async def blackjack(self, ctx, bet: int = DEFAULT_BET):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         user = ctx.author
