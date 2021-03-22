@@ -71,6 +71,7 @@ class Credits():
 
         if give or (last_daily + (24 * 60 * 60)) - now <= 0:
             self.add_user_creds(user, 1000)
+            db.update_row(DAILIES_TABLE, (DAILIES_TABLE_COL1[0], user.id), (DAILIES_TABLE_COL2[0], now))
             return True
         diff = str(datetime.fromtimestamp(last_daily + (24 * 60 * 60)) - datetime.fromtimestamp(now))
         diff = diff.split('.')[0]
