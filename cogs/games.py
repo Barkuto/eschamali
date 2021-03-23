@@ -533,10 +533,10 @@ class Games(commands.Cog):
             bot_wins = busts[4] + sum([r[1] for r in nums])
             bot_losses = busts[2] + sum([r[2] for r in nums])
             bot_draws = sum([r[5] for r in nums])
-            total = (bot_wins + bot_losses + bot_draws) or 1
-            win_p = bot_wins / total * 100
-            loss_p = bot_losses / total * 100
-            draw_p = bot_draws / total * 100
+            total = bot_wins + bot_losses + bot_draws
+            win_p = (bot_wins / total * 100) if total else 0
+            loss_p = (bot_losses / total * 100) if total else 0
+            draw_p = (bot_draws / total * 100) if total else 0
 
             win_loss = '```'
             win_loss += 'Wins  : {} ({:.2f}%)\n'.format(bot_wins, win_p)
@@ -572,10 +572,10 @@ class Games(commands.Cog):
             wins = row[1] if row else 0
             losses = row[2] if row else 0
             draws = row[3] if row else 0
-            total = (wins + losses + draws) or 1
-            win_p = wins / total * 100
-            loss_p = losses / total * 100
-            draw_p = draws / total * 100
+            total = wins + losses + draws
+            win_p = (wins / total * 100) if total else 0
+            loss_p = (losses / total * 100) if total else 0
+            draw_p = (draws / total * 100) if total else 0
 
             win_loss = '```'
             win_loss += 'Wins  : {} ({:.2f}%)\n'.format(wins, win_p)
