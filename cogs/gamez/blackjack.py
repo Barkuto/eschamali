@@ -51,7 +51,7 @@ class Blackjack():
             raise InsufficientCreditsException(INSUFFICIENT_CREDITS)
 
         bet_test = bet / 2 * 3
-        if bet <= 0 or (bet_test - int(bet_test) != 0):
+        if bet <= 0 or (bet_test - int(bet_test) != 0) or (bet_test % 2 != 0):
             raise InvalidBetException(INVALID_BET)
 
         self.credits = credits
@@ -102,11 +102,7 @@ class Blackjack():
             # Beginning State, 2 cards both sides
             if num_house_cards == num_player_cards == 2:
                 # Handle auto win when house or player dealt 21
-                if house_sum == player_sum == 21:
-                    self.set_curr_state(DRAW)
-                    # Return Bet
-                    self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet)
-                elif player_sum == 21:
+                if house_sum == player_sum == 21 or player_sum == 21:
                     self.set_curr_state(PLAYER_WIN)
                     # Bet Payout 3:2
                     self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet + curr_bet / 2 * 3)
