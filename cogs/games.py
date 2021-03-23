@@ -4,7 +4,7 @@ import random
 import re
 import threading
 from datetime import datetime, timedelta
-from discord import Embed, User, Colour
+from discord import Embed, User, Colour, Member
 from discord.ext import commands
 
 UTILS = importlib.import_module('.utils', 'util')
@@ -559,7 +559,7 @@ class Games(commands.Cog):
                       description='Check personal stats for a game',
                       help='Valid Games so far: "blackjack"',
                       brief='Personal Game Stats')
-    async def personal_stats(self, ctx, game, user: User = None):
+    async def personal_stats(self, ctx, game, user: Member = None):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         if not user:
@@ -567,11 +567,31 @@ class Games(commands.Cog):
         valid = ['blackjack', 'bj']
         if game in [valid[0], valid[1]]:
             db = self._get_stats_db()
-            row = db.get_row(BJ_PERSONAL_STATS_TABLE, (BJ_PERSONAL_STATS_TABLE_COL1[0], user.id))
+            if user.id == self.bot.user.id:
+                rows = db.get_all(BJ_STATS_TABLE)
+                busts = []
+                nums = [[]] * 22
+                for r in rows:
+                    if r[0] == 'doubled':
+                        pass
+                    elif r[0] == 'splits':
+                        pass
+                    elif r[0] == 'busts':
+                        busts = r
+                    else:
+                        nums[int(r[0])] = r
+                nums = nums[2:]
 
-            wins = row[1] if row else 0
-            losses = row[2] if row else 0
-            draws = row[3] if row else 0
+                wins = busts[4] + sum([r[1] for r in nums])
+                losses = busts[2] + sum([r[2] for r in nums])
+                draws = sum([r[5] for r in nums])
+            else:
+                row = db.get_row(BJ_PERSONAL_STATS_TABLE, (BJ_PERSONAL_STATS_TABLE_COL1[0], user.id))
+
+                wins = row[1] if row else 0
+                losses = row[2] if row else 0
+                draws = row[3] if row else 0
+
             total = wins + losses + draws
             win_p = (wins / total * 100) if total else 0
             loss_p = (losses / total * 100) if total else 0
