@@ -533,7 +533,7 @@ class Games(commands.Cog):
             bot_wins = busts[4] + sum([r[1] for r in nums])
             bot_losses = busts[2] + sum([r[2] for r in nums])
             bot_draws = sum([r[5] for r in nums])
-            total = bot_wins + bot_losses + bot_draws
+            total = (bot_wins + bot_losses + bot_draws) or 1
             win_p = bot_wins / total * 100
             loss_p = bot_losses / total * 100
             draw_p = bot_draws / total * 100
@@ -569,10 +569,10 @@ class Games(commands.Cog):
             db = self._get_stats_db()
             row = db.get_row(BJ_PERSONAL_STATS_TABLE, (BJ_PERSONAL_STATS_TABLE_COL1[0], user.id))
 
-            wins = row[1]
-            losses = row[2]
-            draws = row[3]
-            total = wins + losses + draws
+            wins = row[1] if row else 0
+            losses = row[2] if row else 0
+            draws = row[3] if row else 0
+            total = (wins + losses + draws) or 1
             win_p = wins / total * 100
             loss_p = losses / total * 100
             draw_p = draws / total * 100
