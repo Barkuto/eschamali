@@ -358,7 +358,7 @@ class Games(commands.Cog):
             finally:
                 lock.release()
             if bj_state_final:
-                self._save_bj_stats(bj_state_final)
+                await self._save_bj_stats(bj_state_final)
         elif reaction.emoji == AGAIN:
             ctx = await self.bot.get_context(msg)
             ctx.author = user
@@ -438,7 +438,7 @@ class Games(commands.Cog):
             await msg.add_reaction(SPLIT)
         else:
             bj_state_final = await self._finalize_bj(user, msg, msg.embeds[0])
-            self._save_bj_stats(bj_state_final)
+            await self._save_bj_stats(bj_state_final)
 
     @commands.command(aliases=['gst', 'st'],
                       description='Check stats for a game',
