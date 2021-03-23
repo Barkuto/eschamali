@@ -47,10 +47,12 @@ class InvalidSplitStateException(BlackjackException):
 
 class Blackjack():
     def __init__(self, credits, deck, bet, house_user, player_user):
-        if bet <= 0:
-            raise InvalidBetException(INVALID_BET)
         if credits.get_user_creds(player_user) < bet:
             raise InsufficientCreditsException(INSUFFICIENT_CREDITS)
+
+        bet_test = bet / 2 * 3
+        if bet <= 0 or (bet_test - int(bet_test) != 0):
+            raise InvalidBetException(INVALID_BET)
 
         self.credits = credits
         self.lock = threading.Lock()
@@ -100,7 +102,7 @@ class Blackjack():
             if num_house_cards == num_player_cards == 2 and player_sum == 21:
                 # Handle auto win when player dealt 21
                 self.set_curr_state(PLAYER_WIN)
-                self.credits.transfer_from_to(self.house_user, self.player_user, 2 * curr_bet)
+                self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet + curr_bet / 2 * 3)
             # Player Turn
             elif self.turn == PLAYER:
                 if player_sum > 21:
