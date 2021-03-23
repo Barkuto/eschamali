@@ -78,6 +78,18 @@ AGAIN = '🔄'
 
 DEFAULT_BET = 100
 
+BJ_STATS_TABLE = 'blackjack_stats'
+BJ_STATS_TABLE_COL1 = ('field', DB_MOD.TEXT)
+BJ_STATS_TABLE_COL2 = ('bot_wins', DB_MOD.INTEGER)
+BJ_STATS_TABLE_COL3 = ('bot_losses', DB_MOD.INTEGER)
+BJ_STATS_TABLE_COL4 = ('user_wins', DB_MOD.INTEGER)
+BJ_STATS_TABLE_COL5 = ('user_losses', DB_MOD.INTEGER)
+BJ_STATS_TABLE_COL6 = ('draws', DB_MOD.INTEGER)
+BJ_DOUBLED_FIELD = 'doubled'
+BJ_SPLITS_FIELD = 'splits'
+BJ_BUSTS_FIELD = 'busts'
+STATS_DB_PATH = os.path.join(os.path.dirname(__file__),  'gamez', 'stats.db')
+
 
 class Games(commands.Cog):
     """Fun commands"""
@@ -86,6 +98,50 @@ class Games(commands.Cog):
         self.bot = bot
         self.bj_states = {}
         self.cr = CREDITS.Credits(bot.user)
+        self._init_stats_db()
+
+    def _init_stats_db(self):
+        db = DB(STATS_DB_PATH)
+        # Blackjack Stat Rows
+        if not db.create_table(BJ_STATS_TABLE,
+                               BJ_STATS_TABLE_COL1,
+                               BJ_STATS_TABLE_COL2, BJ_STATS_TABLE_COL3,
+                               BJ_STATS_TABLE_COL4, BJ_STATS_TABLE_COL5,
+                               BJ_STATS_TABLE_COL6):
+            LOGGER.error('Could not create stats table.')
+        if not db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_DOUBLED_FIELD)):
+            if not db.insert_row(BJ_STATS_TABLE,
+                                 (BJ_STATS_TABLE_COL1[0], BJ_DOUBLED_FIELD),
+                                 (BJ_STATS_TABLE_COL2[0], 0), (BJ_STATS_TABLE_COL3[0], 0),
+                                 (BJ_STATS_TABLE_COL4[0], 0), (BJ_STATS_TABLE_COL5[0], 0),
+                                 (BJ_STATS_TABLE_COL6[0], 0)):
+                LOGGER.error(f'Could not create blackjack stats row: "{BJ_DOUBLED_FIELD}"')
+        if not db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD)):
+            if not db.insert_row(BJ_STATS_TABLE,
+                                 (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD),
+                                 (BJ_STATS_TABLE_COL2[0], 0), (BJ_STATS_TABLE_COL3[0], 0),
+                                 (BJ_STATS_TABLE_COL4[0], 0), (BJ_STATS_TABLE_COL5[0], 0),
+                                 (BJ_STATS_TABLE_COL6[0], 0)):
+                LOGGER.error(f'Could not create blackjack stats row: "{BJ_SPLITS_FIELD}"')
+        if not db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD)):
+            if not db.insert_row(BJ_STATS_TABLE,
+                                 (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
+                                 (BJ_STATS_TABLE_COL2[0], 0), (BJ_STATS_TABLE_COL3[0], 0),
+                                 (BJ_STATS_TABLE_COL4[0], 0), (BJ_STATS_TABLE_COL5[0], 0),
+                                 (BJ_STATS_TABLE_COL6[0], 0)):
+                LOGGER.error(f'Could not create blackjack stats row: "{BJ_BUSTS_FIELD}"')
+        for i in range(2, 22):
+            val = str(i)
+            if not db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], val)):
+                if not db.insert_row(BJ_STATS_TABLE,
+                                     (BJ_STATS_TABLE_COL1[0], val),
+                                     (BJ_STATS_TABLE_COL2[0], 0), (BJ_STATS_TABLE_COL3[0], 0),
+                                     (BJ_STATS_TABLE_COL4[0], 0), (BJ_STATS_TABLE_COL5[0], 0),
+                                     (BJ_STATS_TABLE_COL6[0], 0)):
+                    LOGGER.error(f'Could not create blackjack stats row: "{val}"')
+
+    def _get_stats_db(self):
+        return DB(STATS_DB_PATH)
 
     """
     Blackjack Methods
@@ -125,7 +181,7 @@ class Games(commands.Cog):
         val = ''
         for i in range(len(user_hands)):
             if i == blackjack.curr_hand and len(user_hands) > 1:
-                val += '>'
+                val += ':black_small_square:'
             val += self._cards_to_embed_str(user_hands[i]) + '\n'
         e.add_field(name=name, value=val)
 
@@ -160,10 +216,104 @@ class Games(commands.Cog):
         return e
 
     async def _finalize_bj(self, user, msg, embed):
-        self.bj_states.pop(user.id, None)
+        bj_state = self.bj_states.pop(user.id, None)
         await msg.clear_reactions()
         if self.cr.get_user_creds(user) >= DEFAULT_BET:
             await msg.add_reaction(AGAIN)
+        return bj_state
+
+    async def _save_bj_stats(self, bj_state):
+        if bj_state:
+            # save stats
+            doubled = bj_state.doubled
+            house_sum = str(BJ_MOD.best_sum(bj_state.house_cards))
+            player_sums = [BJ_MOD.best_sum(cards) for cards in bj_state.player_cards]
+            states = bj_state.states
+            split = len(states) > 1
+            db = self._get_stats_db()
+            for i in range(len(states)):
+                s = states[i]
+                p_sum = str(player_sums[i])
+                doubled_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_DOUBLED_FIELD), factory=True)
+                splits_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD), factory=True)
+                busts_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD), factory=True)
+                p_sum_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], p_sum), factory=True)
+                h_sum_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], house_sum), factory=True)
+                # HAND WIN/LOSS/DRAWS
+                if s == BJ_MOD.PLAYER_WIN:
+                    # +1 p_sum[user_wins]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], p_sum),
+                                  (BJ_STATS_TABLE_COL4[0], p_sum_row['user_wins'] + 1))
+                    # +1 h_sum[bot_losses]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], house_sum),
+                                  (BJ_STATS_TABLE_COL3[0], h_sum_row['bot_losses'] + 1))
+                elif s == BJ_MOD.PLAYER_LOSE:
+                    # +1 p_sum[user_losses]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], p_sum),
+                                  (BJ_STATS_TABLE_COL5[0], p_sum_row['user_losses'] + 1))
+                    # +1 h_sum[bot_wins]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], house_sum),
+                                  (BJ_STATS_TABLE_COL2[0], h_sum_row['bot_wins'] + 1))
+                elif s == BJ_MOD.PLAYER_BUST:
+                    # +1 busts[user_losses]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
+                                  (BJ_STATS_TABLE_COL5[0], busts_row['user_losses'] + 1))
+                    # +1 busts[bot_wins]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
+                                  (BJ_STATS_TABLE_COL2[0], busts_row['bot_wins'] + 1))
+                elif s == BJ_MOD.HOUSE_BUST:
+                    # +1 busts[user_wins]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
+                                  (BJ_STATS_TABLE_COL4[0], busts_row['user_wins'] + 1))
+                    # +1 busts[bot_losses]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
+                                  (BJ_STATS_TABLE_COL3[0], busts_row['bot_losses'] + 1))
+                elif s == BJ_MOD.DRAW:
+                    # +1 p_sum/h_sum[draws]
+                    db.update_row(BJ_STATS_TABLE,
+                                  (BJ_STATS_TABLE_COL1[0], p_sum),
+                                  (BJ_STATS_TABLE_COL6[0], p_sum_row['draws'] + 1))
+                # DOUBLED WIN/LOSS/DRAWS
+                if doubled[i]:
+                    if s in [BJ_MOD.PLAYER_WIN, BJ_MOD.HOUSE_BUST]:
+                        # +1 doubled[user_wins]
+                        db.update_row(BJ_STATS_TABLE,
+                                      (BJ_STATS_TABLE_COL1[0], BJ_DOUBLED_FIELD),
+                                      (BJ_STATS_TABLE_COL4[0], doubled_row['user_wins'] + 1))
+                    elif s in [BJ_MOD.PLAYER_LOSE, BJ_MOD.PLAYER_BUST]:
+                        # +1 doubled[user_losses]
+                        db.update_row(BJ_STATS_TABLE,
+                                      (BJ_STATS_TABLE_COL1[0], BJ_DOUBLED_FIELD),
+                                      (BJ_STATS_TABLE_COL5[0], doubled_row['user_losses'] + 1))
+                    elif s == BJ_MOD.DRAW:
+                        # +1 doubled[draws]
+                        db.update_row(BJ_STATS_TABLE,
+                                      (BJ_STATS_TABLE_COL1[0], BJ_DOUBLED_FIELD),
+                                      (BJ_STATS_TABLE_COL6[0], doubled_row['draws'] + 1))
+                if split:
+                    if s in [BJ_MOD.PLAYER_WIN, BJ_MOD.HOUSE_BUST]:
+                        # +1 splits[user_wins]
+                        db.update_row(BJ_STATS_TABLE,
+                                      (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD),
+                                      (BJ_STATS_TABLE_COL4[0], splits_row['user_wins'] + 1))
+                    elif s in [BJ_MOD.PLAYER_LOSE, BJ_MOD.PLAYER_BUST]:
+                        # +1 splits[user_losses]
+                        db.update_row(BJ_STATS_TABLE,
+                                      (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD),
+                                      (BJ_STATS_TABLE_COL5[0], splits_row['user_losses'] + 1))
+                    elif s == BJ_MOD.DRAW:
+                        # +1 splits[draws]
+                        db.update_row(BJ_STATS_TABLE,
+                                      (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD),
+                                      (BJ_STATS_TABLE_COL6[0], splits_row['draws'] + 1))
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -179,6 +329,7 @@ class Games(commands.Cog):
             return
         if reaction.emoji in [HIT, HOLD, DOUBLE, SPLIT]:
             bj_game = self.bj_states[user.id]
+            bj_state_final = None
             lock = bj_game.lock
             if not lock.acquire(blocking=False):
                 return
@@ -199,13 +350,15 @@ class Games(commands.Cog):
                 await msg.remove_reaction(reaction, user)
 
                 if bj_game.get_curr_state() == BJ_MOD.PLAYER_DONE:
-                    await self._finalize_bj(user, msg, embed)
+                    bj_state_final = await self._finalize_bj(user, msg, embed)
                 e = self._embed_from_bj(user, bj_game)
                 if error:
                     e.add_field(name='Error', value=error, inline=False)
                 await msg.edit(embed=e)
             finally:
                 lock.release()
+            if bj_state_final:
+                self._save_bj_stats(bj_state_final)
         elif reaction.emoji == AGAIN:
             ctx = await self.bot.get_context(msg)
             ctx.author = user
@@ -284,7 +437,64 @@ class Games(commands.Cog):
             await msg.add_reaction(DOUBLE)
             await msg.add_reaction(SPLIT)
         else:
-            await self._finalize_bj(user, msg, msg.embeds[0])
+            bj_state_final = await self._finalize_bj(user, msg, msg.embeds[0])
+            self._save_bj_stats(bj_state_final)
+
+    @commands.command(aliases=['gst', 'st'],
+                      description='Check stats for a game',
+                      help='Valid Games so far: "blackjack"',
+                      brief='Game Stats')
+    async def game_stats(self, ctx, *, game):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        valid = ['blackjack', 'bj']
+        if game in [valid[0], valid[1]]:
+            db = self._get_stats_db()
+            rows = db.get_all(BJ_STATS_TABLE)
+            doubled = None
+            splits = []
+            busts = []
+            nums = [[]] * 22
+            for r in rows:
+                if r[0] == 'doubled':
+                    doubled = r
+                elif r[0] == 'splits':
+                    splits = r
+                elif r[0] == 'busts':
+                    busts = r
+                else:
+                    nums[int(r[0])] = r
+            nums = nums[2:]
+            e = Embed(colour=0)
+            line_template = '{:^3}|{:^8}|{:^10}|{:^9}|{:^11}|{:^6}'
+            text = '```' + line_template.format('Num', 'Bot Wins', 'Bot Losses', 'User Wins', 'User Losses', 'Draws') + '\n'
+            for r in nums:
+                text += line_template.format(r[0], r[1], r[2], r[3], r[4], r[5]) + '\n'
+            text += '```'
+
+            busts_value = '```'
+            busts_value += f'Bot Busts : {busts[2]}\n'
+            busts_value += f'User Busts: {busts[4]}\n'
+            busts_value += '```'
+
+            doubled_value = '```'
+            doubled_value += f'User Wins  : {doubled[3]}\n'
+            doubled_value += f'User Losses: {doubled[4]}\n'
+            doubled_value += f'User Draws : {doubled[5]}\n'
+            doubled_value += '```'
+
+            splits_value = '```'
+            splits_value += f'User Wins  : {splits[3]}\n'
+            splits_value += f'User Losses: {splits[4]}\n'
+            splits_value += f'User Draws : {splits[5]}\n'
+            splits_value += '```'
+
+            e.title = 'Blackjack Stats'
+            e.description = text
+            e.add_field(name='Busts', value=busts_value)
+            e.add_field(name='Doubles', value=doubled_value)
+            e.add_field(name='Splits', value=splits_value)
+            await ctx.send(embed=e)
 
     """
     Other Game Methods
