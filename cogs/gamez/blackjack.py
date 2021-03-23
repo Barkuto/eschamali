@@ -90,6 +90,7 @@ class Blackjack():
 
     def _determine_state(self):
         curr_state = self.get_curr_state()
+        house_sum = best_sum(self.house_cards)
         if curr_state == ONGOING:
             curr_bet = self.bets[self.curr_hand]
             curr_player_hand = self.player_cards[self.curr_hand]
@@ -99,10 +100,18 @@ class Blackjack():
             num_player_cards = len(curr_player_hand)
 
             # Beginning State, 2 cards both sides
-            if num_house_cards == num_player_cards == 2 and player_sum == 21:
-                # Handle auto win when player dealt 21
-                self.set_curr_state(PLAYER_WIN)
-                self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet + curr_bet / 2 * 3)
+            if num_house_cards == num_player_cards == 2:
+                # Handle auto win when house or player dealt 21
+                if house_sum == player_sum == 21:
+                    self.set_curr_state(DRAW)
+                    # Return Bet
+                    self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet)
+                elif player_sum == 21:
+                    self.set_curr_state(PLAYER_WIN)
+                    # Bet Payout 3:2
+                    self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet + curr_bet / 2 * 3)
+                elif house_sum == 21:
+                    self.set_curr_state(PLAYER_LOSE)
             # Player Turn
             elif self.turn == PLAYER:
                 if player_sum > 21:
@@ -119,7 +128,6 @@ class Blackjack():
                             self._determine_state()
         elif curr_state == PLAYER_DONE:
             # House Turn
-            house_sum = best_sum(self.house_cards)
             for i in range(len(self.player_cards)):
                 curr_bet = self.bets[i]
                 curr_player_sum = best_sum(self.player_cards[i])

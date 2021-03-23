@@ -181,7 +181,7 @@ class Games(commands.Cog):
 
         name = ''
         value = ''
-        if blackjack.get_curr_state() == BJ_MOD.PLAYER_DONE:
+        if blackjack.get_curr_state() != BJ_MOD.ONGOING:
             name = self._cards_to_embed_sum_name(self.bot.user, bot_hand)
             value = self._cards_to_embed_str(bot_hand)
         else:
