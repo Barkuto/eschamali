@@ -489,11 +489,29 @@ class Games(commands.Cog):
             splits_value += f'User Draws : {splits[5]}\n'
             splits_value += '```'
 
-            e.title = 'Blackjack Stats'
+            bot_wins = busts[4] + sum([r[1] for r in nums])
+            bot_losses = busts[2] + sum([r[2] for r in nums])
+            bot_draws = sum([r[5] for r in nums])
+            total = bot_wins + bot_losses + bot_draws
+            win_p = bot_wins / total * 100
+            loss_p = bot_losses / total * 100
+            draw_p = bot_draws / total * 100
+
+            win_loss = '```'
+            win_loss += 'Wins  : {} ({:.2f}%)\n'.format(bot_wins, win_p)
+            win_loss += 'Losses: {} ({:.2f}%)\n'.format(bot_losses, loss_p)
+            win_loss += 'Draws : {} ({:.2f}%)\n'.format(bot_draws, draw_p)
+            win_loss += f'Total : {total}'
+            win_loss += '```'
+
+            e.title = 'Blackjack Global Stats'
             e.description = text
             e.add_field(name='Busts', value=busts_value)
+            e.add_field(name='\u200b', value='\u200b')
             e.add_field(name='Doubles', value=doubled_value)
             e.add_field(name='Splits', value=splits_value)
+            e.add_field(name='\u200b', value='\u200b')
+            e.add_field(name='Bot Win/Loss', value=win_loss)
             await ctx.send(embed=e)
 
     """
