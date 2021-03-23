@@ -208,7 +208,7 @@ class Games(commands.Cog):
                     player_sum = BJ_MOD.best_sum(cards)
                     # 3:2 auto 21 win
                     if len(cards) == 2 and player_sum == 21:
-                        net += int(bets[i] / 2 * 3)
+                        net += int(blackjack.calc_32(bets[i]))
                     else:
                         net += bets[i]
                 elif r == BJ_MOD.PLAYER_LOSE:

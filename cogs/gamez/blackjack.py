@@ -51,7 +51,7 @@ class Blackjack():
             raise InsufficientCreditsException(INSUFFICIENT_CREDITS)
 
         bet_test = bet / 2 * 3
-        if bet <= 0 or (bet_test - int(bet_test) != 0) or (bet_test % 2 != 0):
+        if bet <= 0 or (bet_test - int(bet_test) != 0):
             raise InvalidBetException(INVALID_BET)
 
         self.credits = credits
@@ -71,6 +71,12 @@ class Blackjack():
         self.credits.transfer_from_to(player_user, house_user, bet)
 
         self._determine_state()
+
+    def calc_32(self, bet):
+        payout = bet + bet / 2 * 3
+        if payout % 2 == 0:
+            return payout
+        return payout + 1
 
     def get_states(self):
         return self.states
@@ -105,7 +111,7 @@ class Blackjack():
                 if house_sum == player_sum == 21 or player_sum == 21:
                     self.set_curr_state(PLAYER_WIN)
                     # Bet Payout 3:2
-                    self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet + curr_bet / 2 * 3)
+                    self.credits.transfer_from_to(self.house_user, self.player_user, self.calc_32(curr_bet))
                 elif house_sum == 21:
                     self.set_curr_state(PLAYER_LOSE)
             # Player Turn
