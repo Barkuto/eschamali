@@ -192,7 +192,13 @@ class Games(commands.Cog):
             if r != BJ_MOD.ONGOING:
                 if r == BJ_MOD.PLAYER_WIN:
                     result_values += ['You Won!']
-                    net += bets[i]
+                    cards = blackjack.player_cards[i]
+                    player_sum = BJ_MOD.best_sum(cards)
+                    # 3:2 auto 21 win
+                    if len(cards) == 2 and player_sum == 21:
+                        net += int(bets[i] / 2 * 3)
+                    else:
+                        net += bets[i]
                 elif r == BJ_MOD.PLAYER_LOSE:
                     result_values += ['You Lost!']
                     net -= bets[i]
