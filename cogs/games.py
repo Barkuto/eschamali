@@ -88,6 +88,12 @@ BJ_STATS_TABLE_COL6 = ('draws', DB_MOD.INTEGER)
 BJ_DOUBLED_FIELD = 'doubled'
 BJ_SPLITS_FIELD = 'splits'
 BJ_BUSTS_FIELD = 'busts'
+
+BJ_PERSONAL_STATS_TABLE = 'blackjack_personal_stats'
+BJ_PERSONAL_STATS_TABLE_COL1 = ('discord_id', DB_MOD.INTEGER)
+BJ_PERSONAL_STATS_TABLE_COL2 = ('wins', DB_MOD.INTEGER)
+BJ_PERSONAL_STATS_TABLE_COL3 = ('losses', DB_MOD.INTEGER)
+BJ_PERSONAL_STATS_TABLE_COL4 = ('draws', DB_MOD.INTEGER)
 STATS_DB_PATH = os.path.join(os.path.dirname(__file__),  'gamez', 'stats.db')
 
 
@@ -103,6 +109,7 @@ class Games(commands.Cog):
     def _init_stats_db(self):
         db = DB(STATS_DB_PATH)
         # Blackjack Stat Rows
+        # Global Stats
         if not db.create_table(BJ_STATS_TABLE,
                                BJ_STATS_TABLE_COL1,
                                BJ_STATS_TABLE_COL2, BJ_STATS_TABLE_COL3,
@@ -139,6 +146,11 @@ class Games(commands.Cog):
                                      (BJ_STATS_TABLE_COL4[0], 0), (BJ_STATS_TABLE_COL5[0], 0),
                                      (BJ_STATS_TABLE_COL6[0], 0)):
                     LOGGER.error(f'Could not create blackjack stats row: "{val}"')
+        # Personal Stats
+        if not db.create_table(BJ_PERSONAL_STATS_TABLE,
+                               BJ_PERSONAL_STATS_TABLE_COL1, BJ_PERSONAL_STATS_TABLE_COL2,
+                               BJ_PERSONAL_STATS_TABLE_COL3, BJ_PERSONAL_STATS_TABLE_COL4):
+            LOGGER.error('Could not create personal stats table.')
 
     def _get_stats_db(self):
         return DB(STATS_DB_PATH)
@@ -228,7 +240,7 @@ class Games(commands.Cog):
             await msg.add_reaction(AGAIN)
         return bj_state
 
-    async def _save_bj_stats(self, bj_state):
+    async def _save_bj_stats(self, bj_state, user_id):
         if bj_state:
             # save stats
             doubled = bj_state.doubled
@@ -245,8 +257,13 @@ class Games(commands.Cog):
                 busts_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD), factory=True)
                 p_sum_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], p_sum), factory=True)
                 h_sum_row = db.get_row(BJ_STATS_TABLE, (BJ_STATS_TABLE_COL1[0], house_sum), factory=True)
+                # personal stat records
+                player_wins = 0
+                player_losses = 0
+                player_draws = 0
                 # HAND WIN/LOSS/DRAWS
                 if s == BJ_MOD.PLAYER_WIN:
+                    player_wins += 1
                     # +1 p_sum[user_wins]
                     db.update_row(BJ_STATS_TABLE,
                                   (BJ_STATS_TABLE_COL1[0], p_sum),
@@ -256,6 +273,7 @@ class Games(commands.Cog):
                                   (BJ_STATS_TABLE_COL1[0], house_sum),
                                   (BJ_STATS_TABLE_COL3[0], h_sum_row['bot_losses'] + 1))
                 elif s == BJ_MOD.PLAYER_LOSE:
+                    player_losses += 1
                     # +1 p_sum[user_losses]
                     db.update_row(BJ_STATS_TABLE,
                                   (BJ_STATS_TABLE_COL1[0], p_sum),
@@ -265,6 +283,7 @@ class Games(commands.Cog):
                                   (BJ_STATS_TABLE_COL1[0], house_sum),
                                   (BJ_STATS_TABLE_COL2[0], h_sum_row['bot_wins'] + 1))
                 elif s == BJ_MOD.PLAYER_BUST:
+                    player_losses += 1
                     # +1 busts[user_losses]
                     db.update_row(BJ_STATS_TABLE,
                                   (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
@@ -274,6 +293,7 @@ class Games(commands.Cog):
                                   (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
                                   (BJ_STATS_TABLE_COL2[0], busts_row['bot_wins'] + 1))
                 elif s == BJ_MOD.HOUSE_BUST:
+                    player_wins += 1
                     # +1 busts[user_wins]
                     db.update_row(BJ_STATS_TABLE,
                                   (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
@@ -283,6 +303,7 @@ class Games(commands.Cog):
                                   (BJ_STATS_TABLE_COL1[0], BJ_BUSTS_FIELD),
                                   (BJ_STATS_TABLE_COL3[0], busts_row['bot_losses'] + 1))
                 elif s == BJ_MOD.DRAW:
+                    player_draws += 1
                     # +1 p_sum/h_sum[draws]
                     db.update_row(BJ_STATS_TABLE,
                                   (BJ_STATS_TABLE_COL1[0], p_sum),
@@ -320,6 +341,20 @@ class Games(commands.Cog):
                         db.update_row(BJ_STATS_TABLE,
                                       (BJ_STATS_TABLE_COL1[0], BJ_SPLITS_FIELD),
                                       (BJ_STATS_TABLE_COL6[0], splits_row['draws'] + 1))
+                # save personal stats
+                user_row = db.get_row(BJ_PERSONAL_STATS_TABLE, (BJ_PERSONAL_STATS_TABLE_COL1[0], user_id))
+                if not user_row:
+                    db.insert_row(BJ_PERSONAL_STATS_TABLE,
+                                  (BJ_PERSONAL_STATS_TABLE_COL1[0], user_id),
+                                  (BJ_PERSONAL_STATS_TABLE_COL2[0], player_wins),
+                                  (BJ_PERSONAL_STATS_TABLE_COL3[0], player_losses),
+                                  (BJ_PERSONAL_STATS_TABLE_COL4[0], player_draws))
+                else:
+                    db.update_row(BJ_PERSONAL_STATS_TABLE,
+                                  (BJ_PERSONAL_STATS_TABLE_COL1[0], user_id),
+                                  (BJ_PERSONAL_STATS_TABLE_COL2[0], user_row[1] + player_wins),
+                                  (BJ_PERSONAL_STATS_TABLE_COL3[0], user_row[2] + player_losses),
+                                  (BJ_PERSONAL_STATS_TABLE_COL4[0], user_row[3] + player_draws))
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
@@ -364,7 +399,7 @@ class Games(commands.Cog):
             finally:
                 lock.release()
             if bj_state_final:
-                await self._save_bj_stats(bj_state_final)
+                await self._save_bj_stats(bj_state_final, user.id)
         elif reaction.emoji == AGAIN:
             ctx = await self.bot.get_context(msg)
             ctx.author = user
@@ -444,13 +479,13 @@ class Games(commands.Cog):
             await msg.add_reaction(SPLIT)
         else:
             bj_state_final = await self._finalize_bj(user, msg, msg.embeds[0])
-            await self._save_bj_stats(bj_state_final)
+            await self._save_bj_stats(bj_state_final, user.id)
 
     @commands.command(aliases=['gst', 'st'],
                       description='Check stats for a game',
                       help='Valid Games so far: "blackjack"',
                       brief='Game Stats')
-    async def game_stats(self, ctx, *, game):
+    async def game_stats(self, ctx, game):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         valid = ['blackjack', 'bj']
@@ -518,6 +553,41 @@ class Games(commands.Cog):
             e.add_field(name='Splits', value=splits_value)
             e.add_field(name='\u200b', value='\u200b')
             e.add_field(name='Bot Win/Loss', value=win_loss)
+            await ctx.send(embed=e)
+
+    @commands.command(aliases=['pst'],
+                      description='Check personal stats for a game',
+                      help='Valid Games so far: "blackjack"',
+                      brief='Personal Game Stats')
+    async def personal_stats(self, ctx, game, user: User = None):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        if not user:
+            user = ctx.author
+        valid = ['blackjack', 'bj']
+        if game in [valid[0], valid[1]]:
+            db = self._get_stats_db()
+            row = db.get_row(BJ_PERSONAL_STATS_TABLE, (BJ_PERSONAL_STATS_TABLE_COL1[0], user.id))
+
+            wins = row[1]
+            losses = row[2]
+            draws = row[3]
+            total = wins + losses + draws
+            win_p = wins / total * 100
+            loss_p = losses / total * 100
+            draw_p = draws / total * 100
+
+            win_loss = '```'
+            win_loss += 'Wins  : {} ({:.2f}%)\n'.format(wins, win_p)
+            win_loss += 'Losses: {} ({:.2f}%)\n'.format(losses, loss_p)
+            win_loss += 'Draws : {} ({:.2f}%)\n'.format(draws, draw_p)
+            win_loss += f'Total : {total}'
+            win_loss += '```'
+
+            roles = [r for r in sorted(user.roles, reverse=True) if not r.name == '@everyone']
+            e = Embed(colour=roles[0].colour if roles else 0)
+            e.title = 'Blackjack Personal Stats'
+            e.description = win_loss
             await ctx.send(embed=e)
 
     """
