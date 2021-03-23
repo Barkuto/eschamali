@@ -539,10 +539,10 @@ class Games(commands.Cog):
             draw_p = (bot_draws / total * 100) if total else 0
 
             win_loss = '```'
-            win_loss += 'Wins  : {} ({:.2f}%)\n'.format(bot_wins, win_p)
-            win_loss += 'Losses: {} ({:.2f}%)\n'.format(bot_losses, loss_p)
-            win_loss += 'Draws : {} ({:.2f}%)\n'.format(bot_draws, draw_p)
-            win_loss += f'Total : {total}'
+            win_loss += 'Wins  : {:7} ({:.2f}%)\n'.format(bot_wins, win_p)
+            win_loss += 'Losses: {:7} ({:.2f}%)\n'.format(bot_losses, loss_p)
+            win_loss += 'Draws : {:7} ({:.2f}%)\n'.format(bot_draws, draw_p)
+            win_loss += 'Total : {:7}'.format(total)
             win_loss += '```'
 
             e.title = 'Blackjack Global Stats'
@@ -578,10 +578,10 @@ class Games(commands.Cog):
             draw_p = (draws / total * 100) if total else 0
 
             win_loss = '```'
-            win_loss += 'Wins  : {} ({:.2f}%)\n'.format(wins, win_p)
-            win_loss += 'Losses: {} ({:.2f}%)\n'.format(losses, loss_p)
-            win_loss += 'Draws : {} ({:.2f}%)\n'.format(draws, draw_p)
-            win_loss += f'Total : {total}'
+            win_loss += 'Wins  : {:7} ({:.2f}%)\n'.format(wins, win_p)
+            win_loss += 'Losses: {:7} ({:.2f}%)\n'.format(losses, loss_p)
+            win_loss += 'Draws : {:7} ({:.2f}%)\n'.format(draws, draw_p)
+            win_loss += 'Total : {:7}'.format(total)
             win_loss += '```'
 
             roles = [r for r in sorted(user.roles, reverse=True) if not r.name == '@everyone']
