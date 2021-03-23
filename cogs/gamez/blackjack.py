@@ -54,7 +54,6 @@ class Blackjack():
 
         self.credits = credits
         self.lock = threading.Lock()
-        self.is_split = False
         self.bets = [bet]
         self.doubled = [False]
         self.curr_hand = 0
