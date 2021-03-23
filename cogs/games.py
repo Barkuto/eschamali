@@ -181,7 +181,7 @@ class Games(commands.Cog):
         val = ''
         for i in range(len(user_hands)):
             if i == blackjack.curr_hand and len(user_hands) > 1:
-                val += ':black_small_square:'
+                val += ':white_small_square:'
             val += self._cards_to_embed_str(user_hands[i]) + '\n'
         e.add_field(name=name, value=val)
 
