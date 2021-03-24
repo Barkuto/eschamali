@@ -119,7 +119,21 @@ class Blackjack():
             # Player Turn
             elif self.turn == PLAYER:
                 if player_sum > 21:
-                    self.hold()
+                    # When player busts, Move to next hand
+                    self.curr_hand += 1
+                    # If all player hands are done
+                    if self.curr_hand == len(self.player_cards):
+                        # Change turn to house
+                        self.turn = HOUSE
+                        # If player split, make house hit to have a hand to compare
+                        if len(self.player_cards) > 1:
+                            self.hit()
+                        # If player not split, continue/end game
+                        else:
+                            self._determine_state()
+                    # If not all player hands done, continue player turn
+                    else:
+                        self._determine_state()
         elif curr_state == PLAYER_DONE:
             # House Turn
             for i in range(len(self.player_cards)):
