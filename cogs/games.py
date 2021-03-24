@@ -198,32 +198,23 @@ class Games(commands.Cog):
         e.add_field(name=name, value=val)
 
         result_values = []
-        net = 0
-        for i in range(len(results)):
-            r = results[i]
-            if r != BJ_MOD.ONGOING:
-                if r == BJ_MOD.PLAYER_WIN:
-                    result_values += ['You Won!']
-                    cards = blackjack.player_cards[i]
-                    player_sum = BJ_MOD.best_sum(cards)
-                    # 3:2 auto 21 win
-                    if len(cards) == 2 and player_sum == 21:
-                        net += int(blackjack.calc_32(bets[i]))
-                    else:
-                        net += bets[i]
-                elif r == BJ_MOD.PLAYER_LOSE:
-                    result_values += ['You Lost!']
-                    net -= bets[i]
-                elif r == BJ_MOD.PLAYER_BUST:
-                    result_values += ['You Busted!']
-                    net -= bets[i]
-                elif r == BJ_MOD.HOUSE_BUST:
-                    result_values += ['Bot Busted, You Won!']
-                    net += bets[i]
-                elif r == BJ_MOD.DRAW:
-                    result_values += ['Draw!']
+        if blackjack.get_curr_state() == BJ_MOD.PLAYER_DONE:
+            for i in range(len(results)):
+                r = results[i]
+                if r != BJ_MOD.ONGOING:
+                    if r == BJ_MOD.PLAYER_WIN:
+                        result_values += ['You Won!']
+                    elif r == BJ_MOD.PLAYER_LOSE:
+                        result_values += ['You Lost!']
+                    elif r == BJ_MOD.PLAYER_BUST:
+                        result_values += ['You Busted!']
+                    elif r == BJ_MOD.HOUSE_BUST:
+                        result_values += ['Bot Busted, You Won!']
+                    elif r == BJ_MOD.DRAW:
+                        result_values += ['Draw!']
         if result_values:
             value = '\n'.join(result_values)
+            net = blackjack.net
             if net >= 0:
                 net = f'+{net}'
             e.description = f'Bets: {"/".join([str(b) for b in bets])}'

@@ -64,6 +64,7 @@ class Blackjack():
         self.player_cards = [[self.deck.pop(0), self.deck.pop(0)]]
         self.turn = PLAYER
         self.states = [ONGOING]
+        self.net = -bet
 
         self.house_user = house_user
         self.player_user = player_user
@@ -73,7 +74,7 @@ class Blackjack():
         self._determine_state()
 
     def calc_32(self, bet):
-        payout = bet + bet / 2 * 3
+        payout = int(bet / 2 * 3)
         if payout % 2 == 0:
             return payout
         return payout + 1
@@ -101,55 +102,55 @@ class Blackjack():
             curr_bet = self.bets[self.curr_hand]
             curr_player_hand = self.player_cards[self.curr_hand]
             player_sum = best_sum(curr_player_hand)
-
-            num_house_cards = len(self.house_cards)
             num_player_cards = len(curr_player_hand)
 
             # Beginning State, 2 cards both sides
-            if num_house_cards == num_player_cards == 2:
+            # if num_house_cards == num_player_cards == 2:
+            if num_player_cards == 2:
                 # Handle auto win when house or player dealt 21
                 if house_sum == player_sum == 21 or player_sum == 21:
                     self.set_curr_state(PLAYER_WIN)
-                    # Bet Payout 3:2
-                    self.credits.transfer_from_to(self.house_user, self.player_user, self.calc_32(curr_bet))
                 elif house_sum == 21:
                     self.set_curr_state(PLAYER_LOSE)
+                else:
+                    return
+                self.curr_hand += 1
+                self._determine_state()
             # Player Turn
             elif self.turn == PLAYER:
                 if player_sum > 21:
-                    # When player busts, move to next hand
-                    # Or make house hit/hold
-                    # Then process House Turn
-                    # This is self.hold() with a condition to hit()
-                    self.curr_hand += 1
-                    if self.curr_hand == len(self.player_cards):
-                        self.turn = HOUSE
-                        if len(self.player_cards) > 1:
-                            self.hit()
-                        else:
-                            self._determine_state()
+                    self.hold()
         elif curr_state == PLAYER_DONE:
             # House Turn
             for i in range(len(self.player_cards)):
                 curr_bet = self.bets[i]
                 curr_player_sum = best_sum(self.player_cards[i])
-                if curr_player_sum > 21 and house_sum > 21:
-                    self.set_state(DRAW, i)
-                elif curr_player_sum > 21:
-                    self.set_state(PLAYER_BUST, i)
-                elif house_sum > 21:
-                    self.set_state(HOUSE_BUST, i)
-                elif house_sum > curr_player_sum:
-                    self.set_state(PLAYER_LOSE, i)
-                elif house_sum < curr_player_sum:
-                    self.set_state(PLAYER_WIN, i)
-                elif house_sum == curr_player_sum:
-                    self.set_state(DRAW, i)
+                if self.states[i] == ONGOING:
+                    if curr_player_sum > 21 and house_sum > 21:
+                        self.set_state(DRAW, i)
+                    elif curr_player_sum > 21:
+                        self.set_state(PLAYER_BUST, i)
+                    elif house_sum > 21:
+                        self.set_state(HOUSE_BUST, i)
+                    elif house_sum > curr_player_sum:
+                        self.set_state(PLAYER_LOSE, i)
+                    elif house_sum < curr_player_sum:
+                        self.set_state(PLAYER_WIN, i)
+                    elif house_sum == curr_player_sum:
+                        self.set_state(DRAW, i)
 
                 if self.states[i] in [HOUSE_BUST, PLAYER_WIN]:
-                    self.credits.transfer_from_to(self.house_user, self.player_user, 2 * curr_bet)
+                    is_two = len(self.player_cards[i]) == 2
+                    is_blackjack = house_sum == curr_player_sum == 21 or curr_player_sum == 21
+                    if self.states[i] == PLAYER_WIN and is_two and is_blackjack:
+                        # Bet Payout 3:2
+                        self.net += curr_bet + self.calc_32(curr_bet)
+                    else:
+                        self.net += curr_bet + curr_bet
                 elif self.states[i] == DRAW:
-                    self.credits.transfer_from_to(self.house_user, self.player_user, curr_bet)
+                    self.net += curr_bet
+            # End of Game, distribute winnings
+            self.credits.transfer_from_to(self.house_user, self.player_user, self.net + sum(self.bets))
 
     def hit(self):
         if self.turn == HOUSE:
@@ -166,6 +167,8 @@ class Blackjack():
         if self.curr_hand == len(self.player_cards):
             self.turn = HOUSE
             self.hit()
+        else:
+            self._determine_state()
 
     def double(self):
         if self.turn != PLAYER:
@@ -175,6 +178,7 @@ class Blackjack():
             player_creds = self.credits.get_user_creds(self.player_user)
             if player_creds >= self.bets[curr_index]:
                 self.credits.transfer_from_to(self.player_user, self.house_user, self.bets[curr_index])
+                self.net -= self.bets[curr_index]
                 self.doubled[curr_index] = True
                 self.bets[curr_index] *= 2
                 self.hit()
@@ -201,6 +205,9 @@ class Blackjack():
                 self.states += [ONGOING]
 
                 self.credits.transfer_from_to(self.player_user, self.house_user, self.bets[self.curr_hand])
+                self.net -= self.bets[self.curr_hand]
+
+                self._determine_state()
             else:
                 raise InsufficientCreditsException(INSUFFICIENT_CREDITS + ' to Split')
         else:
