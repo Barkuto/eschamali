@@ -266,7 +266,10 @@ async def shutdown(ctx):
 async def git(ctx):
     stream = os.popen('git pull origin master')
     output = stream.read()
-    await ctx.send(f'```{output}```')
+    stream2 = os.popen('git log -1')
+    output2 = stream2.read().split('\n')
+    output2 = [o.strip() for o in output if not o.startswith('commit ') and not o.startswith('Author') and len(o) > 0]
+    await ctx.send(f'```{output}\n\n{output2}```')
     if not output.startswith('Already up to date.'):
         to_reload = []
         for line in output.split('\n'):
