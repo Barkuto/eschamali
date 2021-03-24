@@ -268,7 +268,7 @@ async def git(ctx):
     output = stream.read()
     stream2 = os.popen('git log -1')
     output2 = stream2.read().split('\n')
-    output2 = [o.strip() for o in output2 if not o.startswith('commit ') and not o.startswith('Author') and len(o) > 0]
+    output2 = '\n'.join([o.strip() for o in output2 if not o.startswith('commit ') and not o.startswith('Author') and len(o) > 0])
     await ctx.send(f'```{output}\n\n{output2}```')
     if not output.startswith('Already up to date.'):
         to_reload = []
