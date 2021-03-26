@@ -75,6 +75,7 @@ emoji_cards = {v: k for k, v in card_emojis.items()}
 BLACKJACK = ['blackjack', 'bj']
 VALID_GAMES = [] + BLACKJACK
 VALID_GAMES_HELP = 'Valid Games so far: "blackjack"'
+INVALID_GAME = 'Invalid Game'
 
 HIT = '☝️'
 HOLD = '🛑'
@@ -82,9 +83,10 @@ DOUBLE = '🇩'
 SPLIT = '🇸'
 AGAIN = '🔄'
 
+DECK_SHUFFLED = '{} Deck Shuffled'
 BJ_DEFAULT_BET = 100
 BJ_NUM_DECKS = 4
-BJ_SHUFFLED_THRESHOLD = (52 * BJ_NUM_DECKS) / 2
+BJ_SHUFFLED_THRESHOLD = (52 * BJ_NUM_DECKS) // 2
 
 
 class Games(commands.Cog):
@@ -101,10 +103,11 @@ class Games(commands.Cog):
     Blackjack Methods
     """
 
-    def _check_bj_deck(self):
+    async def _check_bj_deck(self, ctx):
         self.bj_deck.lock.acquire()
         if self.bj_deck.cards_used() >= BJ_SHUFFLED_THRESHOLD:
             self.bj_deck.reshuffle()
+            await ctx.send(DECK_SHUFFLED.format('Blackjack'))
         self.bj_deck.lock.release()
 
     def _cards_to_embed_str(self, cards):
@@ -185,6 +188,7 @@ class Games(commands.Cog):
             return
         msg = reaction.message
         embed = msg.embeds[0]
+        ctx = await self.bot.get_context(msg)
         if not embed.footer.text == str(user.id):
             return
         if not embed or not embed.title or not embed.title == 'Blackjack':
@@ -201,7 +205,7 @@ class Games(commands.Cog):
                 action = reaction.emoji
                 error = None
                 try:
-                    self._check_bj_deck()
+                    await self._check_bj_deck(ctx)
                     if action == HIT:
                         bj_game.hit()
                     elif action == DOUBLE:
@@ -226,7 +230,6 @@ class Games(commands.Cog):
             if bj_state_final:
                 await self.stats.save_bj_stats(bj_state_final, user.id)
         elif reaction.emoji == AGAIN:
-            ctx = await self.bot.get_context(msg)
             ctx.author = user
             await self.blackjack(ctx)
 
@@ -290,7 +293,7 @@ class Games(commands.Cog):
         if user.id in self.bj_states.keys():
             return await ctx.send('You already have a Blackjack game running.')
         try:
-            self._check_bj_deck()
+            await self._check_bj_deck(ctx)
             bj_game = BJ_MOD.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
             self.bj_states[user.id] = bj_game
         except BJ_MOD.BlackjackException as e:
@@ -397,7 +400,8 @@ class Games(commands.Cog):
     """
     Other Game Methods
     """
-    @commands.command(description='See Info for Game Deck',
+    @commands.command(aliases=['dk'],
+                      description='See Info for Game Deck',
                       help=VALID_GAMES_HELP,
                       brief='Check Game Deck')
     async def deck(self, ctx, *, game):
@@ -413,7 +417,7 @@ class Games(commands.Cog):
             e.description += 'Cards Left: {:3}```'.format(self.bj_deck.cards_left())
             self.bj_deck.lock.release()
         else:
-            return
+            return await ctx.send(INVALID_GAME)
         e.title = title
         await ctx.send(embed=e)
 
