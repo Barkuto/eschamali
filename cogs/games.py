@@ -379,10 +379,11 @@ class Games(commands.Cog):
                         bj_game.split()
                 except BJ_MOD.BlackjackException as e:
                     error = e
-                await msg.remove_reaction(reaction, user)
 
                 if bj_game.get_curr_state() == BJ_MOD.PLAYER_DONE:
                     bj_state_final = await self._finalize_bj(user, msg, embed)
+                else:
+                    await msg.remove_reaction(reaction, user)
                 e = self._embed_from_bj(user, bj_game)
                 if error:
                     e.add_field(name='Error', value=error, inline=False)
