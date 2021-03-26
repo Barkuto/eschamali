@@ -95,7 +95,6 @@ class Games(commands.Cog):
         self.bj_states = {}
         self.cr = CREDITS.Credits(bot.user)
         self.stats = Stats(self.bot, os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db'))
-        print(self.stats.test)
 
     """
     Blackjack Methods
