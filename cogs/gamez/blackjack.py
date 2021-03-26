@@ -60,8 +60,10 @@ class Blackjack():
         self.doubled = [False]
         self.curr_hand = 0
         self.deck = deck
-        self.house_cards = [self.deck.pop(0), self.deck.pop(1)]
-        self.player_cards = [[self.deck.pop(0), self.deck.pop(0)]]
+        self.deck.lock.acquire()
+        self.house_cards = [self.deck.draw(), self.deck.draw(1)]
+        self.player_cards = [[self.deck.draw(), self.deck.draw()]]
+        self.deck.lock.release()
         self.turn = PLAYER
         self.states = [ONGOING]
         self.net = -bet
@@ -167,13 +169,15 @@ class Blackjack():
             self.credits.transfer_from_to(self.house_user, self.player_user, self.net + sum(self.bets))
 
     def hit(self):
+        self.deck.lock.acquire()
         if self.turn == HOUSE:
             house_sum = best_sum(self.house_cards)
             while house_sum < THRESHOLD:
-                self.house_cards += [self.deck.pop(0)]
+                self.house_cards += [self.deck.draw()]
                 house_sum = best_sum(self.house_cards)
         elif self.turn == PLAYER:
-            self.player_cards[self.curr_hand] += [self.deck.pop(0)]
+            self.player_cards[self.curr_hand] += [self.deck.draw()]
+        self.deck.lock.release()
         self._determine_state()
 
     def hold(self):
@@ -211,8 +215,10 @@ class Blackjack():
             user_creds = self.credits.get_user_creds(self.player_user)
             curr_bet = self.bets[self.curr_hand]
             if user_creds >= curr_bet:
-                self.player_cards[self.curr_hand] = [curr_cards[0], self.deck.pop(0)]
-                self.player_cards += [[curr_cards[1], self.deck.pop(0)]]
+                self.deck.lock.acquire()
+                self.player_cards[self.curr_hand] = [curr_cards[0], self.deck.draw()]
+                self.player_cards += [[curr_cards[1], self.deck.draw()]]
+                self.deck.lock.release()
 
                 self.bets += [self.bets[self.curr_hand]]
                 self.doubled += [False]

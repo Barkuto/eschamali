@@ -72,13 +72,19 @@ card_emojis = {
 
 emoji_cards = {v: k for k, v in card_emojis.items()}
 
+BLACKJACK = ['blackjack', 'bj']
+VALID_GAMES = [] + BLACKJACK
+VALID_GAMES_HELP = 'Valid Games so far: "blackjack"'
+
 HIT = '☝️'
 HOLD = '🛑'
 DOUBLE = '🇩'
 SPLIT = '🇸'
 AGAIN = '🔄'
 
-DEFAULT_BET = 100
+BJ_DEFAULT_BET = 100
+BJ_NUM_DECKS = 4
+BJ_SHUFFLED_THRESHOLD = (52 * BJ_NUM_DECKS) / 2
 
 
 class Games(commands.Cog):
@@ -86,6 +92,7 @@ class Games(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.bj_deck = DECK.Deck(num_decks=BJ_NUM_DECKS)
         self.bj_states = {}
         self.cr = CREDITS.Credits(bot.user)
         self.stats = Stats(self.bot, os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db'))
@@ -93,6 +100,12 @@ class Games(commands.Cog):
     """
     Blackjack Methods
     """
+
+    def _check_bj_deck(self):
+        self.bj_deck.lock.acquire()
+        if self.bj_deck.cards_used() >= BJ_SHUFFLED_THRESHOLD:
+            self.bj_deck.reshuffle()
+        self.bj_deck.lock.release()
 
     def _cards_to_embed_str(self, cards):
         return ' '.join([card_emojis[c] for c in cards])
@@ -162,7 +175,7 @@ class Games(commands.Cog):
     async def _finalize_bj(self, user, msg, embed):
         bj_state = self.bj_states.pop(user.id, None)
         await msg.clear_reactions()
-        if self.cr.get_user_creds(user) >= DEFAULT_BET:
+        if self.cr.get_user_creds(user) >= BJ_DEFAULT_BET:
             await msg.add_reaction(AGAIN)
         return bj_state
 
@@ -188,6 +201,7 @@ class Games(commands.Cog):
                 action = reaction.emoji
                 error = None
                 try:
+                    self._check_bj_deck()
                     if action == HIT:
                         bj_game.hit()
                     elif action == DOUBLE:
@@ -269,15 +283,15 @@ class Games(commands.Cog):
                       description='Play Blackjack with Eschamali',
                       help='Play Blackjack with Eschamali.\n☝️ = Hit\n🛑 = Hold\n🇩 = Double Bet and +1 Card',
                       brief='Play Blackjack')
-    async def blackjack(self, ctx, bet: int = DEFAULT_BET):
+    async def blackjack(self, ctx, bet: int = BJ_DEFAULT_BET):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         user = ctx.author
         if user.id in self.bj_states.keys():
             return await ctx.send('You already have a Blackjack game running.')
         try:
-            deck = DECK.make_deck(num_decks=4)
-            bj_game = BJ_MOD.Blackjack(self.cr, deck, bet, self.bot.user, user)
+            self._check_bj_deck()
+            bj_game = BJ_MOD.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
             self.bj_states[user.id] = bj_game
         except BJ_MOD.BlackjackException as e:
             return await ctx.send(e)
@@ -294,15 +308,13 @@ class Games(commands.Cog):
 
     @commands.command(aliases=['gst', 'st'],
                       description='Check stats for a game',
-                      help='Valid Games so far: "blackjack"',
+                      help=VALID_GAMES_HELP,
                       brief='Game Stats')
     async def game_stats(self, ctx, game):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
-        valid = ['blackjack', 'bj']
-        if game in [valid[0], valid[1]]:
+        if game in BLACKJACK:
             doubled, splits, busts, nums = await self.stats.get_bj_global_stats()
-            print(doubled, splits, busts, nums)
             e = Embed(colour=0)
             line_template = '{:^3}|{:^8}|{:^10}|{:^9}|{:^11}|{:^6}'
             text = '```' + line_template.format('Num', 'Bot Wins', 'Bot Losses', 'User Wins', 'User Losses', 'Draws') + '\n'
@@ -354,15 +366,14 @@ class Games(commands.Cog):
 
     @commands.command(aliases=['pst'],
                       description='Check personal stats for a game',
-                      help='Valid Games so far: "blackjack"',
+                      help=VALID_GAMES_HELP,
                       brief='Personal Game Stats')
     async def personal_stats(self, ctx, game, user: Member = None):
         if not UTILS.can_cog_in(self, ctx.channel):
             return
         if not user:
             user = ctx.author
-        valid = ['blackjack', 'bj']
-        if game in [valid[0], valid[1]]:
+        if game in BLACKJACK:
             wins, losses, draws = await self.stats.get_bj_personal_stats(user)
 
             total = wins + losses + draws
@@ -386,6 +397,24 @@ class Games(commands.Cog):
     """
     Other Game Methods
     """
+    @commands.command(description='See Info for Game Deck',
+                      help=VALID_GAMES_HELP,
+                      brief='Check Game Deck')
+    async def deck(self, ctx, *, game):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        e = Embed(colour=Colour.from_rgb(255, 255, 254))
+        title = '{} Deck Info'
+        if game in BLACKJACK:
+            title = title.format('Blackjack')
+            self.bj_deck.lock.acquire()
+            e.description = ''
+            e.description += '```Cards Used: {:3}\n'.format(self.bj_deck.cards_used())
+            e.description += 'Cards Left: {:3}```'.format(self.bj_deck.cards_left())
+            self.bj_deck.lock.release()
+        e.title = title
+        await ctx.send(embed=e)
+
     @commands.command(aliases=['d'],
                       description='Get Daily Credits for Games',
                       help='24h Reset',
