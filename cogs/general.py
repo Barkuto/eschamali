@@ -18,8 +18,6 @@ from contextlib import redirect_stdout
 
 UTILS = importlib.import_module('.utils', 'util')
 VARS = UTILS.VARS
-DB = UTILS.DB
-LOGGER = VARS.LOGGER
 
 
 class TimeOutException(Exception):
