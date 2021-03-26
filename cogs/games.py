@@ -412,6 +412,8 @@ class Games(commands.Cog):
             e.description += '```Cards Used: {:3}\n'.format(self.bj_deck.cards_used())
             e.description += 'Cards Left: {:3}```'.format(self.bj_deck.cards_left())
             self.bj_deck.lock.release()
+        else:
+            return
         e.title = title
         await ctx.send(embed=e)
 
