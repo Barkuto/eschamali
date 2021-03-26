@@ -13,12 +13,6 @@ BJ_MOD = importlib.import_module('.blackjack', 'cogs.gamez')
 DECK = importlib.import_module('.deck', 'cogs.gamez')
 STATS_MOD = importlib.import_module('.stats', 'cogs.gamez')
 
-importlib.reload(UTILS)
-importlib.reload(CREDITS)
-importlib.reload(BJ_MOD)
-importlib.reload(DECK)
-importlib.reload(STATS_MOD)
-
 DB_MOD = UTILS.DB_MOD
 DB = DB_MOD.DB
 LOGGER = UTILS.VARS.LOGGER

@@ -4,9 +4,6 @@ import os
 UTILS = importlib.import_module('.utils', 'util')
 BJ_MOD = importlib.import_module('.blackjack', 'cogs.gamez')
 
-importlib.reload(UTILS)
-importlib.reload(BJ_MOD)
-
 DB_MOD = UTILS.DB_MOD
 DB = DB_MOD.DB
 LOGGER = UTILS.VARS.LOGGER
