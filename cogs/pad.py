@@ -329,8 +329,12 @@ class PAD(commands.Cog):
                         value=active.desc,
                         inline=False)
         if leader:
-            shield = '/' + str(100 * (1 - ((1 - leader.max_shield) ** 2))) if leader.max_shield > 0 else ''
-            e.add_field(name='Leader: ' + leader.name + f' [{leader.max_hp**2}/{leader.max_atk**2}/{leader.max_rcv**2}{shield}]',
+            ls_hp = leader.max_hp**2
+            ls_atk = leader.max_atk**2
+            ls_rcv = leader.max_rcv**2
+            ls_shield = 100 * (1 - ((1 - leader.max_shield) ** 2))
+            shield = '/{:.3f}'.format(ls_shield) if leader.max_shield > 0 else ''
+            e.add_field(name='Leader: {} [{:.3f}/{:.3f}/{:.3f}{}]'.format(leader.name, ls_hp, ls_atk, ls_rcv, shield),
                         value=leader.desc,
                         inline=False)
         if evolutions:
