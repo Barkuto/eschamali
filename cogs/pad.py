@@ -5,7 +5,7 @@ from discord import Colour
 from discord import Embed
 from discord.ext import tasks, commands
 from enum import Enum
-from math import ceil
+from math import ceil, floor
 import random
 
 UTILS = importlib.import_module('.utils', 'util')
@@ -329,12 +329,12 @@ class PAD(commands.Cog):
                         value=active.desc,
                         inline=False)
         if leader:
-            ls_hp = leader.max_hp**2
-            ls_atk = leader.max_atk**2
-            ls_rcv = leader.max_rcv**2
-            ls_shield = 100 * (1 - ((1 - leader.max_shield) ** 2))
-            shield = '/{:.3f}'.format(ls_shield) if leader.max_shield > 0 else ''
-            e.add_field(name='Leader: {} [{:.3f}/{:.3f}/{:.3f}{}]'.format(leader.name, ls_hp, ls_atk, ls_rcv, shield),
+            ls_hp = str(floor(leader.max_hp ** 2 * 1000) / 1000.0).rstrip('0').rstrip('.')
+            ls_atk = str(floor(leader.max_atk ** 2 * 1000) / 1000.0).rstrip('0').rstrip('.')
+            ls_rcv = str(floor(leader.max_rcv ** 2 * 1000) / 1000.0).rstrip('0').rstrip('.')
+            ls_shield = str(floor((100 * (1 - ((1 - leader.max_shield) ** 2))) * 1000) / 1000.0).rstrip('0').rstrip('.')
+            shield = '/{}'.format(ls_shield) if leader.max_shield > 0 else ''
+            e.add_field(name=f'Leader: {leader.name} [{ls_hp}/{ls_atk}/{ls_rcv}{shield}]',
                         value=leader.desc,
                         inline=False)
         if evolutions:
