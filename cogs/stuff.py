@@ -2,24 +2,12 @@ import random
 from discord import DMChannel
 from discord.ext import commands
 
-outputs = [
-    'https://i.imgur.com/ABnan3T.png',
-    'https://i.imgur.com/wNSDttt.jpg',
-    'https://streamable.com/qxx1ob',
-    'https://www.youtube.com/watch?v=Q16KpquGsIc',
-    'https://www.youtube.com/watch?v=qG3GiXsJ4xE',
-    'https://www.youtube.com/watch?v=IC5icA_t2f4',
-    'https://www.youtube.com/watch?v=D3369OQYUsk',
-    'https://i.imgur.com/iEsyCmn.gif',
-    'https://i.imgur.com/5GfdutZ.jpg',
-    'https://i.imgur.com/oicGMFu.png',
-]
-
 
 class Stuff(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.outputs = open('links').readlines()
 
     @commands.Cog.listener()
     async def on_message(self, msg):
@@ -32,7 +20,7 @@ class Stuff(commands.Cog):
             return
         n = random.randint(1, 100)
         if 1 <= n <= 5:
-            await ctx.send(outputs[random.randrange(len(outputs))])
+            await ctx.send(self.outputs[random.randrange(len(self.outputs))])
         elif n >= 91:
             poss_channels = [c for c in ctx.guild.channels if ctx.author.id in [m.id for m in c.members]]
             random.shuffle(poss_channels)
