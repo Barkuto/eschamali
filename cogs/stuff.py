@@ -1,5 +1,5 @@
 import random
-from discord import DMChannel
+from discord import DMChannel, TextChannel
 from discord.ext import commands
 
 
@@ -22,7 +22,7 @@ class Stuff(commands.Cog):
         if 1 <= n <= 5:
             await ctx.send(self.outputs[random.randrange(len(self.outputs))])
         elif n >= 91:
-            poss_channels = [c for c in ctx.guild.channels if ctx.author.id in [m.id for m in c.members]]
+            poss_channels = [c for c in ctx.guild.channels if isinstance(c, TextChannel) and ctx.author.id in [m.id for m in c.members]]
             random.shuffle(poss_channels)
             m = None
             for c in poss_channels:
