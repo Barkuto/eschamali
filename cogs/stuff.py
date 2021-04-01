@@ -33,7 +33,7 @@ class Stuff(commands.Cog):
         n = random.randint(1, 100)
         if 1 <= n <= 5:
             await ctx.send(outputs[random.randrange(len(outputs))])
-        elif n >= 98:
+        elif n >= 91:
             poss_channels = [c for c in ctx.guild.channels if ctx.author.id in [m.id for m in c.members]]
             random.shuffle(poss_channels)
             m = None
