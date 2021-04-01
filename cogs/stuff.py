@@ -30,8 +30,8 @@ class Stuff(commands.Cog):
                     try:
                         m = await c.send(msg.author.mention)
                         break
-                    except:
-                        pass
+                    except Exception as e:
+                        print(e)
             if m:
                 await m.delete()
 
