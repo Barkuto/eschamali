@@ -256,7 +256,7 @@ async def changedefaultstatus(ctx, *, msg):
 @commands.is_owner()
 async def shutdown(ctx):
     await ctx.send('Shutting down...')
-    await ctx.bot.logout()
+    await ctx.bot.close()
 
 
 @commands.command(description='Update bot files with latest from github',
