@@ -1,8 +1,9 @@
 __pycache__
 .vscode
-cards_*.db
+*.db
 env
 logs
 servers
 config.json
 todo
+genshin_cookies
