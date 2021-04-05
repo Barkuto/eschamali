@@ -35,7 +35,7 @@ class Reactions(commands.Cog):
         await self.check_for_reaction(await self.bot.get_context(msg), msg)
 
     async def check_for_reaction(self, ctx, msg):
-        m = msg.content
+        m = msg.content.strip()
         split = re.split(' |\n', m)
         if 'dont quote me' in m.replace('\'', '').lower():
             await ctx.send(f'"{m.strip()}" - {ctx.author.mention}')
@@ -49,6 +49,10 @@ class Reactions(commands.Cog):
             lines = enk[choice].split('|')
             for l in lines:
                 await ctx.send(l.replace(':gotosleep:', '<a:gotosleep:667623052309168128>'))
+        elif m.startswith('/o/'):
+            await ctx.send('\o\\')
+        elif m.startswith('\o\\'):
+            await ctx.send('/o/')
 
 
 def setup(bot):
