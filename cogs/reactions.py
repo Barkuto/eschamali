@@ -42,7 +42,7 @@ class Reactions(commands.Cog):
         elif 'alot' in split:
             await ctx.send('http://thewritepractice.com/wp-content/uploads/2012/05/Alot-vs-a-lot1-600x450.png')
         elif 'lambo' in split:
-            await ctx.send('https://streamable.com/qxx1ob')
+            await ctx.send('https://youtu.be/6w1TieX_I2w')
         # elif msg.author.id == 85844964633747456 and 131547909090050048 in [u.id for u in msg.mentions]:
         elif msg.author.id == 207986006840836097 and 102559179507519488 in [u.id for u in msg.mentions]:
             choice = random.randint(0, len(enk) - 1)
