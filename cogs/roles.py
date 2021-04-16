@@ -1,6 +1,7 @@
 import importlib
 from discord import Embed
 from discord.ext import commands
+from discord.errors import Forbidden
 
 UTILS = importlib.import_module('.utils', 'util')
 DB_MOD = UTILS.DB_MOD
@@ -202,7 +203,11 @@ class Roles(commands.Cog):
                         await ctx.author.add_roles(sar)
                     else:
                         await ctx.author.remove_roles(sar)
-                    return await UTILS.confirm(ctx)
+                    try:
+                        return await UTILS.confirm(ctx)
+                    except Forbidden as e:
+                        s = 'Added' if which else 'Removed'
+                        return await ctx.send(s + ' role. Even though you blocked me.')
             await UTILS.deny(ctx)
         else:
             await ctx.send(INVALID_ROLE)
