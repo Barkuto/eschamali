@@ -181,6 +181,7 @@ class Admin(commands.Cog):
                     added.append(u)
                 except:
                     not_added.append(u)
+            m = ''
             if added:
                 m = 'Muted: %s\n' % ' '.join([u.mention for u in added])
             if not_added:
