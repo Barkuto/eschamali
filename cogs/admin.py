@@ -207,6 +207,7 @@ class Admin(commands.Cog):
                     removed.append(u)
                 except:
                     not_removed.append(u)
+            m = ''
             if removed:
                 m = 'Unmuted: %s\n' % ' '.join([u.mention for u in removed])
             if not_removed:
