@@ -121,6 +121,7 @@ class Blackjack():
             # Player Turn
             elif self.turn == PLAYER:
                 if player_sum > 21:
+                    self.set_curr_state(PLAYER_BUST)
                     # When player busts, Move to next hand
                     self.curr_hand += 1
                     # If all player hands are done
