@@ -1,7 +1,6 @@
 import importlib
 import asyncio
 import random
-import discord.utils
 from discord import Colour
 from discord import Embed
 from discord.ext import tasks, commands
@@ -75,10 +74,7 @@ class PAD(commands.Cog):
         await self.bot.wait_until_ready()
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
-        msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
-        reaction = discord.utils.get(msg.reactions, emoji=str(payload.emoji))
-        user = payload.member
+    async def on_reaction_add(self, reaction, user):
         if user == self.bot.user or not reaction.message.embeds:
             return
         msg = reaction.message
