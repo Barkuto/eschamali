@@ -1,5 +1,8 @@
 import importlib
 import discord
+import base64
+import json
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse, parse_qs
 from discord.ext import commands
 
 VARS = importlib.import_module('.vars', 'util')
@@ -84,4 +87,39 @@ def find_role(guild, role):
                 return r
     except:
         pass
+    return None
+
+# https://github.com/TsubakiBotPad/discord-menu/
+# discordmenu/intra_message_state.py
+
+
+def make_data_url(json_dict, img_url='https://i.imgur.com/0Xd1Qa6.png'):
+    raw_bytes = base64.b64encode(json.dumps(json_dict).encode())
+    data = str(raw_bytes)[2:-1]
+
+    params = {'data': data}
+    url_parts = list(urlparse(img_url))
+
+    query = dict(parse_qsl(url_parts[4]))
+    query.update(params)
+
+    url_parts[4] = urlencode(query)
+    return urlunparse(url_parts)
+
+
+def read_data_url(url):
+    parsed_url = urlparse(url)
+    query_params_dict = parse_qs(parsed_url.query)
+    data = query_params_dict.get('data')
+    if not data:
+        return None
+
+    result_bytes = base64.b64decode(data[0])
+    return json.loads(result_bytes)
+
+
+def get_embed_data(embed):
+    footer = embed.footer
+    if footer and footer.icon_url:
+        return read_data_url(footer.icon_url)
     return None
