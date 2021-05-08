@@ -1,12 +1,13 @@
 import importlib
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
+import random
+import discord.utils
 from discord import Colour
 from discord import Embed
 from discord.ext import tasks, commands
+from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from math import ceil, floor
-import random
 
 UTILS = importlib.import_module('.utils', 'util')
 PAD_DATA = importlib.import_module('.pad_data', 'cogs.pad_data')
@@ -74,7 +75,10 @@ class PAD(commands.Cog):
         await self.bot.wait_until_ready()
 
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
+    async def on_raw_reaction_add(self, payload):
+        msg = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+        reaction = discord.utils.get(msg.reactions, emoji=str(payload.emoji))
+        user = payload.member
         if user == self.bot.user or not reaction.message.embeds:
             return
         msg = reaction.message
@@ -475,21 +479,21 @@ class AwakeningEmoji(Enum):
     def __str__(self):
         return self.emote()
 
-    @ classmethod
+    @classmethod
     def from_str(cls, s):
         for ae in cls:
             if s == ae.emote():
                 return ae
         return AwakeningEmoji.UNKNOWN
 
-    @ classmethod
+    @classmethod
     def from_id(cls, i):
         for ae in cls:
             if i == ae.id():
                 return ae
         return AwakeningEmoji.UNKNOWN
 
-    @ classmethod
+    @classmethod
     def load_emojis(cls, pad_cog, bot, servers):
         emojis_to_find = [e.emote() for e in AwakeningEmoji]
         for s in servers:
