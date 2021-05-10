@@ -1,12 +1,14 @@
 import importlib
 import asyncio
 import random
+import discord.utils
 from discord import Colour
 from discord import Embed
 from discord.ext import tasks, commands
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from math import ceil, floor
+from datetime import datetime
 
 UTILS = importlib.import_module('.utils', 'util')
 PAD_DATA = importlib.import_module('.pad_data', 'cogs.pad_data')
@@ -38,11 +40,13 @@ class PAD(commands.Cog):
         self.use_emotes = False
         self.updating = False
         self.load_emotes.start()  # pylint: disable=no-member
+        self.update_db.start()  # pylint: disable=no-member
         self.max_mons = 6500
         self._update_max_mons()
 
     def cog_unload(self):
         self.load_emotes.cancel()  # pylint: disable=no-member
+        self.update_db.cancel()  # pylint: disable=no-member
 
     def _update_max_mons(self):
         jp_db = UTILS.DB(PAD_DATA.CARDS_DB % JP)
@@ -63,6 +67,23 @@ class PAD(commands.Cog):
     """
     LISTENERS/TASKS
     """
+
+    @tasks.loop(hours=24)
+    async def update_db(self):
+        if not self.updating:
+            self.updating = True
+            LOGGER.debug('Updating PAD DB.')
+            await self._update_db()
+            LOGGER.debug('Updated PAD DB.')
+            self.updating = False
+
+    @update_db.before_loop
+    async def before_update_db(self):
+        await self.bot.wait_until_ready()
+        now = datetime.now()
+        # 8am eastern time ish
+        update_time = datetime(now.year, now.month, now.day, 12, 0)
+        await discord.utils.sleep_until(update_time)
 
     @tasks.loop(count=1)
     async def load_emotes(self):
