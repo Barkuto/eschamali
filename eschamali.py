@@ -290,14 +290,17 @@ async def git(ctx):
 @commands.is_owner()
 async def test(ctx, timeout=300):
     async def test_run():
-        coro = asyncio.create_subprocess_shell('python3 test.py', stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        proc = await asyncio.wait_for(coro, timeout)
-        stdout, stderr = await proc.communicate()
+        try:
+            coro = asyncio.create_subprocess_shell('python3 test.py', stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            proc = await asyncio.wait_for(coro, timeout)
+            stdout, stderr = await proc.communicate()
 
-        if stdout:
-            await ctx.send(f'```{stdout.decode()}```')
-        if stderr:
-            await ctx.send(f'```{stderr.decode()}```')
+            if stdout:
+                await ctx.send(f'```{stdout.decode()}```')
+            if stderr:
+                await ctx.send(f'```{stderr.decode()}```')
+        except asyncio.exceptions.TimeoutError as e:
+            await ctx.send(f'```Timed out.```')
     await ctx.send('```Running test.py```')
     await test_run()
 
