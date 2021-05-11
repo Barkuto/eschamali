@@ -5,6 +5,7 @@ import traceback
 import sys
 import discord
 import sqlite3
+import asyncio
 from discord import Game, DMChannel, Embed
 from discord.ext import commands
 from discord.ext.commands import Bot
@@ -282,5 +283,23 @@ async def git(ctx):
             await ctx.send('No cogs to reload. Might require restart.')
 
 
-DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown, git, help]
+@commands.command(aliases=['t', 'T', 'q', 'Q'],
+                  description='Run test.py',
+                  help='Owners only',
+                  brief='Test')
+@commands.is_owner()
+async def test(ctx, timeout=300):
+    async def test_run():
+        coro = asyncio.create_subprocess_shell('python3 test.py', stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        proc = await asyncio.wait_for(coro, timeout)
+        stdout, stderr = await proc.communicate()
+
+        if stdout:
+            await ctx.send(f'```{stdout.decode()}```')
+        if stderr:
+            await ctx.send(f'```{stderr.decode()}```')
+    await ctx.send('```Running test.py```')
+    await test_run()
+
+DEFAULT_COMMANDS = [uptime, servers, changestatus, changedefaultstatus, shutdown, git, help, test]
 Eschamali()._run()
