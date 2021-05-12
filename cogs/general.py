@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import discord
 from discord import Embed, ActivityType, Game, Colour
@@ -210,7 +211,9 @@ class General(commands.Cog):
             self.last_cmd = body
             env = {
                 '_': self.last_result,
+                'asyncio': asyncio,
                 'discord': discord,
+                'os': os,
                 'ctx': ctx,
                 'bot': ctx.bot,
                 'author': ctx.author,
