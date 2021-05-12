@@ -39,17 +39,16 @@ def _process_db():
     dgdb.close()
     memory_db.row_factory = sqlite3.Row
 
-    schema_to_region = {NA: 'en', JP: 'ja'}
     monsters = {NA: [], JP: []}
     for region, mons in monsters.items():
         series = {}
         for r in memory_db.execute(f'SELECT * FROM series'):
-            series[r['series_id']] = r[f'name_{schema_to_region[region]}']
+            series[r['series_id']] = r[f'name_en']
         for r in memory_db.execute(f'SELECT * FROM monsters WHERE on_{region}=1'):
             mons_id = r['monster_id']
             m = {
                 'id': r[f'monster_no_{region}'],
-                'name': r[f'name_{schema_to_region[region]}'],
+                'name': r['name_en_override'] or r['name_en'],
                 'hp_max': r['hp_max'],
                 'atk_max': r['atk_max'],
                 'rcv_max': r['rcv_max'],
@@ -78,8 +77,8 @@ def _process_db():
             ls_row = memory_db.execute(f'SELECT * FROM leader_skills WHERE leader_skill_id={ls_id}').fetchone()
             if ls_row:
                 m['leader'] = {
-                    'leader_name': ls_row[f'name_{schema_to_region[region]}'],
-                    'leader_desc': ls_row[f'desc_{schema_to_region[region]}'],
+                    'leader_name': ls_row[f'name_en'],
+                    'leader_desc': ls_row[f'desc_en'],
                     'max_hp': ls_row['max_hp'],
                     'max_atk': ls_row['max_atk'],
                     'max_rcv': ls_row['max_rcv'],
@@ -90,8 +89,8 @@ def _process_db():
             as_row = memory_db.execute(f'SELECT * FROM active_skills WHERE active_skill_id={as_id}').fetchone()
             if as_row:
                 m['active'] = {
-                    'active_name': as_row[f'name_{schema_to_region[region]}'],
-                    'active_desc': as_row[f'desc_{schema_to_region[region]}'],
+                    'active_name': as_row[f'name_en'],
+                    'active_desc': as_row[f'desc_en'],
                     'turn_max': as_row['turn_max'],
                     'turn_min': as_row['turn_min'],
                 }
@@ -125,7 +124,7 @@ def _process_db():
                     queue += [r['from_id'] for r in memory_db.execute(f'SELECT * FROM evolutions WHERE to_id={n}') if r['from_id']]
                     queue += [r['linked_monster_id'] for r in memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={n}') if r['linked_monster_id']]
                     queue += [r['monster_id'] for r in memory_db.execute(f'SELECT * FROM monsters WHERE linked_monster_id={n}') if r['monster_id']]
-                all_evos.append(n)
+                    all_evos.append(n)
             all_evos = [e for e in filter(lambda e: memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={e} AND on_{region}=1').fetchone(), all_evos)]
             if mons_id in all_evos:
                 all_evos.remove(mons_id)
