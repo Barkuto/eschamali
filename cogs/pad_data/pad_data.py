@@ -3,6 +3,7 @@ import os.path
 import importlib
 import urllib.request
 import pickle
+import sqlite3
 from sqlite3 import Binary
 
 UTILS = importlib.import_module('.utils', 'util')
@@ -31,14 +32,20 @@ DB UPDATING/PROCESSING
 
 def _process_db():
     urllib.request.urlretrieve(DADGUIDEURL, DADGUIDEDB)
-    db = DB(DADGUIDEDB)
+
+    dgdb = sqlite3.connect(DADGUIDEDB)
+    memory_db = sqlite3.connect(':memory:')
+    dgdb.backup(memory_db)
+    dgdb.close()
+    memory_db.row_factory = sqlite3.Row
+
     schema_to_region = {NA: 'en', JP: 'ja'}
     monsters = {NA: [], JP: []}
     for region, mons in monsters.items():
         series = {}
-        for r in db.get_all('series', factory=True):
+        for r in memory_db.execute(f'SELECT * FROM series'):
             series[r['series_id']] = r[f'name_{schema_to_region[region]}']
-        for r in db.get_rows('monsters', (f'on_{region}', 1), factory=True):
+        for r in memory_db.execute(f'SELECT * FROM monsters WHERE on_{region}=1'):
             mons_id = r['monster_id']
             m = {
                 'id': r[f'monster_no_{region}'],
@@ -68,7 +75,7 @@ def _process_db():
             }
 
             ls_id = r['leader_skill_id']
-            ls_row = db.get_row('leader_skills', ('leader_skill_id', ls_id), factory=True)
+            ls_row = memory_db.execute(f'SELECT * FROM leader_skills WHERE leader_skill_id={ls_id}').fetchone()
             if ls_row:
                 m['leader'] = {
                     'leader_name': ls_row[f'name_{schema_to_region[region]}'],
@@ -80,7 +87,7 @@ def _process_db():
                 }
 
             as_id = r['active_skill_id']
-            as_row = db.get_row('active_skills', ('active_skill_id', as_id), factory=True)
+            as_row = memory_db.execute(f'SELECT * FROM active_skills WHERE active_skill_id={as_id}').fetchone()
             if as_row:
                 m['active'] = {
                     'active_name': as_row[f'name_{schema_to_region[region]}'],
@@ -89,7 +96,7 @@ def _process_db():
                     'turn_min': as_row['turn_min'],
                 }
 
-            awakenings = db.get_rows('awakenings', ('monster_id', mons_id), factory=True)
+            awakenings = memory_db.execute(f'SELECT * FROM awakenings WHERE monster_id={mons_id}')
             for aw_row in awakenings:
                 awoken_skill_id = aw_row['awoken_skill_id']
                 is_super = aw_row['is_super']
@@ -101,10 +108,10 @@ def _process_db():
             m['supers'] = [s[1] for s in sorted(m['supers'], key=lambda t:t[0])]
             m['awakenings'] = [s[1] for s in sorted(m['awakenings'], key=lambda t:t[0])]
 
-            evos_from = db.get_rows('evolutions', ('from_id', mons_id), factory=True)
-            evos_to = db.get_rows('evolutions', ('to_id', mons_id), factory=True)
+            evos_from = memory_db.execute(f'SELECT * FROM evolutions WHERE from_id={mons_id}')
+            evos_to = memory_db.execute(f'SELECT * FROM evolutions WHERE to_id={mons_id}')
             queue = [e['to_id'] for e in evos_from] + [e['from_id'] for e in evos_to]
-            linked_mons_from = db.get_rows('monsters', ('linked_monster_id', mons_id), factory=True)
+            linked_mons_from = memory_db.execute(f'SELECT * FROM monsters WHERE linked_monster_id={mons_id}')
             if r['linked_monster_id']:
                 queue += [r['linked_monster_id']]
             if linked_mons_from:
@@ -114,43 +121,39 @@ def _process_db():
             while queue:
                 n = queue.pop(0)
                 if not n in all_evos:
-                    queue += [r['to_id'] for r in db.get_rows('evolutions', ('from_id', n), factory=True)]
-                    queue += [r['from_id'] for r in db.get_rows('evolutions', ('to_id', n), factory=True)]
-                    queue += [r['linked_monster_id'] for r in db.get_rows('monsters', ('monster_id', n), factory=True)]
-                    queue += [r['monster_id'] for r in db.get_rows('monsters', ('linked_monster_id', n), factory=True)]
-                    all_evos.append(n)
-            all_evos = [e for e in filter(lambda e: db.get_row('monsters', ('monster_id', e), (f'on_{region}', 1)), all_evos)]
+                    queue += [r['to_id'] for r in memory_db.execute(f'SELECT * FROM evolutions WHERE from_id={n}') if r['to_id']]
+                    queue += [r['from_id'] for r in memory_db.execute(f'SELECT * FROM evolutions WHERE to_id={n}') if r['from_id']]
+                    queue += [r['linked_monster_id'] for r in memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={n}') if r['linked_monster_id']]
+                    queue += [r['monster_id'] for r in memory_db.execute(f'SELECT * FROM monsters WHERE linked_monster_id={n}') if r['monster_id']]
+                all_evos.append(n)
+            all_evos = [e for e in filter(lambda e: memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={e} AND on_{region}=1').fetchone(), all_evos)]
             if mons_id in all_evos:
                 all_evos.remove(mons_id)
-            all_evos = [db.get_value('monsters', f'monster_no_{region}', ('monster_id', e)) for e in all_evos]
+            all_evos = [memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={e}').fetchone()[f'monster_no_{region}'] for e in all_evos]
             m['evolutions'] = sorted(all_evos)
 
             mons.append(Monster(m))
     os.remove(DADGUIDEDB)
+    memory_db.close()
     return monsters
 
 
 def update_monsters():
     all_monsters = _process_db()
     for region, monsters in all_monsters.items():
-        db = DB(CARDS_TMP_DB % region)
-        db.delete_table('monsters')
-        db.create_table('monsters',
-                        ('id', DB_MOD.INTEGER),
-                        ('name', DB_MOD.TEXT),
-                        ('att1', DB_MOD.TEXT),
-                        ('att2', DB_MOD.TEXT),
-                        ('series', DB_MOD.TEXT),
-                        ('monster', DB_MOD.BLOB))
+        memory_db = sqlite3.connect(':memory:')
+        memory_db.execute('DROP TABLE IF EXISTS monsters')
+        memory_db.execute('CREATE TABLE IF NOT EXISTS monsters (id integer, name text, att1 text, att2 text, series text, monster blob)')
+
         for m in monsters:
             if 0 < m.id < 100000:
-                db.insert_row('monsters',
-                              ('id', m.id),
-                              ('name', m.name),
-                              ('att1', m.attribute_1_id),
-                              ('att2', m.attribute_2_id),
-                              ('series', m.series),
-                              ('monster', mons_to_binary(m)))
+                memory_db.execute('INSERT INTO monsters (id, name, att1, att2, series, monster) VALUES (?,?,?,?,?,?)',
+                                  (m.id, m.name, m.attribute_1_id, m.attribute_2_id, m.series, mons_to_binary(m)))
+            memory_db.commit()
+        local_db = sqlite3.connect(CARDS_TMP_DB % region)
+        memory_db.backup(local_db)
+        local_db.close()
+        memory_db.close()
         os.replace(CARDS_TMP_DB % region, CARDS_DB % region)
 
 
