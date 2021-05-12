@@ -2,16 +2,18 @@ import importlib
 import os
 import random
 import re
-import threading
-from datetime import datetime, timedelta
+import base64
+import requests
 from discord import Embed, User, Colour, Member
 from discord.ext import commands
+from io import BytesIO
 
 UTILS = importlib.import_module('.utils', 'util')
 CREDITS = importlib.import_module('.credits', 'cogs.gamez')
 BJ_MOD = importlib.import_module('.blackjack', 'cogs.gamez')
 DECK = importlib.import_module('.deck', 'cogs.gamez')
 STATS_MOD = importlib.import_module('.stats', 'cogs.gamez')
+CARD_IMGS = importlib.import_module('.card_imgs', 'cogs.gamez')
 
 DB_MOD = UTILS.DB_MOD
 DB = DB_MOD.DB
@@ -99,6 +101,34 @@ class Games(commands.Cog):
         self.cr = CREDITS.Credits(bot.user)
         self.stats = Stats(self.bot, os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db'))
 
+        self.filehost_url = None
+        self.filehost_key = None
+        try:
+            with open(os.path.join(os.path.dirname(__file__), 'gamez', 'filehost')) as f:
+                lines = f.readlines()
+                self.filehost_url = lines[0]
+                self.filehost_key = lines[1]
+        except Exception as e:
+            LOGGER.error('Invalid filehost file')
+        self.filehost = self.filehost_key and self.filehost_url
+
+    def _upload_image(self, img, itype='PNG'):
+        with BytesIO() as img_bytes:
+            img.save(img_bytes, format=itype)
+            img_b64 = base64.b64encode(img_bytes.getvalue())
+            data = {
+                'API_KEY': self.filehost_key,
+                'base64': str(img_b64)[2:],
+                'ext': 'png'
+            }
+            r = requests.post(self.filehost_url, json=data)
+            if r.status_code == 200:
+                return r.json()['url'].replace('http://', 'https://')
+        return None
+
+    def get_user_card_sheet(self, user_id, blank=False):
+        return CARD_IMGS.load_sheet_img(user_id, blank=blank)
+
     """
     Blackjack Methods
     """
@@ -116,7 +146,7 @@ class Games(commands.Cog):
     def _cards_to_embed_sum_name(self, user, cards, unknown=False):
         return f'{user.name} ({BJ_MOD.best_sum(cards)}{"?" if unknown else ""})'
 
-    def _embed_from_bj(self, user, blackjack):
+    def _embed_from_bj(self, user, blackjack, sheet_img):
         user_creds = self.cr.get_user_creds(user)
         bets = blackjack.bets
         bot_hand = blackjack.house_cards
@@ -130,23 +160,30 @@ class Games(commands.Cog):
         e.description = f'Credits: {user_creds}\nCurrent Bets: {"/".join([str(b) for b in bets])}'
         e.set_thumbnail(url=user.avatar_url)
 
-        name = ''
-        value = ''
-        if blackjack.get_curr_state() != BJ_MOD.ONGOING:
-            name = self._cards_to_embed_sum_name(self.bot.user, bot_hand)
-            value = self._cards_to_embed_str(bot_hand)
-        else:
-            name = self._cards_to_embed_sum_name(self.bot.user, bot_hand[:1], unknown=True)
-            value = self._cards_to_embed_str(bot_hand[:1]) + ':grey_question:'
-        e.add_field(name=name, value=value)
+        img_url = ''
+        if self.filehost:
+            bj_img = CARD_IMGS.make_bj_img(self, user, blackjack, sheet_img)
+            img_url = self._upload_image(bj_img)
+            if img_url:
+                e.set_image(url=img_url)
+        if (not self.filehost) or (self.filehost and not img_url):
+            name = ''
+            value = ''
+            if blackjack.get_curr_state() != BJ_MOD.ONGOING:
+                name = self._cards_to_embed_sum_name(self.bot.user, bot_hand)
+                value = self._cards_to_embed_str(bot_hand)
+            else:
+                name = self._cards_to_embed_sum_name(self.bot.user, bot_hand[:1], unknown=True)
+                value = self._cards_to_embed_str(bot_hand[:1]) + ':grey_question:'
+            e.add_field(name=name, value=value)
 
-        name = f'{user.name} ({"/".join([str(BJ_MOD.best_sum(c)) for c in user_hands])})'
-        val = ''
-        for i in range(len(user_hands)):
-            if i == blackjack.curr_hand and len(user_hands) > 1:
-                val += ':white_small_square:'
-            val += self._cards_to_embed_str(user_hands[i]) + '\n'
-        e.add_field(name=name, value=val)
+            name = f'{user.name} ({"/".join([str(BJ_MOD.best_sum(c)) for c in user_hands])})'
+            val = ''
+            for i in range(len(user_hands)):
+                if i == blackjack.curr_hand and len(user_hands) > 1:
+                    val += ':white_small_square:'
+                val += self._cards_to_embed_str(user_hands[i]) + '\n'
+            e.add_field(name=name, value=val)
 
         result_values = []
         if blackjack.get_curr_state() == BJ_MOD.PLAYER_DONE:
@@ -169,14 +206,12 @@ class Games(commands.Cog):
             if net >= 0:
                 net = f'+{net}'
             e.description = f'Bets: {"/".join([str(b) for b in bets])}'
-            e.add_field(name='Results', value=f'{value}\nCredits: {user_creds}({net})', inline=False)
-
-        e.set_footer(text=user.id)
+            e.set_footer(text=f'Results:\n{value}\n\nCredits: {user_creds}({net})')
 
         return e
 
     async def _finalize_bj(self, user, msg, embed):
-        bj_state = self.bj_states.pop(user.id, None)
+        bj_state, _ = self.bj_states.pop(user.id, None)
         await msg.clear_reactions()
         if self.cr.get_user_creds(user) >= BJ_DEFAULT_BET:
             await msg.add_reaction(AGAIN)
@@ -189,14 +224,15 @@ class Games(commands.Cog):
         msg = reaction.message
         embed = msg.embeds[0]
         ctx = await self.bot.get_context(msg)
-        if not embed.footer.text == str(user.id):
+        embed_user_id = embed.thumbnail.url.split('/')[4]
+        if not embed_user_id == str(user.id):
             return
         if not embed or not embed.title or not embed.title == 'Blackjack':
             return
         if not self.bot.user in [u async for u in reaction.users()]:
             return
         if reaction.emoji in [HIT, HOLD, DOUBLE, SPLIT]:
-            bj_game = self.bj_states[user.id]
+            bj_game, sheet_img = self.bj_states[user.id]
             bj_state_final = None
             lock = bj_game.lock
             if not lock.acquire(blocking=False):
@@ -221,7 +257,7 @@ class Games(commands.Cog):
                     bj_state_final = await self._finalize_bj(user, msg, embed)
                 else:
                     await msg.remove_reaction(reaction, user)
-                e = self._embed_from_bj(user, bj_game)
+                e = self._embed_from_bj(user, bj_game, sheet_img)
                 if error:
                     e.add_field(name='Error', value=error, inline=False)
                 await msg.edit(embed=e)
@@ -295,11 +331,12 @@ class Games(commands.Cog):
         try:
             await self._check_bj_deck(ctx)
             bj_game = BJ_MOD.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
-            self.bj_states[user.id] = bj_game
+            sheet_img = self.get_user_card_sheet(user.id, blank=True)
+            self.bj_states[user.id] = (bj_game, sheet_img)
         except BJ_MOD.BlackjackException as e:
             return await ctx.send(e)
 
-        msg = await ctx.send(embed=self._embed_from_bj(user, bj_game))
+        msg = await ctx.send(embed=self._embed_from_bj(user, bj_game, sheet_img))
         if bj_game.get_curr_state() == BJ_MOD.ONGOING:
             await msg.add_reaction(HIT)
             await msg.add_reaction(HOLD)
