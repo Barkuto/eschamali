@@ -332,13 +332,12 @@ class PAD(commands.Cog):
             e.add_field(name='Similar Names',
                         value=', '.join([f'[{s}]({PDX_LINK % s})' for s in similar]) if len(similar) <= 10 else 'Too many to show.',
                         inline=True)
-        if not m.series.lower() == 'unsorted':
-            data = {
-                'id': author.id,
-                'query': query,
-                'region': region
-            }
-            e.set_footer(text=f'Series: {m.series}', icon_url=UTILS.make_data_url(data))
+        data = {
+            'id': author.id,
+            'query': query,
+            'region': region
+        }
+        e.set_footer(text=f'Series: {m.series}', icon_url=UTILS.make_data_url(data))
         return e
 
     def _series_embed(self, query, region, page=1):
