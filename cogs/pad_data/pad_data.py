@@ -59,7 +59,7 @@ def _process_db():
                 'rarity': r['rarity'],
                 'lb_mult': r['limit_mult'],
                 'attribute_1_id': r['attribute_1_id'],
-                'attribute_2_id': r['attribute_2_id'],
+                'attribute_2_id': r['attribute_2_id'] if not r['attribute_2_id'] is None else Attribute.NONE.id(),
                 'type_1_id': r['type_1_id'],
                 'type_2_id': r['type_2_id'],
                 'type_3_id': r['type_3_id'],

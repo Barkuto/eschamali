@@ -88,7 +88,7 @@ class Active():
 
 
 class Attribute(Enum):
-    NONE = None
+    NONE = 6
     FIRE = 0
     WATER = 1
     WOOD = 2
@@ -115,14 +115,14 @@ class Attribute(Enum):
     def __repr__(self):
         return str(self)
 
-    @ classmethod
+    @classmethod
     def from_id(cls, att_id):
         for a in cls:
             if a.value == att_id:
                 return a
         return cls.NONE
 
-    @ classmethod
+    @classmethod
     def from_str(cls, att_str):
         if att_str == 'r':
             return cls.FIRE
@@ -185,7 +185,7 @@ class Type(Enum):
         else:
             return []
 
-    @ classmethod
+    @classmethod
     def from_id(cls, type_id):
         for t in cls:
             if t.id() == type_id:
@@ -286,6 +286,13 @@ class Awakening(Enum):
     JAMMERBLESSING = (71, "Blessing of Jammer", "JammerBlessing")
     POISONBLESSING = (72, "Blessing of Poison", "PoisonBlessing")
 
+    FIRECOMBO = (73, "Fire Combo Enhance", "FireCombo")
+    WATERCOMBO = (74, "Water Combo Enhance", "WaterCombo")
+    WOODCOMBO = (75, "Wood Combo Enhance", "WoodCombo")
+    LIGHTCOMBO = (76, "Light Combo Enhance", "LightCombo")
+    DARKCOMBO = (77, "Dark Combo Enhance", "DarkCombo")
+    CROSSATTACK = (78, "Cross Attack Boost", "CrossAttack")
+
     def id(self):
         return self.value[0]  # pylint: disable=unsubscriptable-object
 
@@ -301,7 +308,7 @@ class Awakening(Enum):
     def __repr__(self):
         return str(self)
 
-    @ classmethod
+    @classmethod
     def from_id(cls, aw_id):
         for aw in cls:
             if aw.id() == aw_id:
