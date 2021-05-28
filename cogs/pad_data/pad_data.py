@@ -1,7 +1,7 @@
 import os
 import os.path
 import importlib
-import urllib.request
+import requests
 import pickle
 import sqlite3
 from sqlite3 import Binary
@@ -31,7 +31,9 @@ DB UPDATING/PROCESSING
 
 
 def _process_db():
-    urllib.request.urlretrieve(DADGUIDEURL, DADGUIDEDB)
+    req = requests.get(DADGUIDEURL)
+    with open(DADGUIDEDB, 'wb') as f:
+        f.write(req.content)
 
     dgdb = sqlite3.connect(DADGUIDEDB)
     memory_db = sqlite3.connect(':memory:')
