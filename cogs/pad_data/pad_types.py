@@ -44,8 +44,20 @@ class Monster():
     def lb_rcv(self):
         return int(self.rcv_max * (1 + (self.lb_mult / 100.0)))
 
+    def super_lb_hp(self):
+        return self.lb_hp() + int(self.hp_max * 0.1)
+
+    def super_lb_atk(self):
+        return self.lb_atk() + int(self.atk_max * 0.05)
+
+    def super_lb_rcv(self):
+        return self.lb_rcv() + int(self.rcv_max * 0.05)
+
     def lb_weighted(self):
         return int((self.lb_hp() / 10.0) + (self.lb_atk() / 5.0) + (self.lb_rcv() / 3.0))
+
+    def super_lb_weighted(self):
+        return int((self.super_lb_hp() / 10.0) + (self.super_lb_atk() / 5.0) + (self.super_lb_rcv() / 3.0))
 
     def weighted(self):
         return int((self.hp_max / 10.0) + (self.atk_max / 5.0) + (self.rcv_max / 3.0))

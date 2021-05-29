@@ -267,12 +267,17 @@ class PAD(commands.Cog):
         elif att1 == Attribute.DARK:
             embed_colour = Colour.from_rgb(204, 84, 194)
 
+        types = list(filter(lambda t: t != Type.NONE, [Type.from_id(m.type_1_id),
+                                                       Type.from_id(m.type_2_id),
+                                                       Type.from_id(m.type_3_id)]))
+        desc = '/'.join(map(str, types)) + '\n'
+
         if awakenings and self.use_emotes:
-            desc = ''.join([str(e.to_emoji()) for e in map(AwakeningEmoji.from_id, awakenings)])
+            desc += ''.join([str(e.to_emoji()) for e in map(AwakeningEmoji.from_id, awakenings)])
         elif awakenings:
-            desc = ' '.join([Awakening.from_id(a).short_name() for a in awakenings])
+            desc += ' '.join([Awakening.from_id(a).short_name() for a in awakenings])
         else:
-            desc = 'No Awakenings.'
+            desc += 'No Awakenings.'
 
         if supers and self.use_emotes:
             desc += '\n' + ''.join([str(e.to_emoji()) for e in map(AwakeningEmoji.from_id, supers)])
@@ -281,24 +286,37 @@ class PAD(commands.Cog):
 
         valid_killers = [l.name() for l in m.get_valid_killer_latents()]
         if valid_killers:
-            desc += f'\nKillers({latent_slots} slots): '
+            desc += f'\n({latent_slots} slots): '
             if len(valid_killers) == 8:
                 desc += 'Any'
             else:
                 desc += ' '.join(map(str, valid_killers))
-        types = list(filter(lambda t: t != Type.NONE, [Type.from_id(m.type_1_id),
-                                                       Type.from_id(m.type_2_id),
-                                                       Type.from_id(m.type_3_id)]))
 
-        typing = '/'.join(map(str, types))
-        m_info = '**Rarity** %d\n**Cost** %d\n**MP** %d\n**Inheritable** %s' % (
-            m.rarity, m.cost, m.mp, 'Yes' if m.inheritable else 'No')
+        m_info = '```'
+        m_info += '{:11} {}\n'.format('Rarity', m.rarity)
+        m_info += '{:11} {}\n'.format('Cost', m.cost)
+        m_info += '{:11} {}\n'.format('MP', m.mp)
+        m_info += '{:11} {}'.format('Inheritable', 'Yes' if m.inheritable else 'No')
+        m_info += '```'
 
-        weighted = f'Weighted {m.weighted()}' + (f' | LB {m.lb_weighted()} ({m.lb_mult}%)' if m.lb_mult else '')
-        hp = str(m.hp_max) + (f' | {m.lb_hp()}' if m.lb_mult else '')
-        atk = str(m.atk_max) + (f' | {m.lb_atk()}' if m.lb_mult else '')
-        rcv = str(m.rcv_max) + (f' | {m.lb_rcv()}' if m.lb_mult else '')
-        stats = '\n**HP** %s\n**ATK** %s\n**RCV** %s\n**XP** %s' % (hp, atk, rcv, m.exp)
+        stats = '```'
+        stats += '{:3} {:5}'.format('LV', 99)
+        stats += '|{:5}|{:5}\n'.format(110, 120)
+
+        stats += '{:3} {:5}'.format('HP', m.hp_max)
+        stats += '|{:5}|{:5}\n'.format(m.lb_hp(), m.super_lb_hp()) if m.lb_mult else '\n'
+
+        stats += '{:3} {:5}'.format('ATK', m.atk_max)
+        stats += '|{:5}|{:5}\n'.format(m.lb_atk(), m.super_lb_atk()) if m.lb_mult else '\n'
+
+        stats += '{:3} {:5}'.format('RCV', m.rcv_max)
+        stats += '|{:5}|{:5}\n'.format(m.lb_rcv(), m.super_lb_rcv()) if m.lb_mult else '\n'
+
+        stats += '{:3} {:5}'.format('WHT', m.weighted())
+        stats += '|{:5}|{:5}\n'.format(m.lb_weighted(), m.super_lb_weighted()) if m.lb_mult else '\n'
+
+        stats += '{:3} {}'.format('XP', m.exp)
+        stats += '```'
 
         similar = [mons.id for mons in PAD_DATA.get_monsters(query, region)]
         similar = [n for n in filter(lambda n: not n in evolutions, similar)]
@@ -311,8 +329,8 @@ class PAD(commands.Cog):
         e.colour = embed_colour
 
         e.set_thumbnail(url=PAD_DATA.get_portrait_url(str(m.id), region))
-        e.add_field(name=typing, value=m_info, inline=True)
-        e.add_field(name=weighted, value=stats, inline=True)
+        e.add_field(name='Info', value=m_info, inline=True)
+        e.add_field(name='Stats', value=stats, inline=True)
         if active:
             e.add_field(name='Active: ' + active.name + f' ({active.turn_max}->{ active.turn_min})',
                         value=active.desc,
