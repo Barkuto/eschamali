@@ -300,8 +300,8 @@ class PAD(commands.Cog):
         m_info += '```'
 
         stats = '```'
-        stats += '{:3} {:5}'.format('LV', 99)
-        stats += '|{:5}|{:5}\n'.format(110, 120)
+        stats += '{:3} {:>5}'.format('Lv', m.max_level)
+        stats += '|{:5}|{:5}\n'.format(110, 120) if m.lb_mult else '\n'
 
         stats += '{:3} {:5}'.format('HP', m.hp_max)
         stats += '|{:5}|{:5}\n'.format(m.lb_hp(), m.super_lb_hp()) if m.lb_mult else '\n'
@@ -315,7 +315,7 @@ class PAD(commands.Cog):
         stats += '{:3} {:5}'.format('WHT', m.weighted())
         stats += '|{:5}|{:5}\n'.format(m.lb_weighted(), m.super_lb_weighted()) if m.lb_mult else '\n'
 
-        stats += '{:3} {}'.format('XP', m.exp)
+        stats += '{:3} {:5}'.format('XP', m.exp)
         stats += '```'
 
         similar = [mons.id for mons in PAD_DATA.get_monsters(query, region)]

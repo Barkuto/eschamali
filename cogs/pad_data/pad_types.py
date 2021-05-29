@@ -10,6 +10,7 @@ class Monster():
         self.atk_max = dict['atk_max']
         self.rcv_max = dict['rcv_max']
         self.cost = dict['cost']
+        self.max_level = dict['max_level']
         self.exp = dict['exp']
         self.rarity = dict['rarity']
         self.lb_mult = dict['lb_mult']

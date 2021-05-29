@@ -55,6 +55,7 @@ def _process_db():
                 'atk_max': r['atk_max'],
                 'rcv_max': r['rcv_max'],
                 'cost': r['cost'],
+                'max_level': r['level'],
                 'exp': r['exp'],
                 'rarity': r['rarity'],
                 'lb_mult': r['limit_mult'],
