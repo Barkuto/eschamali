@@ -23,6 +23,8 @@ JP = PAD_DATA.JP
 
 LEFT_ARROW = '⬅️'
 RIGHT_ARROW = '➡️'
+REGIONAL_INDICATOR_N = '🇳'
+REGIONAL_INDICATOR_J = '🇯'
 X = '❌'
 LEFT_TRIANGLE = '◀️'
 RIGHT_TRIANGLE = '▶️'
@@ -121,6 +123,12 @@ class PAD(commands.Cog):
                 await msg.edit(embed=self._series_embed(series_query, region, new_page))
             await msg.remove_reaction(reaction, user)
         elif title.startswith('No.'):
+            all_reactions = [r.emoji for r in filter(lambda r:
+                                                     (r.emoji == REGIONAL_INDICATOR_N
+                                                      or r.emoji == REGIONAL_INDICATOR_J)
+                                                     and r.me,
+                                                     msg.reactions)]
+            region = NA if REGIONAL_INDICATOR_J in all_reactions else JP
             embed_data = UTILS.get_embed_data(embed)
             region = NA if embed_data['region'] == NA else JP
             num = int(title.replace('No.', '').split(' ')[0])
@@ -136,6 +144,13 @@ class PAD(commands.Cog):
                     if n > num:
                         new_num = n
                         break
+            elif e == REGIONAL_INDICATOR_J or e == REGIONAL_INDICATOR_N:
+                new_region = self._flip_region(region)
+                new_embed = self._info_embed(user, str(num), new_region)
+                if new_embed:
+                    await msg.edit(embed=new_embed)
+                    await msg.clear_reactions()
+                    await self._add_info_reactions(msg, new_region)
             if new_num != num:
                 await msg.edit(embed=self._info_embed(user, str(new_num), region))
             await msg.remove_reaction(reaction, user)
@@ -184,9 +199,16 @@ class PAD(commands.Cog):
 
     @commands.command(aliases=['i'],
                       description='Show info for monster from *query*',
-                      help='Use reactions to do different actions\nLeft/Right: Go through evos\nX: Delete embed',
+                      help='Use reactions to do different actions\nLeft/Right: Go through evos\nN/J: Switch between NA and JP\nX: Delete embed',
                       brief='Show info')
     async def info(self, ctx, *, query=None):
+        await self._info(ctx, query, NA)
+
+    @commands.command(aliases=['ij'],
+                      description='Show info for JP monster from *query*',
+                      help='Use reactions to do different actions\nLeft/Right: Go through evos\nN/J: Switch between NA and JP\nX: Delete embed',
+                      brief='Show JP info')
+    async def infojp(self, ctx, *, query=None):
         await self._info(ctx, query, JP)
 
     async def _pic(self, ctx, query, region):
@@ -212,6 +234,13 @@ class PAD(commands.Cog):
                       help='If animated, will also display MP4 and GIF(JIF) links',
                       brief='Show picture')
     async def pic(self, ctx, *, query=None):
+        await self._pic(ctx, query, NA)
+
+    @commands.command(aliases=['pj'],
+                      description='Show pictures for JP monster from *query*',
+                      help='If animated, will also display MP4 and GIF(JIF) links',
+                      brief='Show JP picture')
+    async def picjp(self, ctx, *, query):
         await self._pic(ctx, query, JP)
 
     async def _series(self, ctx, query, region):
@@ -236,6 +265,7 @@ class PAD(commands.Cog):
     async def _add_info_reactions(self, message, region):
         await message.add_reaction(LEFT_ARROW)
         await message.add_reaction(RIGHT_ARROW)
+        await message.add_reaction(REGIONAL_INDICATOR_J if region == NA else REGIONAL_INDICATOR_N)
         await message.add_reaction(X)
 
     async def _add_series_reactions(self, message):

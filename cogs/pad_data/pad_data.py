@@ -41,12 +41,18 @@ def _process_db():
     dgdb.close()
     memory_db.row_factory = sqlite3.Row
 
+    series = {}
+    for r in memory_db.execute(f'SELECT * FROM series'):
+        series[r['series_id']] = r[f'name_en']
+
     monsters = {NA: [], JP: []}
     for region, mons in monsters.items():
-        series = {}
-        for r in memory_db.execute(f'SELECT * FROM series'):
-            series[r['series_id']] = r[f'name_en']
-        for r in memory_db.execute(f'SELECT * FROM monsters WHERE on_{region}=1'):
+        monster_table = 'monsters' + ('_na' if region == NA else '')
+        leader_table = 'leader_skills' + ('_na' if region == NA else '')
+        active_table = 'active_skills' + ('_na' if region == NA else '')
+        awakenings_table = 'awakenings' + ('_na' if region == NA else '')
+        evolutions_table = 'evolutions' + ('_na' if region == NA else '')
+        for r in memory_db.execute(f'SELECT * FROM {monster_table} WHERE on_{region}=1'):
             mons_id = r['monster_id']
             m = {
                 'id': r[f'monster_no_{region}'],
@@ -77,7 +83,7 @@ def _process_db():
             }
 
             ls_id = r['leader_skill_id']
-            ls_row = memory_db.execute(f'SELECT * FROM leader_skills WHERE leader_skill_id={ls_id}').fetchone()
+            ls_row = memory_db.execute(f'SELECT * FROM {leader_table} WHERE leader_skill_id={ls_id}').fetchone()
             if ls_row:
                 m['leader'] = {
                     'leader_name': ls_row[f'name_en'],
@@ -89,7 +95,7 @@ def _process_db():
                 }
 
             as_id = r['active_skill_id']
-            as_row = memory_db.execute(f'SELECT * FROM active_skills WHERE active_skill_id={as_id}').fetchone()
+            as_row = memory_db.execute(f'SELECT * FROM {active_table} WHERE active_skill_id={as_id}').fetchone()
             if as_row:
                 m['active'] = {
                     'active_name': as_row[f'name_en'],
@@ -98,7 +104,7 @@ def _process_db():
                     'turn_min': as_row['turn_min'],
                 }
 
-            awakenings = memory_db.execute(f'SELECT * FROM awakenings WHERE monster_id={mons_id}')
+            awakenings = memory_db.execute(f'SELECT * FROM {awakenings_table} WHERE monster_id={mons_id}')
             for aw_row in awakenings:
                 awoken_skill_id = aw_row['awoken_skill_id']
                 is_super = aw_row['is_super']
@@ -110,10 +116,10 @@ def _process_db():
             m['supers'] = [s[1] for s in sorted(m['supers'], key=lambda t:t[0])]
             m['awakenings'] = [s[1] for s in sorted(m['awakenings'], key=lambda t:t[0])]
 
-            evos_from = memory_db.execute(f'SELECT * FROM evolutions WHERE from_id={mons_id}')
-            evos_to = memory_db.execute(f'SELECT * FROM evolutions WHERE to_id={mons_id}')
+            evos_from = memory_db.execute(f'SELECT * FROM {evolutions_table} WHERE from_id={mons_id}')
+            evos_to = memory_db.execute(f'SELECT * FROM {evolutions_table} WHERE to_id={mons_id}')
             queue = [e['to_id'] for e in evos_from] + [e['from_id'] for e in evos_to]
-            linked_mons_from = memory_db.execute(f'SELECT * FROM monsters WHERE linked_monster_id={mons_id}')
+            linked_mons_from = memory_db.execute(f'SELECT * FROM {monster_table} WHERE linked_monster_id={mons_id}')
             if r['linked_monster_id']:
                 queue += [r['linked_monster_id']]
             if linked_mons_from:
@@ -123,15 +129,15 @@ def _process_db():
             while queue:
                 n = queue.pop(0)
                 if not n in all_evos:
-                    queue += [r['to_id'] for r in memory_db.execute(f'SELECT * FROM evolutions WHERE from_id={n}') if r['to_id']]
-                    queue += [r['from_id'] for r in memory_db.execute(f'SELECT * FROM evolutions WHERE to_id={n}') if r['from_id']]
-                    queue += [r['linked_monster_id'] for r in memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={n}') if r['linked_monster_id']]
-                    queue += [r['monster_id'] for r in memory_db.execute(f'SELECT * FROM monsters WHERE linked_monster_id={n}') if r['monster_id']]
+                    queue += [r['to_id'] for r in memory_db.execute(f'SELECT * FROM {evolutions_table} WHERE from_id={n}') if r['to_id']]
+                    queue += [r['from_id'] for r in memory_db.execute(f'SELECT * FROM {evolutions_table} WHERE to_id={n}') if r['from_id']]
+                    queue += [r['linked_monster_id'] for r in memory_db.execute(f'SELECT * FROM {monster_table} WHERE monster_id={n}') if r['linked_monster_id']]
+                    queue += [r['monster_id'] for r in memory_db.execute(f'SELECT * FROM {monster_table} WHERE linked_monster_id={n}') if r['monster_id']]
                     all_evos.append(n)
-            all_evos = [e for e in filter(lambda e: memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={e} AND on_{region}=1').fetchone(), all_evos)]
+            all_evos = [e for e in filter(lambda e: memory_db.execute(f'SELECT * FROM {monster_table} WHERE monster_id={e} AND on_{region}=1').fetchone(), all_evos)]
             if mons_id in all_evos:
                 all_evos.remove(mons_id)
-            all_evos = [memory_db.execute(f'SELECT * FROM monsters WHERE monster_id={e}').fetchone()[f'monster_no_{region}'] for e in all_evos]
+            all_evos = [memory_db.execute(f'SELECT * FROM {monster_table} WHERE monster_id={e}').fetchone()[f'monster_no_{region}'] for e in all_evos]
             m['evolutions'] = sorted(all_evos)
 
             mons.append(Monster(m))
