@@ -240,7 +240,7 @@ class PAD(commands.Cog):
                       description='Show pictures for JP monster from *query*',
                       help='If animated, will also display MP4 and GIF(JIF) links',
                       brief='Show JP picture')
-    async def picjp(self, ctx, *, query):
+    async def picjp(self, ctx, *, query=None):
         await self._pic(ctx, query, JP)
 
     async def _series(self, ctx, query, region):
