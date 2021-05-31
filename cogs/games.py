@@ -311,6 +311,9 @@ class Games(commands.Cog):
             e.description = f'Bets: {"/".join([str(b) for b in bets])}'
             e.set_footer(text=f'Results:\n{value}\n\nCredits: {user_creds}({net})',
                          icon_url=UTILS.make_data_url(user))
+        else:
+            e.set_footer(text=f'{user.id}',
+                         icon_url=UTILS.make_data_url(user))
 
         return e
 
@@ -332,7 +335,7 @@ class Games(commands.Cog):
             return
         if not embed:
             return
-
+        print('1')
         data = UTILS.get_embed_data(embed)
         if not data:
             return
