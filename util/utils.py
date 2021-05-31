@@ -93,7 +93,9 @@ def find_role(guild, role):
 # discordmenu/intra_message_state.py
 
 
-def make_data_url(json_dict, img_url='https://i.imgur.com/0Xd1Qa6.png'):
+def make_data_url(user, json_dict={}, img_url='https://i.imgur.com/0Xd1Qa6.png'):
+    json_dict['user_id'] = user.id
+
     raw_bytes = base64.b64encode(json.dumps(json_dict).encode())
     data = str(raw_bytes)[2:-1]
 
