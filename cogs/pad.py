@@ -325,7 +325,7 @@ class PAD(commands.Cog):
             if len(valid_killers) == 8:
                 desc += 'Any'
             else:
-                desc += ' '.join(map(str, valid_killers))
+                desc += ('' if self.use_emotes else ' ').join(map(str, valid_killers))
 
         m_info = '```'
         m_info += '{:11} {}\n'.format('Rarity', m.rarity)
