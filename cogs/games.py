@@ -638,6 +638,8 @@ class Games(commands.Cog):
                       help='Valid Parts: base, border, suits, black, red, back',
                       brief='Set Card Parts')
     async def set_part(self, ctx, card_part, set_name):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
         card_part = card_part.lower()
         set_name = set_name.lower()
         if set_name in CARD_IMGS.SETS:
@@ -669,6 +671,22 @@ class Games(commands.Cog):
             m = await ctx.send(embed=e)
             return await m.add_reaction(UTILS.CONFIRM_EMOJI)
         return await ctx.send('Invalid card set.')
+
+    @commands.command(description='Set different parts of your cards to other set parts.',
+                      help='Valid Parts: base, border, suits, black, red, back',
+                      brief='Set Card Parts')
+    async def settings(self, ctx):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        settings = self._get_user_card_settings(ctx.author)
+        text = '```'
+        for k, v in settings.items():
+            text += '{:7} : {:7}\n'.format(k.capitalize(), v)
+        e = Embed()
+        e.title = 'Card Settings'
+        e.set_thumbnail(url=ctx.author.avatar_url)
+        e.description = text + '```'
+        return await ctx.send(embed=e)
 
     """
     Other Game Methods
