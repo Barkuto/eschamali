@@ -1,34 +1,31 @@
 import re
 import random
-import importlib
-from discord import Embed, DMChannel
+from discord import DMChannel
 from discord.ext import commands
-
-UTILS = importlib.import_module('.utils', 'util')
-
-enk = [
-    "wtf|why are you awake",
-    "why are you awake",
-    "shouldn't you be asleep",
-    "shouldn't you be studying",
-    ":gotosleep:",
-    "wtf|:gotosleep:",
-    "its past your bedtime",
-    "isnt it past your bedtime|why are you awake"
-]
 
 
 class Reactions(commands.Cog):
     """Random situations the bot reacts to"""
 
     def __init__(self, bot):
+        self.ENK = [
+            "wtf|why are you awake",
+            "why are you awake",
+            "shouldn't you be asleep",
+            "shouldn't you be studying",
+            ":gotosleep:",
+            "wtf|:gotosleep:",
+            "its past your bedtime",
+            "isnt it past your bedtime|why are you awake"
+        ]
+
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_message(self, msg):
         if isinstance(msg.channel, DMChannel):
             return
-        if not UTILS.can_cog_in(self, msg.channel) and msg.author.id != self.bot.user.id:
+        if not self.bot.utils.can_cog_in(self, msg.channel) and msg.author.id != self.bot.user.id:
             return
         if msg.author.bot:
             return
@@ -45,8 +42,8 @@ class Reactions(commands.Cog):
             await ctx.send('https://youtu.be/6w1TieX_I2w')
         # elif msg.author.id == 85844964633747456 and 131547909090050048 in [u.id for u in msg.mentions]:
         elif msg.author.id == 207986006840836097 and 102559179507519488 in [u.id for u in msg.mentions]:
-            choice = random.randint(0, len(enk) - 1)
-            lines = enk[choice].split('|')
+            choice = random.randint(0, len(self.ENK) - 1)
+            lines = self.ENK[choice].split('|')
             for l in lines:
                 await ctx.send(l.replace(':gotosleep:', '<a:gotosleep:667623052309168128>'))
         elif m.startswith('/o/'):

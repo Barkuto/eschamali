@@ -1,40 +1,31 @@
 import re
-import os
-import os.path
-import discord
-from discord import Permissions, DMChannel
+from discord import DMChannel, Embed, Colour
 from discord.ext import commands
 from discord.errors import Forbidden
-import importlib
-
-UTILS = importlib.import_module('.utils', 'util')
-DB_MOD = UTILS.DB_MOD
-DB = UTILS.DB
-LOGGER = UTILS.VARS.LOGGER
-
-ADMIN_TABLE = 'admin'
-ADMIN_TABLE_COL1 = ('field', DB_MOD.TEXT)
-ADMIN_TABLE_COL2 = ('role', DB_MOD.TEXT)
-BANNED_WORD_FIELD = 'banned_word'
-MUTE_ROLE_FIELD = 'mute_role'
-
-STRIKES_TABLE = 'strikes'
-STRIKES_TABLE_COL1 = ('user', DB_MOD.INTEGER)
-STRIKES_TABLE_COL2 = ('strikes', DB_MOD.INTEGER)
 
 
 class Admin(commands.Cog):
     """Administrative commands"""
 
     def __init__(self, bot):
+        self.ADMIN_TABLE = 'admin'
+        self.ADMIN_TABLE_COL1 = ('field', bot.db.TEXT)
+        self.ADMIN_TABLE_COL2 = ('role', bot.db.TEXT)
+        self.BANNED_WORD_FIELD = 'banned_word'
+        self.MUTE_ROLE_FIELD = 'mute_role'
+
+        self.STRIKES_TABLE = 'strikes'
+        self.STRIKES_TABLE_COL1 = ('user', bot.db.INTEGER)
+        self.STRIKES_TABLE_COL2 = ('strikes', bot.db.INTEGER)
+
         self.bot = bot
         for guild in bot.guilds:
             self._init_db(guild)
 
     def _init_db(self, guild):
-        db = UTILS.get_server_db(guild)
-        db.create_table(ADMIN_TABLE, ADMIN_TABLE_COL1,  ADMIN_TABLE_COL2)
-        db.create_table(STRIKES_TABLE, STRIKES_TABLE_COL1, STRIKES_TABLE_COL2)
+        db = self.bot.utils.get_server_db(guild)
+        db.create_table(self.ADMIN_TABLE, self.ADMIN_TABLE_COL1,  self.ADMIN_TABLE_COL2)
+        db.create_table(self.STRIKES_TABLE, self.STRIKES_TABLE_COL1, self.STRIKES_TABLE_COL2)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
@@ -50,7 +41,7 @@ class Admin(commands.Cog):
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(kick_members=True))
     async def kick(self, ctx, *users):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         kicked = 0
         not_kicked = []
@@ -71,7 +62,7 @@ class Admin(commands.Cog):
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(ban_members=True))
     async def ban(self, ctx, *users):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         banned = 0
         not_banned = []
@@ -92,7 +83,7 @@ class Admin(commands.Cog):
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_messages=True))
     async def prune(self, ctx, num: int, *users):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         total_deleted = 0
         mentions = ctx.message.mentions
@@ -128,13 +119,13 @@ class Admin(commands.Cog):
             await self.set_channel_mute_perms(mute_role, channel)
 
     async def get_create_muterole(self, guild):
-        db = UTILS.get_server_db(guild)
-        role_id = db.get_value(ADMIN_TABLE, ADMIN_TABLE_COL2[0], (ADMIN_TABLE_COL1[0], MUTE_ROLE_FIELD))
+        db = self.bot.utils.get_server_db(guild)
+        role_id = db.get_value(self.ADMIN_TABLE, self.ADMIN_TABLE_COL2[0], (self.ADMIN_TABLE_COL1[0], self.MUTE_ROLE_FIELD))
         if role_id:
             return guild.get_role(int(role_id))
         else:
             role_name = 'Muted'
-            role_colour = discord.Colour.from_rgb(12, 0, 0)
+            role_colour = Colour.from_rgb(12, 0, 0)
             role = None
             for r in guild.roles:
                 if r.name == role_name and r.colour == role_colour:
@@ -153,11 +144,11 @@ class Admin(commands.Cog):
             return role
 
     def _set_muterole(self, role):
-        db = UTILS.get_server_db(role.guild)
-        db.delete_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], MUTE_ROLE_FIELD))
-        return db.insert_row(ADMIN_TABLE,
-                             (ADMIN_TABLE_COL1[0], MUTE_ROLE_FIELD),
-                             (ADMIN_TABLE_COL2[0], role.id))
+        db = self.bot.utils.get_server_db(role.guild)
+        db.delete_rows(self.ADMIN_TABLE, (self.ADMIN_TABLE_COL1[0], self.MUTE_ROLE_FIELD))
+        return db.insert_row(self.ADMIN_TABLE,
+                             (self.ADMIN_TABLE_COL1[0], self.MUTE_ROLE_FIELD),
+                             (self.ADMIN_TABLE_COL2[0], role.id))
 
     async def set_channel_mute_perms(self, role, channel):
         await channel.set_permissions(role, read_messages=False, send_messages=False)
@@ -168,7 +159,7 @@ class Admin(commands.Cog):
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_roles=True))
     async def mute(self, ctx, *users):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         mute_role = await self.get_create_muterole(ctx.guild)
         if mute_role:
@@ -194,7 +185,7 @@ class Admin(commands.Cog):
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_roles=True))
     async def unmute(self, ctx, *users):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         mute_role = await self.get_create_muterole(ctx.guild)
         if mute_role:
@@ -220,24 +211,23 @@ class Admin(commands.Cog):
     @commands.check_any(commands.is_owner(),
                         commands.has_permissions(manage_roles=True))
     async def muterole(self, ctx, *, role=None):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         mentions = ctx.message.role_mentions
         if role and mentions:
             if self._set_muterole(mentions[0]):
-                return await UTILS.confirm(ctx)
+                return await self.bot.utils.confirm(ctx)
         elif role:
-            new_role = UTILS.find_role(ctx.guild, role)
+            new_role = self.bot.utils.find_role(ctx.guild, role)
             if new_role:
                 if self._set_muterole(new_role):
-                    return await UTILS.confirm(ctx)
+                    return await self.bot.utils.confirm(ctx)
             return await ctx.send('Invalid role.')
 
         role = await self.get_create_muterole(ctx.guild)
-        await ctx.send(embed=discord.Embed(
-            title='Mute Role',
-            description=role.mention if role else 'None.',
-            colour=role.colour if role else 0))
+        await ctx.send(embed=Embed(title='Mute Role',
+                                   description=role.mention if role else 'None.',
+                                   colour=role.colour if role else 0))
 
     """
     LOCK FUNCTIONS
@@ -250,7 +240,7 @@ class Admin(commands.Cog):
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True))
     async def lock(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if ctx.channel.overwrites[ctx.guild.default_role].send_messages:
             await ctx.send('Channel locked.')
@@ -263,7 +253,7 @@ class Admin(commands.Cog):
                         commands.has_permissions(manage_messages=True),
                         commands.has_permissions(manage_channels=True))
     async def unlock(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if not ctx.channel.overwrites[ctx.guild.default_role].send_messages:
             await ctx.channel.set_permissions(ctx.guild.default_role, send_messages=True)
@@ -280,21 +270,21 @@ class Admin(commands.Cog):
                         commands.has_permissions(kick_members=True),
                         commands.has_permissions(ban_members=True))
     async def warn(self, ctx, *users):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         num = int(users[0]) if users[0].isdigit() else 1
         if users[0].startswith('-') and users[0][1:].isdigit():
             num = 0 - int(users[0][1:])
-        db = UTILS.get_server_db(ctx)
+        db = self.bot.utils.get_server_db(ctx)
         msg = ''
         for u in ctx.message.mentions:
-            strikes = db.get_value(STRIKES_TABLE, STRIKES_TABLE_COL2[0], (STRIKES_TABLE_COL1[0], u.id))
+            strikes = db.get_value(self.STRIKES_TABLE, self.STRIKES_TABLE_COL2[0], (self.STRIKES_TABLE_COL1[0], u.id))
             if not strikes == None:
                 strikes = strikes + num
-                db.update_row(STRIKES_TABLE, (STRIKES_TABLE_COL1[0], u.id), (STRIKES_TABLE_COL2[0], strikes))
+                db.update_row(self.STRIKES_TABLE, (self.STRIKES_TABLE_COL1[0], u.id), (self.STRIKES_TABLE_COL2[0], strikes))
             else:
                 strikes = num
-                db.insert_row(STRIKES_TABLE, (STRIKES_TABLE_COL1[0], u.id), (STRIKES_TABLE_COL2[0], strikes))
+                db.insert_row(self.STRIKES_TABLE, (self.STRIKES_TABLE_COL1[0], u.id), (self.STRIKES_TABLE_COL2[0], strikes))
             msg += f'{u.mention} now has {strikes} strikes'
             if strikes >= 5:
                 try:
@@ -319,20 +309,20 @@ class Admin(commands.Cog):
                         commands.has_permissions(kick_members=True),
                         commands.has_permissions(ban_members=True))
     async def warnings(self, ctx, *, user):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         u = None
         if ctx.message.mentions:
             u = ctx.message.mentions[0]
         elif user:
-            u = UTILS.find_member(ctx.guild, user)
+            u = self.bot.utils.find_member(ctx.guild, user)
         else:
             return await ctx.send('Invalid user.')
         if u:
-            db = UTILS.get_server_db(ctx)
-            strikes = db.get_value(STRIKES_TABLE, STRIKES_TABLE_COL2[0], (STRIKES_TABLE_COL1[0], u.id))
-            if not strikes == None:
-                await ctx.send(f'{u.mention} has {strikes} strike(s).')
+            db = self.bot.utils.get_server_db(ctx)
+            strikes = db.get_value(self.STRIKES_TABLE, self.STRIKES_TABLE_COL2[0], (self.STRIKES_TABLE_COL1[0], u.id))
+            strikes = strikes or 0
+            await ctx.send(f'{u.mention} has {strikes} strike(s).')
 
     """
     BANNED WORD FUNCTIONS
@@ -340,8 +330,8 @@ class Admin(commands.Cog):
 
     async def check_for_banned_words(self, msg):
         words = re.split(' |\n|,', msg.content)
-        db = UTILS.get_server_db(msg.guild)
-        banned_words = [r[1] for r in db.get_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD))]
+        db = self.bot.utils.get_server_db(msg.guild)
+        banned_words = [r[1] for r in db.get_rows(self.ADMIN_TABLE, (self.ADMIN_TABLE_COL1[0], self.BANNED_WORD_FIELD))]
         for w in words:
             for bw in banned_words:
                 reg = re.compile(fr'^[_\W]*{bw}[_\W]*$', flags=re.IGNORECASE)
@@ -352,7 +342,7 @@ class Admin(commands.Cog):
     async def on_message(self, msg):
         if isinstance(msg.channel, DMChannel):
             return
-        if not UTILS.can_cog_in(self, msg.channel):
+        if not self.bot.utils.can_cog_in(self, msg.channel):
             return
         if msg.author.bot:
             return
@@ -362,7 +352,7 @@ class Admin(commands.Cog):
     async def on_message_edit(self, before, after):
         if isinstance(before.channel, DMChannel):
             return
-        if not UTILS.can_cog_in(self, before.channel):
+        if not self.bot.utils.can_cog_in(self, before.channel):
             return
         await self.check_for_banned_words(after)
 
@@ -375,13 +365,13 @@ class Admin(commands.Cog):
                         commands.has_permissions(manage_channels=True),
                         commands.has_permissions(manage_guild=True))
     async def addbannedwords(self, ctx, *words):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
-        db = UTILS.get_server_db(ctx)
+        db = self.bot.utils.get_server_db(ctx)
         for w in words:
             w = w.lower()
-            if not db.get_row(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD), (ADMIN_TABLE_COL2[0], w)):
-                db.insert_row(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD), (ADMIN_TABLE_COL2[0], w))
+            if not db.get_row(self.ADMIN_TABLE, (self.ADMIN_TABLE_COL1[0], self.BANNED_WORD_FIELD), (self.ADMIN_TABLE_COL2[0], w)):
+                db.insert_row(self.ADMIN_TABLE, (self.ADMIN_TABLE_COL1[0], self.BANNED_WORD_FIELD), (self.ADMIN_TABLE_COL2[0], w))
         await ctx.send(f'Added `{len(words)}` banned words.')
 
     @commands.command(aliases=['dbw'],
@@ -393,11 +383,11 @@ class Admin(commands.Cog):
                         commands.has_permissions(manage_channels=True),
                         commands.has_permissions(manage_guild=True))
     async def deletebannedwords(self, ctx, *words):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
-        db = UTILS.get_server_db(ctx)
+        db = self.bot.utils.get_server_db(ctx)
         for w in words:
-            db.delete_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD), (ADMIN_TABLE_COL2[0], w.lower()))
+            db.delete_rows(self.ADMIN_TABLE, (self.ADMIN_TABLE_COL1[0], self.BANNED_WORD_FIELD), (self.ADMIN_TABLE_COL2[0], w.lower()))
         await ctx.send(f'Deleted `{len(words)}` words.')
 
     @commands.command(aliases=['bw'],
@@ -409,13 +399,12 @@ class Admin(commands.Cog):
                         commands.has_permissions(manage_channels=True),
                         commands.has_permissions(manage_guild=True))
     async def bannedwords(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
-        db = UTILS.get_server_db(ctx)
-        words = [f'`{r[1]}`' for r in db.get_rows(ADMIN_TABLE, (ADMIN_TABLE_COL1[0], BANNED_WORD_FIELD))]
-        await ctx.send(embed=discord.Embed(
-            title='Banned Words',
-            description=' '.join(words)))
+        db = self.bot.utils.get_server_db(ctx)
+        words = [f'`{r[1]}`' for r in db.get_rows(self.ADMIN_TABLE, (self.ADMIN_TABLE_COL1[0], self.BANNED_WORD_FIELD))]
+        await ctx.send(embed=Embed(title='Banned Words',
+                                   description=' '.join(words)))
 
 
 def setup(bot):

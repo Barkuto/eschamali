@@ -1,8 +1,7 @@
 import os
 import importlib
 from PIL import Image, ImageFont, ImageDraw
-
-BJ_MOD = importlib.import_module('.blackjack', 'cogs.gamez')
+from cogs.gamez import blackjack as bj
 
 """
 Card Sheet Methods
@@ -14,6 +13,10 @@ CUSTOM_PATH = os.path.join(SETS_PATH, 'custom')
 DEFAULT_SET = 'default'
 JAPAN_SET = 'japan'
 SETS = [DEFAULT_SET, JAPAN_SET]
+
+
+def reload():
+    importlib.reload(bj)
 
 
 def load_sheet_img(sheet_name, blank=False):
@@ -124,14 +127,14 @@ def make_bj_img(cog, user, blackjack, sheet_img):
 
     font = ImageFont.truetype(os.path.join(FONTS_PATH, 'consolaz.ttf'), 16)
 
-    if blackjack.get_curr_state() != BJ_MOD.ONGOING:
+    if blackjack.get_curr_state() != bj.ONGOING:
         bot_hand_img = make_bj_hand_img(sheet_img, bot_hand)
         bot_name = cog._cards_to_embed_sum_name(cog.bot.user, bot_hand)
     else:
         bot_hand_img = make_bj_hand_img(sheet_img, bot_hand, unknown=True)
         bot_name = cog._cards_to_embed_sum_name(cog.bot.user, bot_hand[:1], unknown=True)
     user_hand_imgs = [make_bj_hand_img(sheet_img, h) for h in user_hands]
-    user_name = f'{user.name} ({"/".join([str(BJ_MOD.best_sum(c)) for c in user_hands])})'
+    user_name = f'{user.name} ({"/".join([str(bj.best_sum(c)) for c in user_hands])})'
 
     test_img = Image.new('RGB', (1, 1))
     test_draw = ImageDraw.Draw(test_img)

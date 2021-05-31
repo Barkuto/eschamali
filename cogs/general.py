@@ -1,24 +1,18 @@
 import asyncio
-import importlib
+import math
+import os.path
+import traceback
+import textwrap
+import ast
+import signal
 import discord
 from discord import Embed, ActivityType, Game, Colour
 from discord.ext import commands
 from discord.ext.commands import ExtensionError
 from discord.utils import get
-import math
-import os.path
-import sys
-import traceback
 from datetime import datetime, timezone
-
-import textwrap
-import ast
-import signal
-from io import StringIO
 from contextlib import redirect_stdout
-
-UTILS = importlib.import_module('.utils', 'util')
-VARS = UTILS.VARS
+from io import StringIO
 
 
 class TimeOutException(Exception):
@@ -47,7 +41,7 @@ class General(commands.Cog):
                       help='Let me google that for you',
                       brief='Google')
     async def google(self, ctx, *query):
-        await ctx.send('https://www.google.com/?q=' + '+'.join(query))
+        await ctx.send('https://www.google.com/search?q=' + '+'.join(query))
 
     @commands.command(description='Show donation link',
                       help='Optional donations',
@@ -83,7 +77,7 @@ class General(commands.Cog):
             if ctx.message.mentions:
                 user = ctx.message.mentions[0]
             else:
-                user = UTILS.find_member(ctx.guild, query)
+                user = self.bot.utils.find_member(ctx.guild, query)
                 if not user:
                     return await ctx.send('Could not find that user.')
         name = user.name
@@ -220,8 +214,8 @@ class General(commands.Cog):
                 'channel': ctx.channel,
                 'msg': ctx.message,
                 'guild': ctx.guild,
-                'db': UTILS.get_server_db(ctx),
-                'UTILS': UTILS
+                'db': self.bot.utils.get_server_db(ctx),
+                'utils': self.bot.utils
             }
         else:
             if not body:
@@ -336,7 +330,7 @@ class General(commands.Cog):
         for cog_name in cogs:
             cog_name = cog_name.lower()
             try:
-                ctx.bot.load_extension(f'{VARS.COGS_DIR_NAME}.{cog_name}')
+                ctx.bot.load_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
                 ctx.bot.pm.load_cog_cmd_prefixes(cog_name)
                 await ctx.send(f'`{cog_name}` loaded.')
             except ExtensionError as e:
@@ -352,6 +346,9 @@ class General(commands.Cog):
             cog_name = cog_name.lower()
             if cog_name == 'all':
                 return await self._reload_all(ctx)
+            elif cog_name == 'utils':
+                self.bot.reload_utils()
+                return await ctx.send('Utils reloaded')
             else:
                 try:
                     nick = cog_name
@@ -363,7 +360,7 @@ class General(commands.Cog):
                     elif not cog_name in self.bot.all_cogs():
                         await ctx.send('Invalid cog.')
                     else:
-                        ctx.bot.reload_extension(f'{VARS.COGS_DIR_NAME}.{cog_name}')
+                        ctx.bot.reload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
                         ctx.bot.pm.load_cog_cmd_prefixes(cog_name)
                         await ctx.send(f'`{cog_name}` reloaded.')
                 except ExtensionError as e:
@@ -378,7 +375,7 @@ class General(commands.Cog):
         for cog_name in cogs:
             cog_name = cog_name.lower()
             try:
-                ctx.bot.unload_extension(f'{VARS.COGS_DIR_NAME}.{cog_name}')
+                ctx.bot.unload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
                 ctx.bot.pm.load_cog_cmd_prefixes(cog_name)
                 await ctx.send(f'`{cog_name}` unloaded.')
             except ExtensionError as e:
@@ -394,7 +391,7 @@ class General(commands.Cog):
         for cog in reload_cogs:
             if cog in all_cogs:
                 try:
-                    ctx.bot.reload_extension(f'{VARS.COGS_DIR_NAME}.{cog}')
+                    ctx.bot.reload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog}')
                     ctx.bot.pm.load_cog_cmd_prefixes(cog)
                     reloaded.append(cog)
                 except ExtensionError:
@@ -422,13 +419,13 @@ class General(commands.Cog):
             await ctx.send(embed=Embed(
                 title='Loaded Cogs',
                 description=' '.join(loaded),
-                colour=discord.Colour.green()
+                colour=Colour.green()
             ))
         if unloaded:
             await ctx.send(embed=Embed(
                 title='Unloaded Cogs',
                 description=' '.join(unloaded),
-                colour=discord.Colour.red()))
+                colour=Colour.red()))
 
 
 def setup(bot):

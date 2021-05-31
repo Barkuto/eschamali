@@ -5,16 +5,15 @@ import requests
 import pickle
 import sqlite3
 from sqlite3 import Binary
+from util.db import DB
+from cogs.pad_data import pad_types
 
-UTILS = importlib.import_module('.utils', 'util')
-PAD_TYPES = importlib.import_module('.pad_types', 'cogs.pad_data')
-DB_MOD = UTILS.DB_MOD
-DB = UTILS.DB
-
-Monster = PAD_TYPES.Monster
-Attribute = PAD_TYPES.Attribute
-Type = PAD_TYPES.Type
-Awakening = PAD_TYPES.Awakening
+Monster = pad_types.Monster
+Leader = pad_types.Leader
+Active = pad_types.Active
+Attribute = pad_types.Attribute
+Type = pad_types.Type
+Awakening = pad_types.Awakening
 
 CARDS_DB = os.path.join(os.path.dirname(__file__), 'cards_%s.db')
 CARDS_TMP_DB = os.path.join(os.path.dirname(__file__), '_cards_%s.db')
@@ -24,6 +23,19 @@ DADGUIDEDB = os.path.join(os.path.dirname(__file__), 'dadguide.sqlite')
 
 NA = 'na'
 JP = 'jp'
+
+
+def reload():
+    global Monster, Leader, Active, Attribute, Type, Awakening
+    importlib.reload(pad_types)
+
+    Monster = pad_types.Monster
+    Leader = pad_types.Leader
+    Active = pad_types.Active
+    Attribute = pad_types.Attribute
+    Type = pad_types.Type
+    Awakening = pad_types.Awakening
+
 
 """
 DB UPDATING/PROCESSING
@@ -66,7 +78,7 @@ def _process_db():
                 'rarity': r['rarity'],
                 'lb_mult': r['limit_mult'],
                 'attribute_1_id': r['attribute_1_id'],
-                'attribute_2_id': r['attribute_2_id'] if not r['attribute_2_id'] is None else Attribute.NONE.id(),
+                'attribute_2_id': r['attribute_2_id'] if not r['attribute_2_id'] is None else pad_types.Attribute.NONE.id(),
                 'type_1_id': r['type_1_id'],
                 'type_2_id': r['type_2_id'],
                 'type_3_id': r['type_3_id'],
@@ -140,7 +152,7 @@ def _process_db():
             all_evos = [memory_db.execute(f'SELECT * FROM {monster_table} WHERE monster_id={e}').fetchone()[f'monster_no_{region}'] for e in all_evos]
             m['evolutions'] = sorted(all_evos)
 
-            mons.append(Monster(m))
+            mons.append(pad_types.Monster(m))
     os.remove(DADGUIDEDB)
     memory_db.close()
     return monsters
@@ -255,7 +267,7 @@ def parse_attribute(query):
     for s in query.split(' '):
         if 0 < len(s) <= 2:
             for c in s:
-                atts += (Attribute.from_str(c),)
+                atts += (pad_types.Attribute.from_str(c),)
             if len(atts) > 0:
                 break
     return (remove_atts(atts, query), atts)
@@ -289,7 +301,7 @@ def _get_pic_url_search(query, region, pic_type):
     return None
 
 
-def _get_pic_url_for(m: Monster, region, pic_type):
+def _get_pic_url_for(m: pad_types.Monster, region, pic_type):
     if m:
         url = None
         is_animated = m.is_animated
@@ -314,7 +326,7 @@ def _get_pic_url_for(m: Monster, region, pic_type):
 
 def _get_pic_url(obj, region, pic_type):
     f = _get_pic_url_search
-    if isinstance(obj, Monster):
+    if isinstance(obj, pad_types.Monster):
         f = _get_pic_url_for
     return f(obj, region, pic_type)
 

@@ -1,18 +1,17 @@
-import json
+import importlib
 import os
 import os.path
 import traceback
 import sys
+import json
 import discord
 import sqlite3
 import asyncio
 from discord import Game, DMChannel, Embed
 from discord.ext import commands
-from discord.ext.commands import Bot
 from datetime import datetime
-
+from util import utils, vars, db
 from util.prefix_manager import PrefixManager
-from util.vars import LOGGER, COGS_DIR_NAME, COGS_DIR, BASE_COGS_DIR_NAME, LOGS_INFO_DIR, LOGS_ERROR_DIR, DB_DIR, CONFIG_FILE
 
 intents = discord.Intents.none()
 intents.guilds = True
@@ -34,7 +33,10 @@ class Eschamali(commands.Bot):
         self.pm = PrefixManager(self)
         self.start_time = datetime.now()
         self.tbs = []
-        with open(CONFIG_FILE) as f:
+        self.utils = utils
+        self.vars = vars
+        self.db = db
+        with open(self.vars.CONFIG_FILE) as f:
             self.config = json.load(f)
         super().__init__(command_prefix=self.pm.get_prefix,
                          owner_ids=self.config['owners'],
@@ -42,18 +44,29 @@ class Eschamali(commands.Bot):
                          help_command=None,
                          intents=intents)
 
+    def reload_utils(self):
+        importlib.reload(utils)
+        importlib.reload(vars)
+        importlib.reload(db)
+        self.utils = utils
+        self.vars = vars
+        self.db = db
+
     def all_cogs(self):
-        return [file.replace('.py', '') for file in os.listdir(COGS_DIR) if file.endswith('.py')]
+        return [file.replace('.py', '') for file in os.listdir(self.vars.COGS_DIR) if file.endswith('.py')]
 
     def loaded_cogs(self, lower=True):
         return [c.lower() if lower else c for c in self.cogs]
 
     def load_cogs(self):
-        for cog in self.all_cogs():
+        to_load = self.all_cogs()
+        if 'perms' in to_load:
+            to_load.insert(0, to_load.pop(to_load.index('perms')))
+        for cog in to_load:
             try:
-                self.load_extension(f'{COGS_DIR_NAME}.{cog}')
+                self.load_extension(f'{self.vars.COGS_DIR_NAME}.{cog}')
             except Exception as e:
-                LOGGER.error(e)
+                self.vars.LOGGER.error(e)
 
     def _run(self):
         if (self.config):
@@ -83,7 +96,7 @@ class Eschamali(commands.Bot):
                 process = False
         else:
             channel = f'({msg.channel.name})'
-        LOGGER.info('{0} {1.author}: {1.content}'.format(channel, msg))
+        self.vars.LOGGER.info('{0} {1.author}: {1.content}'.format(channel, msg))
         if msg.author.bot:
             return
         if process:
@@ -113,7 +126,7 @@ class Eschamali(commands.Bot):
         elif isinstance(error, sqlite3.Error):
             await ctx.send('There was a database error.')
         if ctx.cog:
-            LOGGER.error(f'({ctx.author}){ctx.cog.qualified_name}|{ctx.message.content}|{error}')
+            self.vars.LOGGER.error(f'({ctx.author}){ctx.cog.qualified_name}|{ctx.message.content}|{error}')
         # All other Errors not returned come here. And we can just print the default TraceBack.
         if len(self.tbs) >= 50:
             self.tbs = []
@@ -246,7 +259,7 @@ async def changestatus(ctx, *, msg):
 async def changedefaultstatus(ctx, *, msg):
     ctx.bot.config['status'] = msg
     await changestatus(ctx, msg=msg)
-    with open(CONFIG_FILE, 'w') as f:
+    with open(ctx.bot.vars.CONFIG_FILE, 'w') as f:
         json.dump(ctx.bot.config, f)
     await ctx.send('Changed default status to ' + msg)
 

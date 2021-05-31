@@ -1,48 +1,45 @@
-
-import os
 import importlib
+
+
+import importlib
+import os
 import random
-from datetime import datetime
+import cogs.genshinstats as gs
 from collections import Counter
-from discord import Colour
+from datetime import datetime
 from discord import Embed
 from discord.ext import commands
 
-UTILS = importlib.import_module('.utils', 'util')
-DB_MOD = UTILS.DB_MOD
-DB = DB_MOD.DB
-GS = importlib.import_module('.genshinstats', 'cogs')
-LOGGER = UTILS.VARS.LOGGER
-
-GENSHIN_TABLE = 'genshin'
-GENSHIN_TABLE_COL1 = ('discord_id', DB_MOD.INTEGER)
-GENSHIN_TABLE_COL2 = ('genshin_id', DB_MOD.INTEGER)
-GENSHIN_TABLE_COL3 = ('community_id', DB_MOD.INTEGER)
-DB_PATH = os.path.join(os.path.dirname(__file__), 'genshinstats', 'genshin_binds.db')
-
 NOT_BINDED_MSG = 'You have not binded a Genshin ID yet. See `!help bind` for details.'
 NOT_PUBLIC_MSG = 'Your Hoyolab profile lab is not public.'
-
-regions = {
-    'os_usa': 'NA',
-    'os_euro': 'EU',
-    'os_asia': 'ASIA',
-    'os_cht': 'SAR',
-}
 
 
 class Genshin(commands.Cog):
     """Displays Genshin Impact data"""
 
     def __init__(self, bot):
+        importlib.reload(gs)
+
+        self.GENSHIN_TABLE = 'genshin'
+        self.GENSHIN_TABLE_COL1 = ('discord_id', bot.db.INTEGER)
+        self.GENSHIN_TABLE_COL2 = ('genshin_id', bot.db.INTEGER)
+        self.GENSHIN_TABLE_COL3 = ('community_id', bot.db.INTEGER)
+
+        self.REGIONS = {
+            'os_usa': 'NA',
+            'os_euro': 'EU',
+            'os_asia': 'ASIA',
+            'os_cht': 'SAR',
+        }
+
         self.bot = bot
         self.accounts = []
         self._init_account_cookies()
         self._init_db()
 
     def _init_db(self):
-        db = DB(DB_PATH)
-        db.create_table(GENSHIN_TABLE, GENSHIN_TABLE_COL1, GENSHIN_TABLE_COL2, GENSHIN_TABLE_COL3)
+        self.db = self.bot.db.DB(os.path.join(os.path.dirname(__file__), 'genshinstats', 'genshin_binds.db'))
+        self.db.create_table(self.GENSHIN_TABLE, self.GENSHIN_TABLE_COL1, self.GENSHIN_TABLE_COL2, self.GENSHIN_TABLE_COL3)
 
     def _init_account_cookies(self):
         with open('genshin_cookies') as f:
@@ -51,19 +48,15 @@ class Genshin(commands.Cog):
                 split = l.split(' ')
                 self.accounts += [{'account_id': split[0], 'cookie_token':split[1]}]
         if not self.accounts:
-            LOGGER.error('Invalid cookies file. Genshin cog will not work.')
+            self.bot.vars.LOGGER.error('Invalid cookies file. Genshin cog will not work.')
 
     def _set_cookies(self):
         num = random.randint(0, len(self.accounts) - 1)
-        GS.set_cookie(account_id=self.accounts[num]['account_id'], cookie_token=self.accounts[num]['cookie_token'])
-
-    def _get_db(self):
-        return DB(DB_PATH)
+        gs.set_cookie(account_id=self.accounts[num]['account_id'], cookie_token=self.accounts[num]['cookie_token'])
 
     def _get_genshin_id(self, user):
-        db = DB(DB_PATH)
-        gid = db.get_value(GENSHIN_TABLE, GENSHIN_TABLE_COL2[0], (GENSHIN_TABLE_COL1[0], user.id))
-        cid = db.get_value(GENSHIN_TABLE, GENSHIN_TABLE_COL3[0], (GENSHIN_TABLE_COL1[0], user.id))
+        gid = self.db.get_value(self.GENSHIN_TABLE, self.GENSHIN_TABLE_COL2[0], (self.GENSHIN_TABLE_COL1[0], user.id))
+        cid = self.db.get_value(self.GENSHIN_TABLE, self.GENSHIN_TABLE_COL3[0], (self.GENSHIN_TABLE_COL1[0], user.id))
         return (gid, cid)
 
     def _get_avatar_url(self, name):
@@ -83,13 +76,12 @@ class Genshin(commands.Cog):
                       help='genshin_id = In-game ID\ncommunity_id = Forum ID\nForum ID can be found from \"Account Info\" at https://www.hoyolab.com/',
                       brief='Bind Genshin ID')
     async def bind(self, ctx, genshin_id: int, community_id: int):
-        if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         await ctx.message.delete()
-        db = self._get_db()
-        discord_match = db.get_rows(GENSHIN_TABLE, (GENSHIN_TABLE_COL1[0], ctx.author.id))
-        genshin_match = db.get_rows(GENSHIN_TABLE, (GENSHIN_TABLE_COL2[0], genshin_id))
-        community_match = db.get_rows(GENSHIN_TABLE, (GENSHIN_TABLE_COL3[0], community_id))
+        discord_match = self.db.get_rows(self.GENSHIN_TABLE, (self.GENSHIN_TABLE_COL1[0], ctx.author.id))
+        genshin_match = self.db.get_rows(self.GENSHIN_TABLE, (self.GENSHIN_TABLE_COL2[0], genshin_id))
+        community_match = self.db.get_rows(self.GENSHIN_TABLE, (self.GENSHIN_TABLE_COL3[0], community_id))
         msg = ctx.author.mention + ' '
         if discord_match:
             msg += 'You are already binded to a Genshin ID.'
@@ -98,7 +90,7 @@ class Genshin(commands.Cog):
         elif community_match:
             msg += 'You or someone else is already binded to that Community ID.'
         else:
-            db.insert_row(GENSHIN_TABLE, (GENSHIN_TABLE_COL1[0], ctx.author.id), (GENSHIN_TABLE_COL2[0], genshin_id), (GENSHIN_TABLE_COL3[0], community_id))
+            self.db.insert_row(self.GENSHIN_TABLE, (self.GENSHIN_TABLE_COL1[0], ctx.author.id), (self.GENSHIN_TABLE_COL2[0], genshin_id), (self.GENSHIN_TABLE_COL3[0], community_id))
             msg += 'Binded Genshin ID to your Discord account.'
         await ctx.send(msg)
 
@@ -106,13 +98,12 @@ class Genshin(commands.Cog):
                       help='Unbind Genshin ID from Discord account',
                       brief='Unbind Genshin ID')
     async def unbind(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or not self.accounts:
             return
-        db = self._get_db()
-        discord_match = db.get_rows(GENSHIN_TABLE, (GENSHIN_TABLE_COL1[0], ctx.author.id))
+        discord_match = self.db.get_rows(self.GENSHIN_TABLE, (self.GENSHIN_TABLE_COL1[0], ctx.author.id))
         msg = ctx.author.mention + ' '
         if discord_match:
-            db.delete_rows(GENSHIN_TABLE, (GENSHIN_TABLE_COL1[0], ctx.author.id))
+            self.db.delete_rows(self.GENSHIN_TABLE, (self.GENSHIN_TABLE_COL1[0], ctx.author.id))
             msg += 'Unbinded your Discord account from Genshin ID.'
         else:
             msg += 'You are not binded to a Genshin ID.'
@@ -123,21 +114,21 @@ class Genshin(commands.Cog):
                       brief='See Genshin Stats',
                       aliases=['s'])
     async def stats(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         (gid, cid) = self._get_genshin_id(ctx.author)
         if not gid or not cid:
             return await ctx.send(NOT_BINDED_MSG)
         self._set_cookies()
         try:
-            info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
-            stats = GS.get_user_info(gid)['stats']
-            explorations = GS.fetch_endpoint('game_record/genshin/api/index', server=GS.recognize_server(gid), role_id=gid)['world_explorations']
-        except GS.errors.DataNotPublic:
+            info = gs.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
+            stats = gs.get_user_info(gid)['stats']
+            explorations = gs.fetch_endpoint('game_record/genshin/api/index', server=gs.recognize_server(gid), role_id=gid)['world_explorations']
+        except gs.errors.DataNotPublic:
             return await ctx.send(NOT_PUBLIC_MSG)
 
         name = info['list'][0]['nickname']
-        region = regions[info['list'][0]['region']]
+        region = self.REGIONS[info['list'][0]['region']]
         rank = info['list'][0]['level']
         achievements = stats['achievements']
         active_days = stats['active_days']
@@ -185,16 +176,16 @@ class Genshin(commands.Cog):
                       brief='See Genshin Characters',
                       aliases=['characters', 'chars', 'char', 'c'])
     async def character(self, ctx, *, query=None):
-        if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         (gid, cid) = self._get_genshin_id(ctx.author)
         if not gid or not cid:
             return await ctx.send(NOT_BINDED_MSG)
         self._set_cookies()
-        info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
+        info = gs.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
         try:
-            characters = GS.get_all_characters(gid)
-        except GS.errors.DataNotPublic:
+            characters = gs.get_all_characters(gid)
+        except gs.errors.DataNotPublic:
             return await ctx.send(NOT_PUBLIC_MSG)
 
         name = info['list'][0]['nickname']
@@ -297,16 +288,16 @@ class Genshin(commands.Cog):
         await self._abyss(ctx, query, True)
 
     async def _abyss(self, ctx, query: int = None, previous=False):
-        if not UTILS.can_cog_in(self, ctx.channel) or not self.accounts:
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or not self.accounts:
             return
         (gid, cid) = self._get_genshin_id(ctx.author)
         if not gid or not cid:
             return await ctx.send(NOT_BINDED_MSG)
         self._set_cookies()
-        info = GS.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
+        info = gs.fetch_endpoint('game_record/card/wapi/getGameRecordCard', uid=cid)
         try:
-            spiral_abyss = GS.get_spiral_abyss(gid, previous=previous)
-        except GS.errors.DataNotPublic:
+            spiral_abyss = gs.get_spiral_abyss(gid, previous=previous)
+        except gs.errors.DataNotPublic:
             return await ctx.send(NOT_PUBLIC_MSG)
 
         name = info['list'][0]['nickname']

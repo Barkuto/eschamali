@@ -1,4 +1,3 @@
-import pickle
 from enum import Enum
 
 
@@ -167,10 +166,10 @@ class Type(Enum):
     VENDORMAT = (15, 'Vendor Material')
 
     def id(self):
-        return self.value[0]  # pylint: disable=unsubscriptable-object
+        return self.value[0]
 
     def name(self):
-        return self.value[1]  # pylint: disable=unsubscriptable-object
+        return self.value[1]
 
     def __str__(self):
         return str(self.name())
@@ -307,13 +306,13 @@ class Awakening(Enum):
     CROSSATTACK = (78, "Cross Attack Boost", "CrossAttack")
 
     def id(self):
-        return self.value[0]  # pylint: disable=unsubscriptable-object
+        return self.value[0]
 
     def name(self):
-        return self.value[1]  # pylint: disable=unsubscriptable-object
+        return self.value[1]
 
     def short_name(self):
-        return self.value[2]  # pylint: disable=unsubscriptable-object
+        return self.value[2]
 
     def __str__(self):
         return str(self.id())

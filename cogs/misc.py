@@ -1,22 +1,19 @@
-import importlib
 import random
 from discord import Embed, Colour
 from discord.ext import commands
-
-UTILS = importlib.import_module('.utils', 'util')
-
-TEAM_SIZE = 5
-STOP = '🛑'
-CHECK = '✅'
-REROLL = '🎲'
-MOVE = '↕️'
-RETURN = '⤴️'
 
 
 class Misc(commands.Cog):
     """Misc commands"""
 
     def __init__(self, bot):
+        self.TEAM_SIZE = 5
+        self.STOP = '🛑'
+        self.CHECK = '✅'
+        self.REROLL = '🎲'
+        self.MOVE = '↕️'
+        self.RETURN = '⤴️'
+
         self.bot = bot
 
     async def get_reaction_users(self, msg, reaction):
@@ -30,7 +27,7 @@ class Misc(commands.Cog):
         teams = []
         for embed_proxy in embed.fields:
             players = embed_proxy.value.split('\n')
-            if len(players) == TEAM_SIZE:
+            if len(players) == self.TEAM_SIZE:
                 teams += [players]
         return teams
 
@@ -50,13 +47,13 @@ class Misc(commands.Cog):
         msg = reaction.message
         ctx = await self.bot.get_context(msg)
         allowed = await self.bot.is_owner(user) or user.permissions_in(ctx.channel).manage_messages
-        if reaction.emoji == STOP and allowed:
-            users = await self.get_reaction_users(msg, CHECK)
+        if reaction.emoji == self.STOP and allowed:
+            users = await self.get_reaction_users(msg, self.CHECK)
             if users:
                 players = [u.mention for u in users if not u == self.bot.user]
                 await msg.delete()
                 await self.inhouse(ctx, *players)
-        elif reaction.emoji == MOVE and allowed:
+        elif reaction.emoji == self.MOVE and allowed:
             teams = self.get_embed_teams(msg.embeds[0])
             voice_channels = msg.guild.voice_channels
             voice_channels = [v for v in voice_channels if not v.members or v == user.voice.channel]
@@ -69,19 +66,19 @@ class Misc(commands.Cog):
                 except ValueError:
                     return
                 for p in players:
-                    member = UTILS.find_member(ctx.guild, p)
+                    member = self.bot.utils.find_member(ctx.guild, p)
                     try:
                         await member.move_to(voice_channels[i])
                     except:
                         pass
-        elif reaction.emoji == REROLL:
-            users = await self.get_reaction_users(msg, REROLL)
+        elif reaction.emoji == self.REROLL:
+            users = await self.get_reaction_users(msg, self.REROLL)
             if users and msg.embeds:
                 players = self.get_embed_players(msg.embeds[0])
                 if len(users) - 1 >= len(players) // 2:
-                    await msg.clear_reaction(REROLL)
+                    await msg.clear_reaction(self.REROLL)
                     await self.inhouse(ctx, *players)
-        elif reaction.emoji == RETURN and allowed:
+        elif reaction.emoji == self.RETURN and allowed:
             teams = self.get_embed_teams(msg.embeds[0])
             voice_channels = msg.guild.voice_channels
             voice_channels = [v for v in voice_channels if not v.members or (user.voice and v == user.voice.channel)]
@@ -93,7 +90,7 @@ class Misc(commands.Cog):
                 except ValueError:
                     return
                 for p in players:
-                    member = UTILS.find_member(ctx.guild, p)
+                    member = self.bot.utils.find_member(ctx.guild, p)
                     try:
                         await member.move_to(voice_channels[0])
                     except:
@@ -104,7 +101,7 @@ class Misc(commands.Cog):
                       help='List players separated by a space. Use \'voice\' to use current voice channel users.',
                       brief='Make in-house')
     async def inhouse(self, ctx, *players):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         maps = ['Haven', 'Bind', 'Split', 'Ascent', 'Icebox', 'Breeze']
         colors = [Colour.orange(), Colour.from_rgb(165, 42, 42), Colour.blue(), Colour.from_rgb(255, 255, 0), Colour.teal()]
@@ -125,7 +122,7 @@ class Misc(commands.Cog):
             teams = []
             while len(shuffled_players) != 0:
                 team = []
-                for _ in range(0, TEAM_SIZE):
+                for _ in range(0, self.TEAM_SIZE):
                     if shuffled_players:
                         team.append(shuffled_players.pop(0))
                 teams.append(team)
@@ -137,9 +134,9 @@ class Misc(commands.Cog):
                                 value='\n'.join(teams[i]),
                                 inline=True)
             msg = await ctx.send(embed=embed)
-            await msg.add_reaction(REROLL)
-            await msg.add_reaction(MOVE)
-            await msg.add_reaction(RETURN)
+            await msg.add_reaction(self.REROLL)
+            await msg.add_reaction(self.MOVE)
+            await msg.add_reaction(self.RETURN)
 
     @commands.command(description='Shortcut for \'inhouse voice\' command',
                       help='See \'inhouse\' help.',
@@ -151,11 +148,11 @@ class Misc(commands.Cog):
                       help='See \'inhouse\' help.',
                       brief='Reaction in-house')
     async def ihr(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         msg = await ctx.send('```React with ✅ to join the in-house.```')
-        await msg.add_reaction(CHECK)
-        await msg.add_reaction(STOP)
+        await msg.add_reaction(self.CHECK)
+        await msg.add_reaction(self.STOP)
 
 
 def setup(bot):

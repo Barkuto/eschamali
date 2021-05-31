@@ -1,5 +1,4 @@
 import threading
-import random
 
 ONGOING = 0
 PLAYER_WIN = 1

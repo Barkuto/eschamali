@@ -8,122 +8,117 @@ import requests
 from discord import Embed, User, Colour, Member
 from discord.ext import commands
 from io import BytesIO
+from cogs.gamez import blackjack as bj
+from cogs.gamez import card_imgs, credits, deck, stats
 
-UTILS = importlib.import_module('.utils', 'util')
-CREDITS = importlib.import_module('.credits', 'cogs.gamez')
-BJ_MOD = importlib.import_module('.blackjack', 'cogs.gamez')
-DECK = importlib.import_module('.deck', 'cogs.gamez')
-STATS_MOD = importlib.import_module('.stats', 'cogs.gamez')
-CARD_IMGS = importlib.import_module('.card_imgs', 'cogs.gamez')
-
-DB_MOD = UTILS.DB_MOD
-DB = DB_MOD.DB
-LOGGER = UTILS.VARS.LOGGER
-Stats = STATS_MOD.Stats
-DEFAULT_SET = CARD_IMGS.DEFAULT_SET
-
-ANSWERS = [
-    'It is certain',
-    'It is decidedly so',
-    'Without a doubt',
-    'Yes, definitely',
-    'You may rely on it',
-    'As I see it, yes',
-    'Most likely',
-    'Outlook good',
-    'Yes',
-    'Signs point to yes',
-
-    'Reply hazy try again',
-    'Ask again later',
-    'Better not tell you now',
-    'Cannot predict now',
-    'Concentrate and ask again',
-
-    'Don\'t count on it',
-    'My reply is no',
-    'My sources say no',
-    'Outlook not so good',
-    'Very doubtful',
-    'NO - May cause disease contraction'
-]
-
-PICKS = {
-    0: ':rock:',
-    1: ':newspaper:',
-    2: ':scissors:'
-}
-
-card_emojis = {
-    'Ace': ':regional_indicator_a:',
-    '2': ':two:',
-    '3': ':three:',
-    '4': ':four:',
-    '5': ':five:',
-    '6': ':six:',
-    '7': ':seven:',
-    '8': ':eight:',
-    '9': ':nine:',
-    '10': ':keycap_ten:',
-    'Jack': ':regional_indicator_j:',
-    'Queen': ':regional_indicator_q:',
-    'King': ':regional_indicator_k:',
-    'Spades': ':spades:',
-    'Clubs': ':clubs:',
-    'Diamonds': ':diamonds:',
-    'Hearts': ':heart:'
-}
-
-emoji_cards = {v: k for k, v in card_emojis.items()}
-
-BLACKJACK = ['blackjack', 'bj']
-VALID_GAMES = [] + BLACKJACK
-VALID_GAMES_HELP = 'Valid Games so far: "blackjack"'
-INVALID_GAME = 'Invalid Game'
-
-HIT = '☝️'
-HOLD = '🛑'
-DOUBLE = '🇩'
-SPLIT = '🇸'
-AGAIN = '🔄'
-
-DECK_SHUFFLED = '{} Deck Shuffled'
 BJ_DEFAULT_BET = 100
-BJ_NUM_DECKS = 4
-BJ_SHUFFLED_THRESHOLD = (52 * BJ_NUM_DECKS) // 2
-
-USER_SETS_TABLE = 'user_sets'
-USER_SETS_TABLE_COL1 = ('id', DB_MOD.INTEGER)
-USER_SETS_TABLE_COL2 = ('black', DB_MOD.TEXT)
-USER_SETS_TABLE_COL3 = ('red', DB_MOD.TEXT)
-USER_SETS_TABLE_COL4 = ('suits', DB_MOD.TEXT)
-USER_SETS_TABLE_COL5 = ('back', DB_MOD.TEXT)
-USER_SETS_TABLE_COL6 = ('base', DB_MOD.TEXT)
-USER_SETS_TABLE_COL7 = ('border', DB_MOD.TEXT)
-
-USER_UNLOCKS_TABLE = 'user_unlocks'
-USER_UNLOCKS_TABLE_COL1 = ('id', DB_MOD.INTEGER)
-USER_UNLOCKS_TABLE_COL2 = ('unlocks', DB_MOD.TEXT)
-
-STATS_DB = os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db')
-CARD_DB = os.path.join(os.path.dirname(__file__), 'gamez', 'cards.db')
-
-CUSTOM_SET = 'custom'
-SET_SHOP = {
-    CUSTOM_SET: 50000,
-    CARD_IMGS.JAPAN_SET: 20000,
-}
+VALID_GAMES_HELP = 'Valid Games so far: "blackjack"'
 
 
 class Games(commands.Cog):
     """Fun commands"""
 
     def __init__(self, bot):
+        importlib.reload(bj)
+        importlib.reload(card_imgs)
+        card_imgs.reload()
+        importlib.reload(credits)
+        importlib.reload(deck)
+        importlib.reload(stats)
+
+        self.ANSWERS = [
+            'It is certain',
+            'It is decidedly so',
+            'Without a doubt',
+            'Yes, definitely',
+            'You may rely on it',
+            'As I see it, yes',
+            'Most likely',
+            'Outlook good',
+            'Yes',
+            'Signs point to yes',
+
+            'Reply hazy try again',
+            'Ask again later',
+            'Better not tell you now',
+            'Cannot predict now',
+            'Concentrate and ask again',
+
+            'Don\'t count on it',
+            'My reply is no',
+            'My sources say no',
+            'Outlook not so good',
+            'Very doubtful',
+            'NO - May cause disease contraction'
+        ]
+
+        self.PICKS = {
+            0: ':rock:',
+            1: ':newspaper:',
+            2: ':scissors:'
+        }
+
+        self.card_emojis = {
+            'Ace': ':regional_indicator_a:',
+            '2': ':two:',
+            '3': ':three:',
+            '4': ':four:',
+            '5': ':five:',
+            '6': ':six:',
+            '7': ':seven:',
+            '8': ':eight:',
+            '9': ':nine:',
+            '10': ':keycap_ten:',
+            'Jack': ':regional_indicator_j:',
+            'Queen': ':regional_indicator_q:',
+            'King': ':regional_indicator_k:',
+            'Spades': ':spades:',
+            'Clubs': ':clubs:',
+            'Diamonds': ':diamonds:',
+            'Hearts': ':heart:'
+        }
+
+        self.BLACKJACK = ['blackjack', 'bj']
+        self.VALID_GAMES = [] + self.BLACKJACK
+        self.INVALID_GAME = 'Invalid Game'
+
+        self.HIT = '☝️'
+        self.HOLD = '🛑'
+        self.DOUBLE = '🇩'
+        self.SPLIT = '🇸'
+        self.AGAIN = '🔄'
+
+        self.DECK_SHUFFLED = '{} Deck Shuffled'
+        self.BJ_NUM_DECKS = 4
+        self.BJ_SHUFFLED_THRESHOLD = (52 * self.BJ_NUM_DECKS) // 2
+
+        self.USER_SETS_TABLE = 'user_sets'
+        self.USER_SETS_TABLE_COL1 = ('id', bot.db.INTEGER)
+        self.USER_SETS_TABLE_COL2 = ('black', bot.db.TEXT)
+        self.USER_SETS_TABLE_COL3 = ('red', bot.db.TEXT)
+        self.USER_SETS_TABLE_COL4 = ('suits', bot.db.TEXT)
+        self.USER_SETS_TABLE_COL5 = ('back', bot.db.TEXT)
+        self.USER_SETS_TABLE_COL6 = ('base', bot.db.TEXT)
+        self.USER_SETS_TABLE_COL7 = ('border', bot.db.TEXT)
+
+        self.USER_UNLOCKS_TABLE = 'user_unlocks'
+        self.USER_UNLOCKS_TABLE_COL1 = ('id', bot.db.INTEGER)
+        self.USER_UNLOCKS_TABLE_COL2 = ('unlocks', bot.db.TEXT)
+
+        self.STATS_DB = os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db')
+        self.CARD_DB = os.path.join(os.path.dirname(__file__), 'gamez', 'cards.db')
+
+        self.CUSTOM_SET = 'custom'
+        self.SET_SHOP = {
+            self.CUSTOM_SET: 50000,
+            card_imgs.JAPAN_SET: 20000,
+        }
+
         self.bot = bot
-        self.bj_deck = DECK.Deck(num_decks=BJ_NUM_DECKS)
+        self.bj_deck = deck.Deck(num_decks=self.BJ_NUM_DECKS)
         self.bj_states = {}
-        self.cr = CREDITS.Credits(bot.user)
-        self.stats = Stats(self.bot, STATS_DB)
+        self.cr = credits.Credits(bot)
+        self.stats = stats.Stats(self.bot, self.STATS_DB, self.VALID_GAMES)
         self._init_card_db()
 
         self.filehost_url = None
@@ -134,16 +129,16 @@ class Games(commands.Cog):
                 self.filehost_url = lines[0]
                 self.filehost_key = lines[1]
         except Exception as e:
-            LOGGER.error('Invalid filehost file')
+            self.bot.vars.LOGGER.error('Invalid filehost file')
         self.filehost = self.filehost_key and self.filehost_url
 
     def _init_card_db(self):
-        self.card_db = DB(CARD_DB)
-        if not self.card_db.create_table(USER_SETS_TABLE, USER_SETS_TABLE_COL1, USER_SETS_TABLE_COL2, USER_SETS_TABLE_COL3,
-                                         USER_SETS_TABLE_COL4, USER_SETS_TABLE_COL5, USER_SETS_TABLE_COL6, USER_SETS_TABLE_COL7):
-            LOGGER.error(f'Could not create {USER_SETS_TABLE} table.')
-        if not self.card_db.create_table(USER_UNLOCKS_TABLE, USER_UNLOCKS_TABLE_COL1, USER_UNLOCKS_TABLE_COL2):
-            LOGGER.error(f'Could not create {USER_UNLOCKS_TABLE} table.')
+        self.card_db = self.bot.db.DB(self.CARD_DB)
+        if not self.card_db.create_table(self.USER_SETS_TABLE, self.USER_SETS_TABLE_COL1, self.USER_SETS_TABLE_COL2, self.USER_SETS_TABLE_COL3,
+                                         self.USER_SETS_TABLE_COL4, self.USER_SETS_TABLE_COL5, self.USER_SETS_TABLE_COL6, self.USER_SETS_TABLE_COL7):
+            self.bot.vars.LOGGER.error(f'Could not create {self.USER_SETS_TABLE} table.')
+        if not self.card_db.create_table(self.USER_UNLOCKS_TABLE, self.USER_UNLOCKS_TABLE_COL1, self.USER_UNLOCKS_TABLE_COL2):
+            self.bot.vars.LOGGER.error(f'Could not create {self.USER_UNLOCKS_TABLE} table.')
 
     def _upload_image(self, img, itype='PNG'):
         with BytesIO() as img_bytes:
@@ -160,18 +155,18 @@ class Games(commands.Cog):
         return None
 
     def _get_user_card_sheet(self, user, blank=False):
-        return CARD_IMGS.load_sheet_img(user.id, blank=blank)
+        return card_imgs.load_sheet_img(user.id, blank=blank)
 
     def _get_user_card_settings(self, user):
         settings = {
-            'black': DEFAULT_SET,
-            'red': DEFAULT_SET,
-            'suits': DEFAULT_SET,
-            'back': DEFAULT_SET,
-            'base': DEFAULT_SET,
-            'border': DEFAULT_SET
+            'black': card_imgs.DEFAULT_SET,
+            'red': card_imgs.DEFAULT_SET,
+            'suits': card_imgs.DEFAULT_SET,
+            'back': card_imgs.DEFAULT_SET,
+            'base': card_imgs.DEFAULT_SET,
+            'border': card_imgs.DEFAULT_SET
         }
-        row = self.card_db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(self.USER_SETS_TABLE, (self.USER_SETS_TABLE_COL1[0], user.id), factory=True)
         if row:
             settings['black'] = row['black']
             settings['red'] = row['red']
@@ -182,51 +177,51 @@ class Games(commands.Cog):
         return settings
 
     def _save_user_card_settings(self, user, settings):
-        row = self.card_db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(self.USER_SETS_TABLE, (self.USER_SETS_TABLE_COL1[0], user.id), factory=True)
         if row:
-            self.card_db.update_row(USER_SETS_TABLE,
-                                    (USER_SETS_TABLE_COL1[0], user.id),
-                                    (USER_SETS_TABLE_COL2[0], settings['black']),
-                                    (USER_SETS_TABLE_COL3[0], settings['red']),
-                                    (USER_SETS_TABLE_COL4[0], settings['suits']),
-                                    (USER_SETS_TABLE_COL5[0], settings['back']),
-                                    (USER_SETS_TABLE_COL6[0], settings['base']),
-                                    (USER_SETS_TABLE_COL7[0], settings['border']))
+            self.card_db.update_row(self.USER_SETS_TABLE,
+                                    (self.USER_SETS_TABLE_COL1[0], user.id),
+                                    (self.USER_SETS_TABLE_COL2[0], settings['black']),
+                                    (self.USER_SETS_TABLE_COL3[0], settings['red']),
+                                    (self.USER_SETS_TABLE_COL4[0], settings['suits']),
+                                    (self.USER_SETS_TABLE_COL5[0], settings['back']),
+                                    (self.USER_SETS_TABLE_COL6[0], settings['base']),
+                                    (self.USER_SETS_TABLE_COL7[0], settings['border']))
         else:
-            self.card_db.insert_row(USER_SETS_TABLE,
-                                    (USER_SETS_TABLE_COL1[0], user.id),
-                                    (USER_SETS_TABLE_COL2[0], settings['black']),
-                                    (USER_SETS_TABLE_COL3[0], settings['red']),
-                                    (USER_SETS_TABLE_COL4[0], settings['suits']),
-                                    (USER_SETS_TABLE_COL5[0], settings['back']),
-                                    (USER_SETS_TABLE_COL6[0], settings['base']),
-                                    (USER_SETS_TABLE_COL7[0], settings['border']))
-        sheet, sheet_blank = CARD_IMGS.make_sheet_img(base_name=settings['base'],
+            self.card_db.insert_row(self.USER_SETS_TABLE,
+                                    (self.USER_SETS_TABLE_COL1[0], user.id),
+                                    (self.USER_SETS_TABLE_COL2[0], settings['black']),
+                                    (self.USER_SETS_TABLE_COL3[0], settings['red']),
+                                    (self.USER_SETS_TABLE_COL4[0], settings['suits']),
+                                    (self.USER_SETS_TABLE_COL5[0], settings['back']),
+                                    (self.USER_SETS_TABLE_COL6[0], settings['base']),
+                                    (self.USER_SETS_TABLE_COL7[0], settings['border']))
+        sheet, sheet_blank = card_imgs.make_sheet_img(base_name=settings['base'],
                                                       border_name=settings['border'],
                                                       suits_name=settings['suits'],
                                                       black_name=settings['black'],
                                                       red_name=settings['red'],
                                                       back_name=settings['back'])
-        sheet.save(os.path.join(CARD_IMGS.CUSTOM_PATH, f'{user.id}.png'), format='PNG')
-        sheet_blank.save(os.path.join(CARD_IMGS.CUSTOM_PATH, f'{user.id}_blank.png'), format='PNG')
+        sheet.save(os.path.join(card_imgs.CUSTOM_PATH, f'{user.id}.png'), format='PNG')
+        sheet_blank.save(os.path.join(card_imgs.CUSTOM_PATH, f'{user.id}_blank.png'), format='PNG')
 
     def _get_user_unlocks(self, user):
-        row = self.card_db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(self.USER_UNLOCKS_TABLE, (self.USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
         if row:
             return json.loads(base64.b64decode(row['unlocks']))
         return []
 
     def _set_user_unlocks(self, user, unlocks):
-        row = self.card_db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(self.USER_UNLOCKS_TABLE, (self.USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
         data = str(base64.b64encode(json.dumps(unlocks).encode()))[2:-1]
         if row:
-            self.card_db.update_row(USER_UNLOCKS_TABLE,
-                                    (USER_UNLOCKS_TABLE_COL1[0], user.id),
-                                    (USER_UNLOCKS_TABLE_COL2[0], data))
+            self.card_db.update_row(self.USER_UNLOCKS_TABLE,
+                                    (self.USER_UNLOCKS_TABLE_COL1[0], user.id),
+                                    (self.USER_UNLOCKS_TABLE_COL2[0], data))
         else:
-            self.card_db.insert_row(USER_UNLOCKS_TABLE,
-                                    (USER_UNLOCKS_TABLE_COL1[0], user.id),
-                                    (USER_UNLOCKS_TABLE_COL2[0], data))
+            self.card_db.insert_row(self.USER_UNLOCKS_TABLE,
+                                    (self.USER_UNLOCKS_TABLE_COL1[0], user.id),
+                                    (self.USER_UNLOCKS_TABLE_COL2[0], data))
 
     """
     Blackjack Methods
@@ -234,16 +229,16 @@ class Games(commands.Cog):
 
     async def _check_bj_deck(self, ctx):
         self.bj_deck.lock.acquire()
-        if self.bj_deck.cards_used() >= BJ_SHUFFLED_THRESHOLD:
+        if self.bj_deck.cards_used() >= self.BJ_SHUFFLED_THRESHOLD:
             self.bj_deck.reshuffle()
-            await ctx.send(DECK_SHUFFLED.format('Blackjack'))
+            await ctx.send(self.DECK_SHUFFLED.format('Blackjack'))
         self.bj_deck.lock.release()
 
     def _cards_to_embed_str(self, cards):
-        return ' '.join([card_emojis[c] for c in cards])
+        return ' '.join([self.card_emojis[c] for c in cards])
 
     def _cards_to_embed_sum_name(self, user, cards, unknown=False):
-        return f'{user.name} ({BJ_MOD.best_sum(cards)}{"?" if unknown else ""})'
+        return f'{user.name} ({bj.best_sum(cards)}{"?" if unknown else ""})'
 
     def _embed_from_bj(self, user, blackjack, sheet_img):
         user_creds = self.cr.get_user_creds(user)
@@ -261,14 +256,14 @@ class Games(commands.Cog):
 
         img_url = ''
         if self.filehost:
-            bj_img = CARD_IMGS.make_bj_img(self, user, blackjack, sheet_img)
+            bj_img = card_imgs.make_bj_img(self, user, blackjack, sheet_img)
             img_url = self._upload_image(bj_img)
             if img_url:
                 e.set_image(url=img_url)
         if (not self.filehost) or (self.filehost and not img_url):
             name = ''
             value = ''
-            if blackjack.get_curr_state() != BJ_MOD.ONGOING:
+            if blackjack.get_curr_state() != bj.ONGOING:
                 name = self._cards_to_embed_sum_name(self.bot.user, bot_hand)
                 value = self._cards_to_embed_str(bot_hand)
             else:
@@ -276,7 +271,7 @@ class Games(commands.Cog):
                 value = self._cards_to_embed_str(bot_hand[:1]) + ':grey_question:'
             e.add_field(name=name, value=value)
 
-            name = f'{user.name} ({"/".join([str(BJ_MOD.best_sum(c)) for c in user_hands])})'
+            name = f'{user.name} ({"/".join([str(bj.best_sum(c)) for c in user_hands])})'
             val = ''
             for i in range(len(user_hands)):
                 if i == blackjack.curr_hand and len(user_hands) > 1:
@@ -285,19 +280,19 @@ class Games(commands.Cog):
             e.add_field(name=name, value=val)
 
         result_values = []
-        if blackjack.get_curr_state() == BJ_MOD.PLAYER_DONE:
+        if blackjack.get_curr_state() == bj.PLAYER_DONE:
             for i in range(len(results)):
                 r = results[i]
-                if r != BJ_MOD.ONGOING:
-                    if r == BJ_MOD.PLAYER_WIN:
+                if r != bj.ONGOING:
+                    if r == bj.PLAYER_WIN:
                         result_values += ['You Won!']
-                    elif r == BJ_MOD.PLAYER_LOSE:
+                    elif r == bj.PLAYER_LOSE:
                         result_values += ['You Lost!']
-                    elif r == BJ_MOD.PLAYER_BUST:
+                    elif r == bj.PLAYER_BUST:
                         result_values += ['You Busted!']
-                    elif r == BJ_MOD.HOUSE_BUST:
+                    elif r == bj.HOUSE_BUST:
                         result_values += ['Bot Busted, You Won!']
-                    elif r == BJ_MOD.DRAW:
+                    elif r == bj.DRAW:
                         result_values += ['Draw!']
         if result_values:
             value = '\n'.join(result_values)
@@ -306,10 +301,10 @@ class Games(commands.Cog):
                 net = f'+{net}'
             e.description = f'Bets: {"/".join([str(b) for b in bets])}'
             e.set_footer(text=f'Results:\n{value}\n\nCredits: {user_creds}({net})',
-                         icon_url=UTILS.make_data_url(user))
+                         icon_url=self.bot.utils.make_data_url(user))
         else:
             e.set_footer(text=f'{user.id}',
-                         icon_url=UTILS.make_data_url(user))
+                         icon_url=self.bot.utils.make_data_url(user))
 
         return e
 
@@ -317,7 +312,7 @@ class Games(commands.Cog):
         bj_state, _ = self.bj_states.pop(user.id, None)
         await msg.clear_reactions()
         if self.cr.get_user_creds(user) >= BJ_DEFAULT_BET:
-            await msg.add_reaction(AGAIN)
+            await msg.add_reaction(self.AGAIN)
         return bj_state
 
     @commands.Cog.listener()
@@ -331,8 +326,7 @@ class Games(commands.Cog):
             return
         if not embed:
             return
-        print('1')
-        data = UTILS.get_embed_data(embed)
+        data = self.bot.utils.get_embed_data(embed)
         if not data:
             return
 
@@ -340,7 +334,7 @@ class Games(commands.Cog):
             return
 
         if embed.title and embed.title == 'Blackjack':
-            if reaction.emoji in [HIT, HOLD, DOUBLE, SPLIT]:
+            if reaction.emoji in [self.HIT, self.HOLD, self.DOUBLE, self.SPLIT]:
                 bj_game, sheet_img = self.bj_states[user.id]
                 bj_state_final = None
                 lock = bj_game.lock
@@ -351,18 +345,18 @@ class Games(commands.Cog):
                     error = None
                     try:
                         await self._check_bj_deck(ctx)
-                        if action == HIT:
+                        if action == self.HIT:
                             bj_game.hit()
-                        elif action == DOUBLE:
+                        elif action == self.DOUBLE:
                             bj_game.double()
-                        elif action == HOLD:
+                        elif action == self.HOLD:
                             bj_game.hold()
-                        elif action == SPLIT:
+                        elif action == self.SPLIT:
                             bj_game.split()
-                    except BJ_MOD.BlackjackException as e:
+                    except bj.BlackjackException as e:
                         error = e
 
-                    if bj_game.get_curr_state() == BJ_MOD.PLAYER_DONE:
+                    if bj_game.get_curr_state() == bj.PLAYER_DONE:
                         bj_state_final = await self._finalize_bj(user, msg, embed)
                     else:
                         await msg.remove_reaction(reaction, user)
@@ -374,31 +368,31 @@ class Games(commands.Cog):
                     lock.release()
                 if bj_state_final:
                     await self.stats.save_bj_stats(bj_state_final, user.id)
-            elif reaction.emoji == AGAIN:
+            elif reaction.emoji == self.AGAIN:
                 ctx.author = user
                 await self.blackjack(ctx)
-        elif 'buy' in data and reaction.emoji == UTILS.CONFIRM_EMOJI:
+        elif 'buy' in data and reaction.emoji == self.bot.utils.CONFIRM_EMOJI:
             choice = data['buy']
             price = data['price']
             user_unlocks = self._get_user_unlocks(user)
             user_creds = self.cr.get_user_creds(user)
             if user_creds >= price and not choice in user_unlocks:
-                if choice != CUSTOM_SET:
+                if choice != self.CUSTOM_SET:
                     user_unlocks += [choice]
                 self.cr.transfer_from_to(user, self.bot.user, price)
                 self._set_user_unlocks(user, user_unlocks)
                 await msg.add_reaction('👍')
-        elif 'settings' in data and reaction.emoji == UTILS.CONFIRM_EMOJI:
+        elif 'settings' in data and reaction.emoji == self.bot.utils.CONFIRM_EMOJI:
             settings = data['settings']
             self._save_user_card_settings(user, settings)
             await msg.add_reaction('👍')
 
     @commands.command(aliases=['creds', 'cred', 'cr', 'balance', 'bal'],
-                      description='Play Blackjack with Eschamali',
-                      help='Good luck',
-                      brief='Play Blackjack')
+                      description='Check Credits from Games',
+                      help='Check own credits, or mention another user to see theirs',
+                      brief='Check Credits')
     async def credits(self, ctx, user: User = None):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if not user:
             user = ctx.author
@@ -422,7 +416,7 @@ class Games(commands.Cog):
                       help='Must mention user to send credits.',
                       brief='Send Credits')
     async def send(self, ctx, user: User, amount: int):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if amount < 0:
             return await ctx.send('You cannot send negative credits.')
@@ -449,25 +443,25 @@ class Games(commands.Cog):
                       help='Play Blackjack with Eschamali.\n☝️ = Hit\n🛑 = Hold\n🇩 = Double Bet and +1 Card',
                       brief='Play Blackjack')
     async def blackjack(self, ctx, bet: int = BJ_DEFAULT_BET):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         user = ctx.author
         if user.id in self.bj_states.keys():
             return await ctx.send('You already have a Blackjack game running.')
         try:
             await self._check_bj_deck(ctx)
-            bj_game = BJ_MOD.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
+            bj_game = bj.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
             sheet_img = self._get_user_card_sheet(user, blank=True)
             self.bj_states[user.id] = (bj_game, sheet_img)
-        except BJ_MOD.BlackjackException as e:
+        except bj.BlackjackException as e:
             return await ctx.send(e)
 
         msg = await ctx.send(embed=self._embed_from_bj(user, bj_game, sheet_img))
-        if bj_game.get_curr_state() == BJ_MOD.ONGOING:
-            await msg.add_reaction(HIT)
-            await msg.add_reaction(HOLD)
-            await msg.add_reaction(DOUBLE)
-            await msg.add_reaction(SPLIT)
+        if bj_game.get_curr_state() == bj.ONGOING:
+            await msg.add_reaction(self.HIT)
+            await msg.add_reaction(self.HOLD)
+            await msg.add_reaction(self.DOUBLE)
+            await msg.add_reaction(self.SPLIT)
         else:
             bj_state_final = await self._finalize_bj(user, msg, msg.embeds[0])
             await self.stats.save_bj_stats(bj_state_final, user.id)
@@ -477,9 +471,9 @@ class Games(commands.Cog):
                       help=VALID_GAMES_HELP,
                       brief='Game Stats')
     async def game_stats(self, ctx, game):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
-        if game in BLACKJACK:
+        if game in self.BLACKJACK:
             doubled, splits, busts, nums = await self.stats.get_bj_global_stats()
             e = Embed(colour=0)
             line_template = '{:^3}|{:^8}|{:^10}|{:^9}|{:^11}|{:^6}'
@@ -535,11 +529,11 @@ class Games(commands.Cog):
                       help=VALID_GAMES_HELP,
                       brief='Personal Game Stats')
     async def personal_stats(self, ctx, game, user: Member = None):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if not user:
             user = ctx.author
-        if game in BLACKJACK:
+        if game in self.BLACKJACK:
             wins, losses, draws = await self.stats.get_bj_personal_stats(user)
 
             total = wins + losses + draws
@@ -568,13 +562,13 @@ class Games(commands.Cog):
                       help='Just use it.',
                       brief='Set Shop')
     async def shop(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         user_unlocks = self._get_user_unlocks(ctx.author)
         e = Embed()
         e.title = 'Card Set Shop'
         e.description = '```'
-        for name, price in SET_SHOP.items():
+        for name, price in self.SET_SHOP.items():
             price_text = f'{price}'
             if name in user_unlocks:
                 price_text = 'BOUGHT'
@@ -587,14 +581,14 @@ class Games(commands.Cog):
                       help='Use the shop command to see what is buyable',
                       brief='Buy Sets')
     async def buy(self, ctx, choice):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         choice = choice.lower()
         user_unlocks = self._get_user_unlocks(ctx.author)
         if choice in user_unlocks:
             return await ctx.send('You have already bought that set!')
-        if choice in SET_SHOP:
-            set_price = SET_SHOP[choice]
+        if choice in self.SET_SHOP:
+            set_price = self.SET_SHOP[choice]
             data = {
                 'buy': choice,
                 'price': set_price
@@ -602,9 +596,9 @@ class Games(commands.Cog):
 
             e = Embed()
             e.description = f'`{choice.capitalize()}` Card Set'
-            e.set_footer(icon_url=UTILS.make_data_url(ctx.author, data), text=f'Buy for {set_price} credits?')
+            e.set_footer(icon_url=self.bot.utils.make_data_url(ctx.author, data), text=f'Buy for {set_price} credits?')
             m = await ctx.send(embed=e)
-            return await m.add_reaction(UTILS.CONFIRM_EMOJI)
+            return await m.add_reaction(self.bot.utils.CONFIRM_EMOJI)
         return await ctx.send('Invalid Set.')
 
     @commands.command(aliases=['prv'],
@@ -612,15 +606,15 @@ class Games(commands.Cog):
                       help='No argument previews current cards image\nArgument previews a set',
                       brief='Preview Sets')
     async def preview(self, ctx, card_set=''):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         card_set = card_set.lower()
         sheet = None
         sheet_blank = None
-        if card_set == CUSTOM_SET:
+        if card_set == self.CUSTOM_SET:
             return await ctx.send('Ask a bot owner to make a custom card set.')
-        elif card_set and card_set in SET_SHOP:
-            sheet, sheet_blank = CARD_IMGS.make_set_sheet_img(card_set)
+        elif card_set and card_set in self.SET_SHOP:
+            sheet, sheet_blank = card_imgs.make_set_sheet_img(card_set)
         else:
             sheet = self._get_user_card_sheet(ctx.author)
             sheet_blank = self._get_user_card_sheet(ctx.author, blank=True)
@@ -637,11 +631,11 @@ class Games(commands.Cog):
                       help='Valid Parts: base, border, suits, black, red, back',
                       brief='Set Card Parts')
     async def set_part(self, ctx, card_part, set_name):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         card_part = card_part.lower()
         set_name = set_name.lower()
-        if set_name in CARD_IMGS.SETS:
+        if set_name in card_imgs.SETS:
             user_unlocks = self._get_user_unlocks(ctx.author)
             if not set_name in user_unlocks:
                 return await ctx.send('You have not bought that set!')
@@ -655,7 +649,7 @@ class Games(commands.Cog):
             else:
                 return await ctx.send('Invalid card part.')
 
-            sheet, sheet_blank = CARD_IMGS.make_sheet_img(settings['base'], settings['border'], settings['suits'],
+            sheet, sheet_blank = card_imgs.make_sheet_img(settings['base'], settings['border'], settings['suits'],
                                                           settings['black'], settings['red'], settings['back'])
             sheet_url = self._upload_image(sheet)
             sheet_blank_url = self._upload_image(sheet_blank)
@@ -664,18 +658,18 @@ class Games(commands.Cog):
             e = Embed()
             e.set_image(url=sheet_url)
             e.set_thumbnail(url=sheet_blank_url)
-            e.set_footer(icon_url=UTILS.make_data_url(ctx.author, data),
+            e.set_footer(icon_url=self.bot.utils.make_data_url(ctx.author, data),
                          text=f'Change Card "{card_part}"?')
 
             m = await ctx.send(embed=e)
-            return await m.add_reaction(UTILS.CONFIRM_EMOJI)
+            return await m.add_reaction(self.bot.utils.CONFIRM_EMOJI)
         return await ctx.send('Invalid card set.')
 
     @commands.command(description='Set different parts of your cards to other set parts.',
                       help='Valid Parts: base, border, suits, black, red, back',
                       brief='Set Card Parts')
     async def settings(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         settings = self._get_user_card_settings(ctx.author)
         text = '```'
@@ -695,11 +689,11 @@ class Games(commands.Cog):
                       help=VALID_GAMES_HELP,
                       brief='Check Game Deck')
     async def deck(self, ctx, *, game):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         e = Embed(colour=Colour.from_rgb(255, 255, 254))
         title = '{} Deck Info'
-        if game in BLACKJACK:
+        if game in self.BLACKJACK:
             title = title.format('Blackjack')
             self.bj_deck.lock.acquire()
             e.description = ''
@@ -707,7 +701,7 @@ class Games(commands.Cog):
             e.description += 'Cards Left: {:3}```'.format(self.bj_deck.cards_left())
             self.bj_deck.lock.release()
         else:
-            return await ctx.send(INVALID_GAME)
+            return await ctx.send(self.INVALID_GAME)
         e.title = title
         await ctx.send(embed=e)
 
@@ -716,7 +710,7 @@ class Games(commands.Cog):
                       help='24h Reset',
                       brief='Credits Daily')
     async def daily(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         user = ctx.author
         daily_check = self.cr.daily(user)
@@ -734,7 +728,7 @@ class Games(commands.Cog):
                       help='None',
                       brief='Leaderboard')
     async def leaderboard(self, ctx, page=1):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         e = Embed(colour=Colour.green())
         e.title = 'Credit Leaderboard'
@@ -768,7 +762,7 @@ class Games(commands.Cog):
                       help='Guess a number between 1-10\nExact = 100\nWithin 1 = 50\nWithin 2 = 10\n4 or more = -20',
                       brief='Guess Number Game')
     async def guess(self, ctx, guess: int):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         low = 1
         high = 10
@@ -803,7 +797,7 @@ class Games(commands.Cog):
                       help='Luck doesn\'t need help',
                       brief='Ask 8ball')
     async def eightball(self, ctx, *, question):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         await ctx.send(embed=Embed(
             title=':8ball:The Magical 8-Ball:8ball:'
@@ -813,14 +807,14 @@ class Games(commands.Cog):
             inline=False
         ).add_field(
             name=':exclamation:Answer:exclamation:',
-            value=ANSWERS[random.randint(0, len(ANSWERS) - 1)],
+            value=self.ANSWERS[random.randint(0, len(self.ANSWERS) - 1)],
             inline=False))
 
     @commands.command(description='Choose a choice from given *choices*',
                       help='*choices* are separated by ";"\ni.e choice 1;choice 2;etc...',
                       brief='Choose choice')
     async def choose(self, ctx, *, choices):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         choices = re.split(';|\n', choices)
         chosen = choices[random.randint(0, len(choices) - 1)]
@@ -851,7 +845,7 @@ class Games(commands.Cog):
             description=f'{ctx.author.mention} vs. {ctx.bot.user.mention}'
         ).add_field(
             name='Battle',
-            value=f'{PICKS[author_choice]} vs. {PICKS[bot_choice]}'
+            value=f'{self.PICKS[author_choice]} vs. {self.PICKS[bot_choice]}'
         ).add_field(
             name='Winner',
             value=f'{winner.mention if winner else "Tie."}'))
@@ -860,7 +854,7 @@ class Games(commands.Cog):
                     help='Choose rock, paper, or scissors\nAliased by r, p, and s',
                     brief='R,P,S')
     async def rps(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel) or ctx.invoked_subcommand is None:
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or ctx.invoked_subcommand is None:
             return
 
     @rps.command(aliases=['r'],
@@ -883,7 +877,7 @@ class Games(commands.Cog):
                       help='Default *max_num* is 100',
                       brief='Roll a number')
     async def roll(self, ctx, max_num: int = 100):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         await ctx.send(f'`{random.randint(1, max_num)}`')
 
@@ -891,7 +885,7 @@ class Games(commands.Cog):
                       help='*options* are separated by ";"\nFirst option in list is set as the question/title',
                       brief='Make poll')
     async def poll(self, ctx, *, options):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         options = re.split(';|\n', options)
         poll_name = options[0]

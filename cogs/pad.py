@@ -9,58 +9,51 @@ from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 from math import ceil, floor
 from datetime import datetime
-
-UTILS = importlib.import_module('.utils', 'util')
-PAD_DATA = importlib.import_module('.pad_data', 'cogs.pad_data')
-LOGGER = UTILS.VARS.LOGGER
-
-Attribute = PAD_DATA.Attribute
-Type = PAD_DATA.Type
-Awakening = PAD_DATA.Awakening
-
-NA = PAD_DATA.NA
-JP = PAD_DATA.JP
-
-LEFT_ARROW = '⬅️'
-RIGHT_ARROW = '➡️'
-REGIONAL_INDICATOR_N = '🇳'
-REGIONAL_INDICATOR_J = '🇯'
-X = '❌'
-LEFT_TRIANGLE = '◀️'
-RIGHT_TRIANGLE = '▶️'
-
-PDX_LINK = 'http://puzzledragonx.com/en/monster.asp?n=%d'
+from cogs.pad_data import pad_data
 
 
 class PAD(commands.Cog):
     """Displays PAD monster data"""
 
     def __init__(self, bot):
+        importlib.reload(pad_data)
+        pad_data.reload()
+
+        self.LEFT_ARROW = '⬅️'
+        self.RIGHT_ARROW = '➡️'
+        self.REGIONAL_INDICATOR_N = '🇳'
+        self.REGIONAL_INDICATOR_J = '🇯'
+        self.X = '❌'
+        self.LEFT_TRIANGLE = '◀️'
+        self.RIGHT_TRIANGLE = '▶️'
+
+        self.PDX_LINK = 'http://puzzledragonx.com/en/monster.asp?n=%d'
+
         self.bot = bot
         self.use_emotes = False
         self.updating = False
-        self.load_emotes.start()  # pylint: disable=no-member
-        self.update_db.start()  # pylint: disable=no-member
-        self.max_mons = 6500
+        self.load_emotes.start()
+        self.update_db.start()
+        self.max_mons = 7000
         self._update_max_mons()
 
     def cog_unload(self):
-        self.load_emotes.cancel()  # pylint: disable=no-member
-        self.update_db.cancel()  # pylint: disable=no-member
+        self.load_emotes.cancel()
+        self.update_db.cancel()
 
     def _update_max_mons(self):
-        jp_db = UTILS.DB(PAD_DATA.CARDS_DB % JP)
+        jp_db = self.bot.utils.DB(pad_data.CARDS_DB % pad_data.JP)
         if jp_db.table_exists('monsters'):
             try:
                 self.max_mons = jp_db.execute_one('SELECT MAX(id) AS max_id FROM monsters')
             except:
-                pass
+                self.bot.vars.LOGGER.error('Could not update max_mons')
 
     def _get_rdm_mons(self):
         m = None
         while not m:
-            m1 = PAD_DATA.get_monster(random.randint(1, self.max_mons), NA)
-            m2 = PAD_DATA.get_monster(random.randint(1, self.max_mons), JP)
+            m1 = pad_data.get_monster(random.randint(1, self.max_mons), pad_data.NA)
+            m2 = pad_data.get_monster(random.randint(1, self.max_mons), pad_data.JP)
             m = m1 or m2
         return m
 
@@ -72,9 +65,9 @@ class PAD(commands.Cog):
     async def update_db(self):
         if not self.updating:
             self.updating = True
-            LOGGER.debug('Updating PAD DB.')
+            self.bot.vars.LOGGER.debug('Updating PAD DB.')
             await self._update_db()
-            LOGGER.debug('Updated PAD DB.')
+            self.bot.vars.LOGGER.debug('Updated PAD DB.')
             self.updating = False
 
     @update_db.before_loop
@@ -108,7 +101,7 @@ class PAD(commands.Cog):
             return
         e = reaction.emoji
         title = embed.title
-        if e == X:
+        if e == self.X:
             await msg.delete()
         elif title.startswith('Series: '):
             footer = embed.footer.text
@@ -117,36 +110,36 @@ class PAD(commands.Cog):
             max_page = int(footer.split(' ')[1].split('/')[1])
             series_query = title.replace('Series: ', '', 1)
             new_page = curr_page
-            if e == LEFT_TRIANGLE:
+            if e == self.LEFT_TRIANGLE:
                 new_page -= 1
-            elif e == RIGHT_TRIANGLE:
+            elif e == self.RIGHT_TRIANGLE:
                 new_page += 1
             if new_page != curr_page and 1 <= new_page <= max_page:
                 await msg.edit(embed=self._series_embed(series_query, region, new_page))
             await msg.remove_reaction(reaction, user)
         elif title.startswith('No.'):
             all_reactions = [r.emoji for r in filter(lambda r:
-                                                     (r.emoji == REGIONAL_INDICATOR_N
-                                                      or r.emoji == REGIONAL_INDICATOR_J)
+                                                     (r.emoji == self.REGIONAL_INDICATOR_N
+                                                      or r.emoji == self.REGIONAL_INDICATOR_J)
                                                      and r.me,
                                                      msg.reactions)]
-            region = NA if REGIONAL_INDICATOR_J in all_reactions else JP
-            embed_data = UTILS.get_embed_data(embed)
-            region = NA if embed_data['region'] == NA else JP
+            region = pad_data.NA if self.REGIONAL_INDICATOR_J in all_reactions else pad_data.JP
+            embed_data = self.bot.utils.get_embed_data(embed)
+            region = pad_data.NA if embed_data['region'] == pad_data.NA else pad_data.JP
             num = int(title.replace('No.', '').split(' ')[0])
-            m = PAD_DATA.get_monster(num, region)
+            m = pad_data.get_monster(num, region)
             new_num = num
-            if e == LEFT_ARROW:
+            if e == self.LEFT_ARROW:
                 for n in reversed(m.evolutions):
                     if n < num:
                         new_num = n
                         break
-            elif e == RIGHT_ARROW:
+            elif e == self.RIGHT_ARROW:
                 for n in m.evolutions:
                     if n > num:
                         new_num = n
                         break
-            elif e == REGIONAL_INDICATOR_J or e == REGIONAL_INDICATOR_N:
+            elif e == self.REGIONAL_INDICATOR_J or e == self.REGIONAL_INDICATOR_N:
                 new_region = self._flip_region(region)
                 new_embed = self._info_embed(user, str(num), new_region)
                 if new_embed:
@@ -158,24 +151,24 @@ class PAD(commands.Cog):
             await msg.remove_reaction(reaction, user)
 
     def _flip_region(self, region):
-        if region == NA:
-            return JP
+        if region == pad_data.NA:
+            return pad_data.JP
         else:
-            return NA
+            return pad_data.NA
 
     """
     COMMANDS
     """
 
     async def _update_db(self):
-        await asyncio.get_event_loop().run_in_executor(ThreadPoolExecutor(), PAD_DATA.update_monsters)
+        await asyncio.get_event_loop().run_in_executor(ThreadPoolExecutor(), pad_data.update_monsters)
         self._update_max_mons()
 
     @commands.command(description='Update the internal PAD DB data',
                       help='Takes roughly 2 minutes',
                       brief='Update DB')
     async def update(self, ctx):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if not self.updating:
             self.updating = True
@@ -187,7 +180,7 @@ class PAD(commands.Cog):
             await ctx.send('Already updating.')
 
     async def _info(self, ctx, query, region):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if not query:
             query = str(self._get_rdm_mons().id)
@@ -204,17 +197,17 @@ class PAD(commands.Cog):
                       help='Use reactions to do different actions\nLeft/Right: Go through evos\nN/J: Switch between NA and JP\nX: Delete embed',
                       brief='Show info')
     async def info(self, ctx, *, query=None):
-        await self._info(ctx, query, NA)
+        await self._info(ctx, query, pad_data.NA)
 
     @commands.command(aliases=['ij'],
                       description='Show info for JP monster from *query*',
                       help='Use reactions to do different actions\nLeft/Right: Go through evos\nN/J: Switch between NA and JP\nX: Delete embed',
                       brief='Show JP info')
     async def infojp(self, ctx, *, query=None):
-        await self._info(ctx, query, JP)
+        await self._info(ctx, query, pad_data.JP)
 
     async def _pic(self, ctx, query, region):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         if not query:
             query = str(self._get_rdm_mons().id)
@@ -236,17 +229,17 @@ class PAD(commands.Cog):
                       help='If animated, will also display MP4 and GIF(JIF) links',
                       brief='Show picture')
     async def pic(self, ctx, *, query=None):
-        await self._pic(ctx, query, NA)
+        await self._pic(ctx, query, pad_data.NA)
 
     @commands.command(aliases=['pj'],
                       description='Show pictures for JP monster from *query*',
                       help='If animated, will also display MP4 and GIF(JIF) links',
                       brief='Show JP picture')
     async def picjp(self, ctx, *, query=None):
-        await self._pic(ctx, query, JP)
+        await self._pic(ctx, query, pad_data.JP)
 
     async def _series(self, ctx, query, region):
-        if not UTILS.can_cog_in(self, ctx.channel):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         e = self._series_embed(query, region)
         if e:
@@ -258,25 +251,25 @@ class PAD(commands.Cog):
                       help='Use reactions to do different actions:\nLeft/Right: Change page\nX: Delete embed',
                       brief='Show series')
     async def series(self, ctx, *, query):
-        await self._series(ctx, query, JP)
+        await self._series(ctx, query, pad_data.JP)
 
     """
     EMBEDS
     """
 
     async def _add_info_reactions(self, message, region):
-        await message.add_reaction(LEFT_ARROW)
-        await message.add_reaction(RIGHT_ARROW)
-        await message.add_reaction(REGIONAL_INDICATOR_J if region == NA else REGIONAL_INDICATOR_N)
-        await message.add_reaction(X)
+        await message.add_reaction(self.LEFT_ARROW)
+        await message.add_reaction(self.RIGHT_ARROW)
+        await message.add_reaction(self.REGIONAL_INDICATOR_J if region == pad_data.NA else self.REGIONAL_INDICATOR_N)
+        await message.add_reaction(self.X)
 
     async def _add_series_reactions(self, message):
-        await message.add_reaction(LEFT_TRIANGLE)
-        await message.add_reaction(RIGHT_TRIANGLE)
-        await message.add_reaction(X)
+        await message.add_reaction(self.LEFT_TRIANGLE)
+        await message.add_reaction(self.RIGHT_TRIANGLE)
+        await message.add_reaction(self.X)
 
     def _info_embed(self, author, query, region):
-        m = PAD_DATA.get_monster(query, region)
+        m = pad_data.get_monster(query, region)
         if not m:
             return None
         active = m.active
@@ -286,35 +279,35 @@ class PAD(commands.Cog):
         supers = m.supers
         latent_slots = m.latent_slots
 
-        att1 = Attribute.from_id(m.attribute_1_id)
+        att1 = pad_data.Attribute.from_id(m.attribute_1_id)
         embed_colour = Colour.from_rgb(255, 255, 254)
-        if att1 == Attribute.FIRE:
+        if att1 == pad_data.Attribute.FIRE:
             embed_colour = Colour.from_rgb(255, 116, 75)
-        elif att1 == Attribute.WATER:
+        elif att1 == pad_data.Attribute.WATER:
             embed_colour = Colour.from_rgb(64, 255, 255)
-        elif att1 == Attribute.WOOD:
+        elif att1 == pad_data.Attribute.WOOD:
             embed_colour = Colour.from_rgb(76, 217, 98)
-        elif att1 == Attribute.LIGHT:
+        elif att1 == pad_data.Attribute.LIGHT:
             embed_colour = Colour.from_rgb(242, 231, 76)
-        elif att1 == Attribute.DARK:
+        elif att1 == pad_data.Attribute.DARK:
             embed_colour = Colour.from_rgb(204, 84, 194)
 
-        types = list(filter(lambda t: t != Type.NONE, [Type.from_id(m.type_1_id),
-                                                       Type.from_id(m.type_2_id),
-                                                       Type.from_id(m.type_3_id)]))
+        types = list(filter(lambda t: t != pad_data.Type.NONE, [pad_data.Type.from_id(m.type_1_id),
+                                                                pad_data.Type.from_id(m.type_2_id),
+                                                                pad_data.Type.from_id(m.type_3_id)]))
         desc = '/'.join(map(str, types)) + '\n'
 
         if awakenings and self.use_emotes:
             desc += ''.join([str(e.to_emoji()) for e in map(AwakeningEmoji.from_id, awakenings)])
         elif awakenings:
-            desc += ' '.join([Awakening.from_id(a).short_name() for a in awakenings])
+            desc += ' '.join([pad_data.Awakening.from_id(a).short_name() for a in awakenings])
         else:
             desc += 'No Awakenings.'
 
         if supers and self.use_emotes:
             desc += '\n' + ''.join([str(e.to_emoji()) for e in map(AwakeningEmoji.from_id, supers)])
         elif supers:
-            desc += '\n' + ' '.join([Awakening.from_id(a).short_name() for a in supers])
+            desc += '\n' + ' '.join([pad_data.Awakening.from_id(a).short_name() for a in supers])
 
         if self.use_emotes:
             valid_killers = [LatentEmoji.from_id(l.id()).to_emoji() for l in m.get_valid_killer_latents()]
@@ -353,17 +346,17 @@ class PAD(commands.Cog):
         stats += '{:3} {:5}'.format('XP', m.exp)
         stats += '```'
 
-        similar = [mons.id for mons in PAD_DATA.get_monsters(query, region)]
+        similar = [mons.id for mons in pad_data.get_monsters(query, region)]
         similar = [n for n in filter(lambda n: not n in evolutions, similar)]
         similar.remove(m.id)
 
         e = Embed()
         e.title = f'No.{m.id} {m.name}'
-        e.url = PDX_LINK % m.id
+        e.url = self.PDX_LINK % m.id
         e.description = f'**{desc}**'
         e.colour = embed_colour
 
-        e.set_thumbnail(url=PAD_DATA.get_portrait_url(str(m.id), region))
+        e.set_thumbnail(url=pad_data.get_portrait_url(str(m.id), region))
         e.add_field(name='Info', value=m_info, inline=True)
         e.add_field(name='Stats', value=stats, inline=True)
         if active:
@@ -380,21 +373,21 @@ class PAD(commands.Cog):
                         value=leader.desc,
                         inline=False)
         if evolutions:
-            e.add_field(name='Other Evos', value=', '.join([f'[{e}]({PDX_LINK % e})' for e in evolutions]), inline=True)
+            e.add_field(name='Other Evos', value=', '.join([f'[{e}]({self.PDX_LINK % e})' for e in evolutions]), inline=True)
         if similar:
             e.add_field(name='Similar Names',
-                        value=', '.join([f'[{s}]({PDX_LINK % s})' for s in similar]) if len(similar) <= 10 else 'Too many to show.',
+                        value=', '.join([f'[{s}]({self.PDX_LINK % s})' for s in similar]) if len(similar) <= 10 else 'Too many to show.',
                         inline=True)
         data = {
             'query': query,
             'region': region
         }
-        e.set_footer(text=f'Series: {m.series}', icon_url=UTILS.make_data_url(author, data))
+        e.set_footer(text=f'Series: {m.series}', icon_url=self.bot.utils.make_data_url(author, data))
         return e
 
     def _series_embed(self, query, region, page=1):
         query = query.lower()
-        monsters = PAD_DATA.get_series(query, region)
+        monsters = pad_data.get_series(query, region)
         if not monsters:
             return None
         per_page = 10
@@ -406,13 +399,13 @@ class PAD(commands.Cog):
         return e
 
     def _pic_embed(self, query, region):
-        m = PAD_DATA.get_monster(query, region)
-        url = PAD_DATA.get_picture_url(m, region)
+        m = pad_data.get_monster(query, region)
+        url = pad_data.get_picture_url(m, region)
         if m and url:
             desc = ''
             if m.is_animated:
-                mp4 = PAD_DATA.get_animated_mp4_url(m, region)
-                gif = PAD_DATA.get_animated_gif_url(m, region)
+                mp4 = pad_data.get_animated_mp4_url(m, region)
+                gif = pad_data.get_animated_gif_url(m, region)
                 desc = (f'[MP4]({mp4})' if mp4 else '') + (f' | [GIF]({gif})' if gif else '')
             return Embed(title=f'No.{m.id} {m.name}',
                          description=desc).set_image(url=url)
@@ -509,10 +502,10 @@ class AwakeningEmoji(Enum):
     CROSSATTACK = (78, 'CrossAttack')
 
     def id(self):
-        return self.value[0]  # pylint: disable=unsubscriptable-object
+        return self.value[0]
 
     def emote(self):
-        return self.value[1]  # pylint: disable=unsubscriptable-object
+        return self.value[1]
 
     def to_emoji(self):
         return awakening_emojis[self.id()]
@@ -544,7 +537,7 @@ class AwakeningEmoji(Enum):
                     if g_e.name in emojis_to_find:
                         awakening_emojis[AwakeningEmoji.from_str(g_e.name).id()] = g_e
         if len(awakening_emojis) < len(emojis_to_find):
-            LOGGER.error('Not all awakening emojis were loaded.')
+            bot.vars.LOGGER.error('Not all awakening emojis were loaded.')
             return False
         else:
             return True
@@ -564,10 +557,10 @@ class LatentEmoji(Enum):
     MACHINE = (8, 'MachineLatent')
 
     def id(self):
-        return self.value[0]  # pylint: disable=unsubscriptable-object
+        return self.value[0]
 
     def emote(self):
-        return self.value[1]  # pylint: disable=unsubscriptable-object
+        return self.value[1]
 
     def to_emoji(self):
         return latent_emojis[self.id()]
@@ -597,7 +590,7 @@ class LatentEmoji(Enum):
                     if g_e.name in emojis_to_find:
                         latent_emojis[LatentEmoji.from_str(g_e.name).id()] = g_e
         if len(latent_emojis) < len(emojis_to_find):
-            LOGGER.error('Not all latent emojis were loaded.')
+            bot.vars.LOGGER.error('Not all latent emojis were loaded.')
             return False
         else:
             return True
