@@ -88,7 +88,9 @@ class PAD(commands.Cog):
     @tasks.loop(count=1)
     async def load_emotes(self):
         if 'emotes' in self.bot.config:
-            AwakeningEmoji.load_emojis(self, self.bot, self.bot.config['emotes'])
+            loaded_aw_emoji = AwakeningEmoji.load_emojis(self.bot, self.bot.config['emotes'])
+            loaded_la_emoji = LatentEmoji.load_emojis(self.bot, self.bot.config['emotes'])
+            self.use_emotes = loaded_aw_emoji and loaded_la_emoji
 
     @load_emotes.before_loop
     async def before_load_emotes(self):
@@ -314,9 +316,12 @@ class PAD(commands.Cog):
         elif supers:
             desc += '\n' + ' '.join([Awakening.from_id(a).short_name() for a in supers])
 
-        valid_killers = [l.name() for l in m.get_valid_killer_latents()]
+        if self.use_emotes:
+            valid_killers = [LatentEmoji.from_id(l.id()).to_emoji() for l in m.get_valid_killer_latents()]
+        else:
+            valid_killers = [l.name() for l in m.get_valid_killer_latents()]
         if valid_killers:
-            desc += f'\n({latent_slots} slots): '
+            desc += f'\n({latent_slots} slots):' + ('' if self.use_emotes else ' ')
             if len(valid_killers) == 8:
                 desc += 'Any'
             else:
@@ -418,90 +423,90 @@ awakening_emojis = {}
 
 
 class AwakeningEmoji(Enum):
-    UNKNOWN = (0, "Unknown")
-    HP = (1, "HP")
-    ATK = (2, "ATK")
-    RCV = (3, "RCV")
-    FIRERES = (4, "FireRes")
-    WATERRES = (5, "WaterRes")
-    WOODRES = (6, "WoodRes")
-    LIGHTRES = (7, "LightRes")
-    DARKRES = (8, "DarkRes")
-    AUTORCV = (9, "AutoRCV")
-    BINDRES = (10, "BindRes")
-    BLINDRES = (11, "BlindRes")
-    JAMRES = (12, "JamRes")
-    POIRES = (13, "PoiRes")
-    FIREOE = (14, "FireOE")
-    WATEROE = (15, "WaterOE")
-    WOODOE = (16, "WoodOE")
-    LIGHTOE = (17, "LightOE")
-    DARKOE = (18, "DarkOE")
-    HEARTOE = (29, "HeartOE")
-    TIMEEXTEND = (19, "TE")
-    BINDRCV = (20, "BindRCV")
-    SKILLBOOST = (21, "SB")
-    TPA = (27, "TPA")
-    SBR = (28, "SBR")
-    FIREROW = (22, "FireRow")
-    WATERROW = (23, "WaterRow")
-    WOODROW = (24, "WoodRow")
-    LIGHTROW = (25, "LightRow")
-    DARKROW = (26, "DarkRow")
-    COOP = (30, "CoopBoost")
-    DRAGONKILLER = (31, "DragonKill")
-    GODKILLER = (32, "GodKill")
-    DEVILKILLER = (33, "DevilKill")
-    MACHINEKILLER = (34, "MachineKill")
-    BALANCEDKILLER = (35, "BalanceKill")
-    ATTACKERKILLER = (36, "AttackerKill")
-    PHYSICALKILLER = (37, "PhysKill")
-    HEALERKILLER = (38, "HealerKill")
-    EVOMATKILLER = (39, "EvoKill")
-    AWOKENMATKILLER = (40, "AwokenKill")
-    ENHANCEKILLER = (41, "EnhanceKill")
-    VENDORKILLER = (42, "RedeemKill")
-    SEVENC = (43, "7c")
-    GUARDBREAK = (44, "GuardBreak")
-    FOLLOWUPATTACK = (45, "FUA")
-    TEAMHP = (46, "TeamHP")
-    TEAMRCV = (47, "TeamRCV")
-    VOIDPEN = (48, "VoidPen")
-    ASSIST = (49, "Assist")
-    SFUA = (50, "SFUA")
-    CHARGE = (51, "Charge")
-    BINDRESPLUS = (52, "BindResPlus")
-    TEPLUS = (53, "TEPlus")
-    CLOUDRES = (54, "CloudRes")
-    RIBBONRES = (55, "RibbonRes")
-    SBPLUS = (56, "SBPlus")
-    HP80BOOST = (57, "80Boost")
-    HP50BOOST = (58, "50Boost")
-    LSHIELD = (59, "LShield")
-    LUNLOCK = (60, "LUnlock")
-    TENC = (61, "10c")
+    UNKNOWN = (0, 'Unknown')
+    HP = (1, 'HP')
+    ATK = (2, 'ATK')
+    RCV = (3, 'RCV')
+    FIRERES = (4, 'FireRes')
+    WATERRES = (5, 'WaterRes')
+    WOODRES = (6, 'WoodRes')
+    LIGHTRES = (7, 'LightRes')
+    DARKRES = (8, 'DarkRes')
+    AUTORCV = (9, 'AutoRCV')
+    BINDRES = (10, 'BindRes')
+    BLINDRES = (11, 'BlindRes')
+    JAMRES = (12, 'JamRes')
+    POIRES = (13, 'PoiRes')
+    FIREOE = (14, 'FireOE')
+    WATEROE = (15, 'WaterOE')
+    WOODOE = (16, 'WoodOE')
+    LIGHTOE = (17, 'LightOE')
+    DARKOE = (18, 'DarkOE')
+    HEARTOE = (29, 'HeartOE')
+    TIMEEXTEND = (19, 'TE')
+    BINDRCV = (20, 'BindRCV')
+    SKILLBOOST = (21, 'SB')
+    TPA = (27, 'TPA')
+    SBR = (28, 'SBR')
+    FIREROW = (22, 'FireRow')
+    WATERROW = (23, 'WaterRow')
+    WOODROW = (24, 'WoodRow')
+    LIGHTROW = (25, 'LightRow')
+    DARKROW = (26, 'DarkRow')
+    COOP = (30, 'CoopBoost')
+    DRAGONKILLER = (31, 'DragonKill')
+    GODKILLER = (32, 'GodKill')
+    DEVILKILLER = (33, 'DevilKill')
+    MACHINEKILLER = (34, 'MachineKill')
+    BALANCEDKILLER = (35, 'BalanceKill')
+    ATTACKERKILLER = (36, 'AttackerKill')
+    PHYSICALKILLER = (37, 'PhysKill')
+    HEALERKILLER = (38, 'HealerKill')
+    EVOMATKILLER = (39, 'EvoKill')
+    AWOKENMATKILLER = (40, 'AwokenKill')
+    ENHANCEKILLER = (41, 'EnhanceKill')
+    VENDORKILLER = (42, 'RedeemKill')
+    SEVENC = (43, '7c')
+    GUARDBREAK = (44, 'GuardBreak')
+    FOLLOWUPATTACK = (45, 'FUA')
+    TEAMHP = (46, 'TeamHP')
+    TEAMRCV = (47, 'TeamRCV')
+    VOIDPEN = (48, 'VoidPen')
+    ASSIST = (49, 'Assist')
+    SFUA = (50, 'SFUA')
+    CHARGE = (51, 'Charge')
+    BINDRESPLUS = (52, 'BindResPlus')
+    TEPLUS = (53, 'TEPlus')
+    CLOUDRES = (54, 'CloudRes')
+    RIBBONRES = (55, 'RibbonRes')
+    SBPLUS = (56, 'SBPlus')
+    HP80BOOST = (57, '80Boost')
+    HP50BOOST = (58, '50Boost')
+    LSHIELD = (59, 'LShield')
+    LUNLOCK = (60, 'LUnlock')
+    TENC = (61, '10c')
 
-    COMBOORB = (62, "ComboOrb")
-    VOICE = (63, "Voice")
-    DUNGEONBOOST = (64, "DungeonBoost")
+    COMBOORB = (62, 'ComboOrb')
+    VOICE = (63, 'Voice')
+    DUNGEONBOOST = (64, 'DungeonBoost')
 
-    MINUSHP = (65, "MinusHP")
-    MINUSATK = (66, "MinusATK")
-    MINUSRCV = (67, "MinusRCV")
+    MINUSHP = (65, 'MinusHP')
+    MINUSATK = (66, 'MinusATK')
+    MINUSRCV = (67, 'MinusRCV')
 
-    BLINDRESPLUS = (68, "BlindResPlus")
-    JAMMERRESPLUS = (69, "JammerResPlus")
-    POISONRESPLUS = (70, "PoisonResPlus")
+    BLINDRESPLUS = (68, 'BlindResPlus')
+    JAMMERRESPLUS = (69, 'JammerResPlus')
+    POISONRESPLUS = (70, 'PoisonResPlus')
 
-    JAMMERBLESSING = (71, "JammerBlessing")
-    POISONBLESSING = (72, "PoisonBlessing")
+    JAMMERBLESSING = (71, 'JammerBlessing')
+    POISONBLESSING = (72, 'PoisonBlessing')
 
-    FIRECOMBO = (73, "FireCombo")
-    WATERCOMBO = (74, "WaterCombo")
-    WOODCOMBO = (75, "WoodCombo")
-    LIGHTCOMBO = (76, "LightCombo")
-    DARKCOMBO = (77, "DarkCombo")
-    CROSSATTACK = (78, "CrossAttack")
+    FIRECOMBO = (73, 'FireCombo')
+    WATERCOMBO = (74, 'WaterCombo')
+    WOODCOMBO = (75, 'WoodCombo')
+    LIGHTCOMBO = (76, 'LightCombo')
+    DARKCOMBO = (77, 'DarkCombo')
+    CROSSATTACK = (78, 'CrossAttack')
 
     def id(self):
         return self.value[0]  # pylint: disable=unsubscriptable-object
@@ -530,20 +535,72 @@ class AwakeningEmoji(Enum):
         return AwakeningEmoji.UNKNOWN
 
     @classmethod
-    def load_emojis(cls, pad_cog, bot, servers):
+    def load_emojis(cls, bot, servers):
         emojis_to_find = [e.emote() for e in AwakeningEmoji]
         for s in servers:
             g = bot.get_guild(s)
             if g:
                 for g_e in g.emojis:
                     if g_e.name in emojis_to_find:
-                        awakening_emojis[AwakeningEmoji.from_str(
-                            g_e.name).id()] = g_e
+                        awakening_emojis[AwakeningEmoji.from_str(g_e.name).id()] = g_e
         if len(awakening_emojis) < len(emojis_to_find):
             LOGGER.error('Not all awakening emojis were loaded.')
-            pad_cog.use_emotes = False
+            return False
         else:
-            pad_cog.use_emotes = True
+            return True
+
+
+latent_emojis = {}
+
+
+class LatentEmoji(Enum):
+    BALANCED = (1, 'BalancedLatent')
+    PHYSICAL = (2, 'PhysicalLatent')
+    HEALER = (3, 'HealerLatent')
+    DRAGON = (4, 'DragonLatent')
+    GOD = (5, 'GodLatent')
+    ATTACKER = (6, 'AttackerLatent')
+    DEVIL = (7, 'DevilLatent')
+    MACHINE = (8, 'MachineLatent')
+
+    def id(self):
+        return self.value[0]  # pylint: disable=unsubscriptable-object
+
+    def emote(self):
+        return self.value[1]  # pylint: disable=unsubscriptable-object
+
+    def to_emoji(self):
+        return latent_emojis[self.id()]
+
+    def __str__(self):
+        return self.emote()
+
+    @classmethod
+    def from_str(cls, s):
+        for ae in cls:
+            if s == ae.emote():
+                return ae
+
+    @classmethod
+    def from_id(cls, i):
+        for ae in cls:
+            if i == ae.id():
+                return ae
+
+    @classmethod
+    def load_emojis(cls, bot, servers):
+        emojis_to_find = [e.emote() for e in LatentEmoji]
+        for s in servers:
+            g = bot.get_guild(s)
+            if g:
+                for g_e in g.emojis:
+                    if g_e.name in emojis_to_find:
+                        latent_emojis[LatentEmoji.from_str(g_e.name).id()] = g_e
+        if len(latent_emojis) < len(emojis_to_find):
+            LOGGER.error('Not all latent emojis were loaded.')
+            return False
+        else:
+            return True
 
 
 def setup(bot):
