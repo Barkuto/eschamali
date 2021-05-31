@@ -46,6 +46,7 @@ class Eschamali(commands.Bot):
 
     def reload_utils(self):
         importlib.reload(utils)
+        utils.reload()
         importlib.reload(vars)
         importlib.reload(db)
         self.utils = utils

@@ -4,14 +4,16 @@ import base64
 import json
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse, parse_qs
 from discord.ext import commands
-
-VARS = importlib.import_module('.vars', 'util')
-DB_MOD = importlib.import_module('.db', 'util')
-DB = DB_MOD.DB
+from util import db, vars
 
 CONFIRM_EMOJI = '✅'
 DENY_EMOJI = '❌'
 ERR_EMOJI = '⚠️'
+
+
+def reload():
+    importlib.reload(db)
+    importlib.reload(vars)
 
 
 async def confirm(ctx):
@@ -36,13 +38,13 @@ def can_cog_in(cog, channel):
 
 def get_server_db(source):
     if isinstance(source, commands.Context):
-        return DB(f'{VARS.DB_DIR}{source.guild.id}')
+        return db.DB(f'{vars.DB_DIR}{source.guild.id}')
     elif isinstance(source, discord.TextChannel):
-        return DB(f'{VARS.DB_DIR}{source.guild.id}')
+        return db.DB(f'{vars.DB_DIR}{source.guild.id}')
     elif isinstance(source, discord.Guild):
-        return DB(f'{VARS.DB_DIR}{source.id}')
+        return db.DB(f'{vars.DB_DIR}{source.id}')
     elif isinstance(source, int):
-        return DB(f'{VARS.DB_DIR}{source}')
+        return db.DB(f'{vars.DB_DIR}{source}')
     return None
 
 
