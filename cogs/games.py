@@ -3,6 +3,7 @@ import os
 import random
 import re
 import base64
+import json
 import requests
 from discord import Embed, User, Colour, Member
 from discord.ext import commands
@@ -19,6 +20,7 @@ DB_MOD = UTILS.DB_MOD
 DB = DB_MOD.DB
 LOGGER = UTILS.VARS.LOGGER
 Stats = STATS_MOD.Stats
+DEFAULT_SET = CARD_IMGS.DEFAULT_SET
 
 ANSWERS = [
     'It is certain',
@@ -90,6 +92,28 @@ BJ_DEFAULT_BET = 100
 BJ_NUM_DECKS = 4
 BJ_SHUFFLED_THRESHOLD = (52 * BJ_NUM_DECKS) // 2
 
+USER_SETS_TABLE = 'user_sets'
+USER_SETS_TABLE_COL1 = ('id', DB_MOD.INTEGER)
+USER_SETS_TABLE_COL2 = ('black', DB_MOD.TEXT)
+USER_SETS_TABLE_COL3 = ('red', DB_MOD.TEXT)
+USER_SETS_TABLE_COL4 = ('suits', DB_MOD.TEXT)
+USER_SETS_TABLE_COL5 = ('back', DB_MOD.TEXT)
+USER_SETS_TABLE_COL6 = ('base', DB_MOD.TEXT)
+USER_SETS_TABLE_COL7 = ('border', DB_MOD.TEXT)
+
+USER_UNLOCKS_TABLE = 'user_unlocks'
+USER_UNLOCKS_TABLE_COL1 = ('id', DB_MOD.INTEGER)
+USER_UNLOCKS_TABLE_COL2 = ('unlocks', DB_MOD.TEXT)
+
+STATS_DB = os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db')
+CARD_DB = os.path.join(os.path.dirname(__file__), 'gamez', 'cards.db')
+
+CUSTOM_SET = 'custom'
+SET_SHOP = {
+    CUSTOM_SET: 50000,
+    CARD_IMGS.JAPAN_SET: 20000,
+}
+
 
 class Games(commands.Cog):
     """Fun commands"""
@@ -99,7 +123,8 @@ class Games(commands.Cog):
         self.bj_deck = DECK.Deck(num_decks=BJ_NUM_DECKS)
         self.bj_states = {}
         self.cr = CREDITS.Credits(bot.user)
-        self.stats = Stats(self.bot, os.path.join(os.path.dirname(__file__), 'gamez', 'stats.db'))
+        self.stats = Stats(self.bot, STATS_DB)
+        self._init_card_db()
 
         self.filehost_url = None
         self.filehost_key = None
@@ -111,6 +136,14 @@ class Games(commands.Cog):
         except Exception as e:
             LOGGER.error('Invalid filehost file')
         self.filehost = self.filehost_key and self.filehost_url
+
+    def _init_card_db(self):
+        db = DB(CARD_DB)
+        if not db.create_table(USER_SETS_TABLE, USER_SETS_TABLE_COL1, USER_SETS_TABLE_COL2, USER_SETS_TABLE_COL3,
+                               USER_SETS_TABLE_COL4, USER_SETS_TABLE_COL5, USER_SETS_TABLE_COL6, USER_SETS_TABLE_COL7):
+            LOGGER.error(f'Could not create {USER_SETS_TABLE} table.')
+        if not db.create_table(USER_UNLOCKS_TABLE, USER_UNLOCKS_TABLE_COL1, USER_UNLOCKS_TABLE_COL2):
+            LOGGER.error(f'Could not create {USER_UNLOCKS_TABLE} table.')
 
     def _upload_image(self, img, itype='PNG'):
         with BytesIO() as img_bytes:
@@ -126,8 +159,78 @@ class Games(commands.Cog):
                 return r.json()['url'].replace('http://', 'https://')
         return None
 
-    def get_user_card_sheet(self, user_id, blank=False):
-        return CARD_IMGS.load_sheet_img(user_id, blank=blank)
+    def _get_user_card_sheet(self, user, blank=False):
+        return CARD_IMGS.load_sheet_img(user.id, blank=blank)
+
+    def _get_user_card_settings(self, user):
+        db = DB(CARD_DB)
+        settings = {
+            'black': DEFAULT_SET,
+            'red': DEFAULT_SET,
+            'suits': DEFAULT_SET,
+            'back': DEFAULT_SET,
+            'base': DEFAULT_SET,
+            'border': DEFAULT_SET
+        }
+        row = db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
+        if row:
+            settings['black'] = row['black']
+            settings['red'] = row['red']
+            settings['suits'] = row['suits']
+            settings['back'] = row['back']
+            settings['base'] = row['base']
+            settings['border'] = row['border']
+        return settings
+
+    def _save_user_card_settings(self, user, settings):
+        db = DB(CARD_DB)
+        row = db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
+        if row:
+            db.update_row(USER_SETS_TABLE,
+                          (USER_SETS_TABLE_COL1[0], user.id),
+                          (USER_SETS_TABLE_COL2[0], settings['black']),
+                          (USER_SETS_TABLE_COL3[0], settings['red']),
+                          (USER_SETS_TABLE_COL4[0], settings['suits']),
+                          (USER_SETS_TABLE_COL5[0], settings['back']),
+                          (USER_SETS_TABLE_COL6[0], settings['base']),
+                          (USER_SETS_TABLE_COL7[0], settings['border']))
+        else:
+            db.insert_row(USER_SETS_TABLE,
+                          (USER_SETS_TABLE_COL1[0], user.id),
+                          (USER_SETS_TABLE_COL2[0], settings['black']),
+                          (USER_SETS_TABLE_COL3[0], settings['red']),
+                          (USER_SETS_TABLE_COL4[0], settings['suits']),
+                          (USER_SETS_TABLE_COL5[0], settings['back']),
+                          (USER_SETS_TABLE_COL6[0], settings['base']),
+                          (USER_SETS_TABLE_COL7[0], settings['border']))
+        sheet, sheet_blank = CARD_IMGS.make_sheet_img(base_name=settings['base'],
+                                                      border_name=settings['border'],
+                                                      suits_name=settings['suits'],
+                                                      black_name=settings['black'],
+                                                      red_name=settings['red'],
+                                                      back_name=settings['back'])
+        sheet.save(os.path.join(CARD_IMGS.CUSTOM_PATH, f'{user.id}.png'), format='PNG')
+        sheet_blank.save(os.path.join(CARD_IMGS.CUSTOM_PATH, f'{user.id}_blank.png'), format='PNG')
+
+    def _get_user_unlocks(self, user):
+        db = DB(CARD_DB)
+        row = db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
+        if row:
+            return json.loads(base64.b64decode(row['unlocks']))
+        return []
+
+    def _set_user_unlocks(self, user, unlocks):
+        db = DB(CARD_DB)
+        row = db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
+        data = str(base64.b64encode(json.dumps(unlocks).encode()))[2:-1]
+        if row:
+            db.update_row(USER_UNLOCKS_TABLE,
+                          (USER_UNLOCKS_TABLE_COL1[0], user.id),
+                          (USER_UNLOCKS_TABLE_COL2[0], data))
+        else:
+            db.insert_row(USER_UNLOCKS_TABLE,
+                          (USER_UNLOCKS_TABLE_COL1[0], user.id),
+                          (USER_UNLOCKS_TABLE_COL2[0], data))
 
     """
     Blackjack Methods
@@ -206,7 +309,8 @@ class Games(commands.Cog):
             if net >= 0:
                 net = f'+{net}'
             e.description = f'Bets: {"/".join([str(b) for b in bets])}'
-            e.set_footer(text=f'Results:\n{value}\n\nCredits: {user_creds}({net})')
+            e.set_footer(text=f'Results:\n{value}\n\nCredits: {user_creds}({net})',
+                         icon_url=UTILS.make_data_url(user))
 
         return e
 
@@ -224,50 +328,71 @@ class Games(commands.Cog):
         msg = reaction.message
         embed = msg.embeds[0]
         ctx = await self.bot.get_context(msg)
-        embed_user_id = embed.thumbnail.url.split('/')[4]
-        if not embed_user_id == str(user.id):
-            return
-        if not embed or not embed.title or not embed.title == 'Blackjack':
-            return
         if not self.bot.user in [u async for u in reaction.users()]:
             return
-        if reaction.emoji in [HIT, HOLD, DOUBLE, SPLIT]:
-            bj_game, sheet_img = self.bj_states[user.id]
-            bj_state_final = None
-            lock = bj_game.lock
-            if not lock.acquire(blocking=False):
-                return
-            try:
-                action = reaction.emoji
-                error = None
-                try:
-                    await self._check_bj_deck(ctx)
-                    if action == HIT:
-                        bj_game.hit()
-                    elif action == DOUBLE:
-                        bj_game.double()
-                    elif action == HOLD:
-                        bj_game.hold()
-                    elif action == SPLIT:
-                        bj_game.split()
-                except BJ_MOD.BlackjackException as e:
-                    error = e
+        if not embed:
+            return
 
-                if bj_game.get_curr_state() == BJ_MOD.PLAYER_DONE:
-                    bj_state_final = await self._finalize_bj(user, msg, embed)
-                else:
-                    await msg.remove_reaction(reaction, user)
-                e = self._embed_from_bj(user, bj_game, sheet_img)
-                if error:
-                    e.add_field(name='Error', value=error, inline=False)
-                await msg.edit(embed=e)
-            finally:
-                lock.release()
-            if bj_state_final:
-                await self.stats.save_bj_stats(bj_state_final, user.id)
-        elif reaction.emoji == AGAIN:
-            ctx.author = user
-            await self.blackjack(ctx)
+        data = UTILS.get_embed_data(embed)
+        if not data:
+            return
+
+        if not data['user_id'] == user.id:
+            return
+
+        if embed.title and embed.title == 'Blackjack':
+            if reaction.emoji in [HIT, HOLD, DOUBLE, SPLIT]:
+                bj_game, sheet_img = self.bj_states[user.id]
+                bj_state_final = None
+                lock = bj_game.lock
+                if not lock.acquire(blocking=False):
+                    return
+                try:
+                    action = reaction.emoji
+                    error = None
+                    try:
+                        await self._check_bj_deck(ctx)
+                        if action == HIT:
+                            bj_game.hit()
+                        elif action == DOUBLE:
+                            bj_game.double()
+                        elif action == HOLD:
+                            bj_game.hold()
+                        elif action == SPLIT:
+                            bj_game.split()
+                    except BJ_MOD.BlackjackException as e:
+                        error = e
+
+                    if bj_game.get_curr_state() == BJ_MOD.PLAYER_DONE:
+                        bj_state_final = await self._finalize_bj(user, msg, embed)
+                    else:
+                        await msg.remove_reaction(reaction, user)
+                    e = self._embed_from_bj(user, bj_game, sheet_img)
+                    if error:
+                        e.add_field(name='Error', value=error, inline=False)
+                    await msg.edit(embed=e)
+                finally:
+                    lock.release()
+                if bj_state_final:
+                    await self.stats.save_bj_stats(bj_state_final, user.id)
+            elif reaction.emoji == AGAIN:
+                ctx.author = user
+                await self.blackjack(ctx)
+        elif 'buy' in data and reaction.emoji == UTILS.CONFIRM_EMOJI:
+            choice = data['buy']
+            price = data['price']
+            user_unlocks = self._get_user_unlocks(user)
+            user_creds = self.cr.get_user_creds(user)
+            if user_creds >= price and not choice in user_unlocks:
+                if choice != CUSTOM_SET:
+                    user_unlocks += [choice]
+                self.cr.transfer_from_to(user, self.bot.user, price)
+                self._set_user_unlocks(user, user_unlocks)
+                await msg.add_reaction('👍')
+        elif 'settings' in data and reaction.emoji == UTILS.CONFIRM_EMOJI:
+            settings = data['settings']
+            self._save_user_card_settings(user, settings)
+            await msg.add_reaction('👍')
 
     @commands.command(aliases=['creds', 'cred', 'cr', 'balance', 'bal'],
                       description='Play Blackjack with Eschamali',
@@ -298,6 +423,8 @@ class Games(commands.Cog):
                       help='Must mention user to send credits.',
                       brief='Send Credits')
     async def send(self, ctx, user: User, amount: int):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
         if amount < 0:
             return await ctx.send('You cannot send negative credits.')
         author_creds = self.cr.get_user_creds(ctx.author)
@@ -331,7 +458,7 @@ class Games(commands.Cog):
         try:
             await self._check_bj_deck(ctx)
             bj_game = BJ_MOD.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
-            sheet_img = self.get_user_card_sheet(user.id, blank=True)
+            sheet_img = self._get_user_card_sheet(user, blank=True)
             self.bj_states[user.id] = (bj_game, sheet_img)
         except BJ_MOD.BlackjackException as e:
             return await ctx.send(e)
@@ -433,6 +560,115 @@ class Games(commands.Cog):
             e.title = 'Blackjack Personal Stats'
             e.description = win_loss
             await ctx.send(embed=e)
+
+    """
+    Card Customization Methods
+    """
+
+    @commands.command(description='Card Set Shop',
+                      help='Just use it.',
+                      brief='Set Shop')
+    async def shop(self, ctx):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        user_unlocks = self._get_user_unlocks(ctx.author)
+        e = Embed()
+        e.title = 'Card Set Shop'
+        e.description = '```'
+        for name, price in SET_SHOP.items():
+            price_text = f'{price}'
+            if name in user_unlocks:
+                price_text = 'BOUGHT'
+            e.description += '{:10} : {:>6}\n'.format(name.capitalize(), price_text)
+        e.description += '```'
+
+        await ctx.send(embed=e)
+
+    @commands.command(description='Buy Card Set from the shop',
+                      help='Use the shop command to see what is buyable',
+                      brief='Buy Sets')
+    async def buy(self, ctx, choice):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        choice = choice.lower()
+        user_unlocks = self._get_user_unlocks(ctx.author)
+        if choice in user_unlocks:
+            return await ctx.send('You have already bought that set!')
+        if choice in SET_SHOP:
+            set_price = SET_SHOP[choice]
+            data = {
+                'buy': choice,
+                'price': set_price
+            }
+
+            e = Embed()
+            e.description = f'`{choice.capitalize()}` Card Set'
+            e.set_footer(icon_url=UTILS.make_data_url(ctx.author, data), text=f'Buy for {set_price} credits?')
+            m = await ctx.send(embed=e)
+            return await m.add_reaction(UTILS.CONFIRM_EMOJI)
+        return await ctx.send('Invalid Set.')
+
+    @commands.command(aliases=['prv'],
+                      description='Preview Card Sets',
+                      help='No argument previews current cards image\nArgument previews a set',
+                      brief='Preview Sets')
+    async def preview(self, ctx, card_set=''):
+        if not UTILS.can_cog_in(self, ctx.channel):
+            return
+        card_set = card_set.lower()
+        sheet = None
+        sheet_blank = None
+        if card_set == CUSTOM_SET:
+            return await ctx.send('Ask a bot owner to make a custom card set.')
+        elif card_set and card_set in SET_SHOP:
+            sheet, sheet_blank = CARD_IMGS.make_set_sheet_img(card_set)
+        else:
+            sheet = self._get_user_card_sheet(ctx.author)
+            sheet_blank = self._get_user_card_sheet(ctx.author, blank=True)
+
+        if sheet and sheet_blank:
+            sheet_url = self._upload_image(sheet)
+            sheet_blank_url = self._upload_image(sheet_blank)
+            if sheet_url and sheet_blank_url:
+                await ctx.send(sheet_url)
+                return await ctx.send(sheet_blank_url)
+
+    @commands.command(aliases=['set'],
+                      description='Set different parts of your cards to other set parts.',
+                      help='Valid Parts: base, border, suits, black, red, back',
+                      brief='Set Card Parts')
+    async def set_part(self, ctx, card_part, set_name):
+        card_part = card_part.lower()
+        set_name = set_name.lower()
+        if set_name in CARD_IMGS.SETS:
+            user_unlocks = self._get_user_unlocks(ctx.author)
+            if not set_name in user_unlocks:
+                return await ctx.send('You have not bought that set!')
+
+            settings = self._get_user_card_settings(ctx.author)
+            if card_part == 'all':
+                for k, _ in settings.items():
+                    settings[k] = set_name
+            elif card_part in settings:
+                settings[card_part] = set_name
+            else:
+                return await ctx.send('Invalid card part.')
+
+            sheet, sheet_blank = CARD_IMGS.make_sheet_img(settings['base'], settings['border'], settings['suits'],
+                                                          settings['black'], settings['red'], settings['back'])
+            sheet_url = self._upload_image(sheet)
+            sheet_blank_url = self._upload_image(sheet_blank)
+            data = {'settings': settings}
+
+            e = Embed()
+            e.set_image(url=sheet_url)
+            e.set_thumbnail(url=sheet_blank_url)
+            e.set_footer(icon_url=UTILS.make_data_url(ctx.author, data),
+                         text=f'Change Card "{card_part}"?')
+
+            m = await ctx.send(embed=e)
+            return await m.add_reaction(UTILS.CONFIRM_EMOJI)
+        return await ctx.send('Invalid card set.')
 
     """
     Other Game Methods

@@ -12,7 +12,8 @@ FONTS_PATH = os.path.join(os.path.dirname(__file__), 'fonts')
 CUSTOM_PATH = os.path.join(SETS_PATH, 'custom')
 
 DEFAULT_SET = 'default'
-SETS = [DEFAULT_SET]
+JAPAN_SET = 'japan'
+SETS = [DEFAULT_SET, JAPAN_SET]
 
 
 def load_sheet_img(sheet_name, blank=False):
@@ -24,7 +25,7 @@ def load_sheet_img(sheet_name, blank=False):
         return Image.open(fp=os.path.join(SETS_PATH, DEFAULT_SET, f'sheet{"_blank" if blank else ""}.png'))
 
 
-def make_sheet_img(set_name=DEFAULT_SET):
+def make_set_sheet_img(set_name=DEFAULT_SET):
     return make_sheet_img(set_name, set_name, set_name, set_name, set_name, set_name)
 
 
