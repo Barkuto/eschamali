@@ -7,3 +7,7 @@ servers
 config.json
 todo
 genshin_cookies
+filehost
+*.psd
+*.ttf
+footer.png
