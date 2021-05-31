@@ -138,11 +138,11 @@ class Games(commands.Cog):
         self.filehost = self.filehost_key and self.filehost_url
 
     def _init_card_db(self):
-        db = DB(CARD_DB)
-        if not db.create_table(USER_SETS_TABLE, USER_SETS_TABLE_COL1, USER_SETS_TABLE_COL2, USER_SETS_TABLE_COL3,
-                               USER_SETS_TABLE_COL4, USER_SETS_TABLE_COL5, USER_SETS_TABLE_COL6, USER_SETS_TABLE_COL7):
+        self.card_db = DB(CARD_DB)
+        if not self.card_db.create_table(USER_SETS_TABLE, USER_SETS_TABLE_COL1, USER_SETS_TABLE_COL2, USER_SETS_TABLE_COL3,
+                                         USER_SETS_TABLE_COL4, USER_SETS_TABLE_COL5, USER_SETS_TABLE_COL6, USER_SETS_TABLE_COL7):
             LOGGER.error(f'Could not create {USER_SETS_TABLE} table.')
-        if not db.create_table(USER_UNLOCKS_TABLE, USER_UNLOCKS_TABLE_COL1, USER_UNLOCKS_TABLE_COL2):
+        if not self.card_db.create_table(USER_UNLOCKS_TABLE, USER_UNLOCKS_TABLE_COL1, USER_UNLOCKS_TABLE_COL2):
             LOGGER.error(f'Could not create {USER_UNLOCKS_TABLE} table.')
 
     def _upload_image(self, img, itype='PNG'):
@@ -163,7 +163,6 @@ class Games(commands.Cog):
         return CARD_IMGS.load_sheet_img(user.id, blank=blank)
 
     def _get_user_card_settings(self, user):
-        db = DB(CARD_DB)
         settings = {
             'black': DEFAULT_SET,
             'red': DEFAULT_SET,
@@ -172,7 +171,7 @@ class Games(commands.Cog):
             'base': DEFAULT_SET,
             'border': DEFAULT_SET
         }
-        row = db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
         if row:
             settings['black'] = row['black']
             settings['red'] = row['red']
@@ -183,26 +182,25 @@ class Games(commands.Cog):
         return settings
 
     def _save_user_card_settings(self, user, settings):
-        db = DB(CARD_DB)
-        row = db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(USER_SETS_TABLE, (USER_SETS_TABLE_COL1[0], user.id), factory=True)
         if row:
-            db.update_row(USER_SETS_TABLE,
-                          (USER_SETS_TABLE_COL1[0], user.id),
-                          (USER_SETS_TABLE_COL2[0], settings['black']),
-                          (USER_SETS_TABLE_COL3[0], settings['red']),
-                          (USER_SETS_TABLE_COL4[0], settings['suits']),
-                          (USER_SETS_TABLE_COL5[0], settings['back']),
-                          (USER_SETS_TABLE_COL6[0], settings['base']),
-                          (USER_SETS_TABLE_COL7[0], settings['border']))
+            self.card_db.update_row(USER_SETS_TABLE,
+                                    (USER_SETS_TABLE_COL1[0], user.id),
+                                    (USER_SETS_TABLE_COL2[0], settings['black']),
+                                    (USER_SETS_TABLE_COL3[0], settings['red']),
+                                    (USER_SETS_TABLE_COL4[0], settings['suits']),
+                                    (USER_SETS_TABLE_COL5[0], settings['back']),
+                                    (USER_SETS_TABLE_COL6[0], settings['base']),
+                                    (USER_SETS_TABLE_COL7[0], settings['border']))
         else:
-            db.insert_row(USER_SETS_TABLE,
-                          (USER_SETS_TABLE_COL1[0], user.id),
-                          (USER_SETS_TABLE_COL2[0], settings['black']),
-                          (USER_SETS_TABLE_COL3[0], settings['red']),
-                          (USER_SETS_TABLE_COL4[0], settings['suits']),
-                          (USER_SETS_TABLE_COL5[0], settings['back']),
-                          (USER_SETS_TABLE_COL6[0], settings['base']),
-                          (USER_SETS_TABLE_COL7[0], settings['border']))
+            self.card_db.insert_row(USER_SETS_TABLE,
+                                    (USER_SETS_TABLE_COL1[0], user.id),
+                                    (USER_SETS_TABLE_COL2[0], settings['black']),
+                                    (USER_SETS_TABLE_COL3[0], settings['red']),
+                                    (USER_SETS_TABLE_COL4[0], settings['suits']),
+                                    (USER_SETS_TABLE_COL5[0], settings['back']),
+                                    (USER_SETS_TABLE_COL6[0], settings['base']),
+                                    (USER_SETS_TABLE_COL7[0], settings['border']))
         sheet, sheet_blank = CARD_IMGS.make_sheet_img(base_name=settings['base'],
                                                       border_name=settings['border'],
                                                       suits_name=settings['suits'],
@@ -213,24 +211,22 @@ class Games(commands.Cog):
         sheet_blank.save(os.path.join(CARD_IMGS.CUSTOM_PATH, f'{user.id}_blank.png'), format='PNG')
 
     def _get_user_unlocks(self, user):
-        db = DB(CARD_DB)
-        row = db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
         if row:
             return json.loads(base64.b64decode(row['unlocks']))
         return []
 
     def _set_user_unlocks(self, user, unlocks):
-        db = DB(CARD_DB)
-        row = db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
+        row = self.card_db.get_row(USER_UNLOCKS_TABLE, (USER_UNLOCKS_TABLE_COL1[0], user.id), factory=True)
         data = str(base64.b64encode(json.dumps(unlocks).encode()))[2:-1]
         if row:
-            db.update_row(USER_UNLOCKS_TABLE,
-                          (USER_UNLOCKS_TABLE_COL1[0], user.id),
-                          (USER_UNLOCKS_TABLE_COL2[0], data))
+            self.card_db.update_row(USER_UNLOCKS_TABLE,
+                                    (USER_UNLOCKS_TABLE_COL1[0], user.id),
+                                    (USER_UNLOCKS_TABLE_COL2[0], data))
         else:
-            db.insert_row(USER_UNLOCKS_TABLE,
-                          (USER_UNLOCKS_TABLE_COL1[0], user.id),
-                          (USER_UNLOCKS_TABLE_COL2[0], data))
+            self.card_db.insert_row(USER_UNLOCKS_TABLE,
+                                    (USER_UNLOCKS_TABLE_COL1[0], user.id),
+                                    (USER_UNLOCKS_TABLE_COL2[0], data))
 
     """
     Blackjack Methods
