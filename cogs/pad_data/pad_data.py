@@ -257,7 +257,7 @@ def get_monsters(query, region):
                             found += 1
                 if found == len(split):
                     exact_names.append(m)
-            mons_to_use = exact_names or mons_to_use or results
+            mons_to_use = mons_to_use or exact_names or results
             if mons_to_use and keyword:
                 kw_matches = []
                 if keyword in EQUIP_KEYWORDS:
