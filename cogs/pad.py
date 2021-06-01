@@ -42,7 +42,7 @@ class PAD(commands.Cog):
         self.update_db.cancel()
 
     def _update_max_mons(self):
-        jp_db = self.bot.utils.DB(pad_data.CARDS_DB % pad_data.JP)
+        jp_db = self.bot.db.DB(pad_data.CARDS_DB % pad_data.JP)
         if jp_db.table_exists('monsters'):
             try:
                 self.max_mons = jp_db.execute_one('SELECT MAX(id) AS max_id FROM monsters')
