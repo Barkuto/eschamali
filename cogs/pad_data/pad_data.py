@@ -24,6 +24,11 @@ DADGUIDEDB = os.path.join(os.path.dirname(__file__), 'dadguide.sqlite')
 NA = 'na'
 JP = 'jp'
 
+EQUIP_KEYWORDS = ['equip', 'e']
+BASE_KEYWORDS = ['base']
+MAX_KEYWORDS = ['max', 'high', 'highest']
+KEYWORDS = EQUIP_KEYWORDS + BASE_KEYWORDS + MAX_KEYWORDS
+
 
 def reload():
     global Monster, Leader, Active, Attribute, Type, Awakening
@@ -225,8 +230,10 @@ def get_monsters(query, region):
             m = _get_monster(int(query), region)
             return [m] if m else []
         else:
+            mons_to_use = []
             db = DB(CARDS_DB % region)
             query, atts = parse_attribute(query.lower())
+            query, keyword = parse_keyword(query)
             split = query.split(' ')
             match_cols = ()
             for i in range(0, len(atts)):
@@ -239,7 +246,10 @@ def get_monsters(query, region):
                                         factory=True)]
             exact_names = []
             for m in results:
-                name_split = m.name.lower().replace(',', '').replace('\'', '').split(' ')
+                if m.name.lower() == query:
+                    mons_to_use = [_get_monster(m_id, region) for m_id in m.evolutions]
+                    break
+                name_split = m.name.lower().replace(',', '').replace('\'s', '').replace('\'', '').split(' ')
                 found = 0
                 for s in split:
                     for n in name_split:
@@ -247,7 +257,26 @@ def get_monsters(query, region):
                             found += 1
                 if found == len(split):
                     exact_names.append(m)
-            return exact_names if exact_names else results
+            mons_to_use = exact_names or mons_to_use or results
+            if mons_to_use and keyword:
+                kw_matches = []
+                if keyword in EQUIP_KEYWORDS:
+                    for m in mons_to_use:
+                        if Awakening.ASSIST.id() in m.awakenings:
+                            kw_matches += [m]
+                elif keyword in BASE_KEYWORDS:
+                    test_mons = mons_to_use[0]
+                    if test_mons.evolutions and test_mons.evolutions[0] < test_mons.id:
+                        return [_get_monster(test_mons.evolutions[0], region)]
+                    return [mons_to_use[0]]
+                elif keyword in MAX_KEYWORDS:
+                    test_mons = mons_to_use[len(mons_to_use)-1]
+                    if test_mons.evolutions and test_mons.evolutions[len(test_mons.evolutions)-1] > test_mons.id:
+                        return [_get_monster(test_mons.evolutions[len(test_mons.evolutions)-1], region)]
+                    return [mons_to_use[len(mons_to_use)-1]]
+                return kw_matches
+            else:
+                return mons_to_use
     return []
 
 
@@ -267,7 +296,8 @@ def parse_attribute(query):
     for s in query.split(' '):
         if 0 < len(s) <= 2:
             for c in s:
-                atts += (Attribute.from_str(c),)
+                if not c in KEYWORDS:
+                    atts += (Attribute.from_str(c),)
             if len(atts) > 0:
                 break
     return (remove_atts(atts, query), atts)
@@ -281,6 +311,21 @@ def remove_atts(atts, query):
     for s in query.split(' '):
         if att != s:
             new_query.append(s)
+    return ' '.join(new_query)
+
+
+def parse_keyword(query):
+    for s in query.split(' '):
+        if s in KEYWORDS:
+            return (remove_keyword(s, query), s)
+    return (query, '')
+
+
+def remove_keyword(keyword, query):
+    new_query = []
+    for s in query.split(' '):
+        if s != keyword:
+            new_query += [s]
     return ' '.join(new_query)
 
 
