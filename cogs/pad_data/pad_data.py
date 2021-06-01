@@ -214,9 +214,9 @@ def get_monster(query, region):
     for m in monsters:
         to_check = m.weighted()
         if to_check < 0:
-            new_hp = abs(m.hp_max())
-            new_atk = abs(m.atk_max())
-            new_rcv = abs(m.rcv_max())
+            new_hp = abs(m.hp_max)
+            new_atk = abs(m.atk_max)
+            new_rcv = abs(m.rcv_max)
             to_check = (new_hp / 10.0) + (new_atk / 5.0) + (new_rcv / 3.0)
         if to_check > best_weight:
             highest_weight_mons = m

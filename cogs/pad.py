@@ -329,19 +329,19 @@ class PAD(commands.Cog):
 
         stats = '```'
         stats += '{:3} {:>5}'.format('Lv', m.max_level)
-        stats += '|{:5}|{:5}\n'.format(110, 120) if m.lb_mult else '\n'
+        stats += '|{:6}|{:6}\n'.format(110, 120) if m.lb_mult else '\n'
 
         stats += '{:3} {:5}'.format('HP', m.hp_max)
-        stats += '|{:5}|{:5}\n'.format(m.lb_hp(), m.super_lb_hp()) if m.lb_mult else '\n'
+        stats += '|{:6}|{:6}\n'.format(m.lb_hp(), m.super_lb_hp()) if m.lb_mult else '\n'
 
         stats += '{:3} {:5}'.format('ATK', m.atk_max)
-        stats += '|{:5}|{:5}\n'.format(m.lb_atk(), m.super_lb_atk()) if m.lb_mult else '\n'
+        stats += '|{:6}|{:6}\n'.format(m.lb_atk(), m.super_lb_atk()) if m.lb_mult else '\n'
 
         stats += '{:3} {:5}'.format('RCV', m.rcv_max)
-        stats += '|{:5}|{:5}\n'.format(m.lb_rcv(), m.super_lb_rcv()) if m.lb_mult else '\n'
+        stats += '|{:6}|{:6}\n'.format(m.lb_rcv(), m.super_lb_rcv()) if m.lb_mult else '\n'
 
         stats += '{:3} {:5}'.format('WHT', m.weighted())
-        stats += '|{:5}|{:5}\n'.format(m.lb_weighted(), m.super_lb_weighted()) if m.lb_mult else '\n'
+        stats += '|{:6}|{:6}\n'.format(m.lb_weighted(), m.super_lb_weighted()) if m.lb_mult else '\n'
 
         stats += '{:3} {:5,}'.format('XP', m.exp)
         stats += '```'
