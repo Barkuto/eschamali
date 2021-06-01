@@ -262,8 +262,10 @@ def get_monsters(query, region):
                 kw_matches = []
                 if keyword in EQUIP_KEYWORDS:
                     for m in mons_to_use:
-                        if Awakening.ASSIST.id() in m.awakenings:
-                            kw_matches += [m]
+                        to_check = [m] + [_get_monster(m_id, region) for m_id in m.evolutions]
+                        for evo_mons in to_check:
+                            if Awakening.ASSIST.id() in evo_mons.awakenings:
+                                kw_matches += [evo_mons]
                 elif keyword in BASE_KEYWORDS:
                     test_mons = mons_to_use[0]
                     if test_mons.evolutions and test_mons.evolutions[0] < test_mons.id:
