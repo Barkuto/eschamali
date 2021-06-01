@@ -316,7 +316,16 @@ class General(commands.Cog):
                 else:
                     await ctx.send(f'```py\n{self.bot.tbs[i]}```')
         else:
-            await ctx.send(f'No tracebacks.')
+            await ctx.send('No tracebacks.')
+
+    @commands.command(aliases=['ctb'],
+                      description='Clears all tracebacks',
+                      help='Owners only\n',
+                      brief='Clear Tracebacks')
+    @commands.is_owner()
+    async def clear_tracebacks(self, ctx):
+        self.bot.tbs = []
+        return await ctx.send('Tracebacks Cleared.')
 
     """
     COG COMMANDS
