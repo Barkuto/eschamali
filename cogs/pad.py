@@ -343,7 +343,7 @@ class PAD(commands.Cog):
         stats += '{:3} {:5}'.format('WHT', m.weighted())
         stats += '|{:5}|{:5}\n'.format(m.lb_weighted(), m.super_lb_weighted()) if m.lb_mult else '\n'
 
-        stats += '{:3} {:5}'.format('XP', m.exp)
+        stats += '{:3} {:5,}'.format('XP', m.exp)
         stats += '```'
 
         similar = [mons.id for mons in pad_data.get_monsters(query, region)]
