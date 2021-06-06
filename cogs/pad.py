@@ -314,7 +314,7 @@ class PAD(commands.Cog):
         else:
             valid_killers = [l.name() for l in m.get_valid_killer_latents()]
         if valid_killers:
-            desc += f'\n({latent_slots} slots):' + ('' if self.use_emotes else ' ')
+            desc += f'\n[{latent_slots} slots] ' + ('' if self.use_emotes else ' ')
             if len(valid_killers) == 8:
                 desc += 'Any'
             else:
