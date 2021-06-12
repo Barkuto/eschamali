@@ -335,7 +335,15 @@ class Games(commands.Cog):
 
         if embed.title and embed.title == 'Blackjack':
             if reaction.emoji in [self.HIT, self.HOLD, self.DOUBLE, self.SPLIT]:
-                bj_game, sheet_img = self.bj_states[user.id]
+                try:
+                    bj_game, sheet_img = self.bj_states[user.id]
+                except KeyError:
+                    e = Embed()
+                    e.title = 'Blackjack'
+                    e.description = 'This Blackjack game has already been completed.'
+                    e.set_thumbnail(url=user.avatar_url)
+                    await msg.clear_reactions()
+                    return await msg.edit(embed=e)
                 bj_state_final = None
                 lock = bj_game.lock
                 if not lock.acquire(blocking=False):
@@ -447,14 +455,16 @@ class Games(commands.Cog):
             return
         user = ctx.author
         if user.id in self.bj_states.keys():
-            return await ctx.send('You already have a Blackjack game running.')
-        try:
-            await self._check_bj_deck(ctx)
-            bj_game = bj.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
-            sheet_img = self._get_user_card_sheet(user, blank=True)
-            self.bj_states[user.id] = (bj_game, sheet_img)
-        except bj.BlackjackException as e:
-            return await ctx.send(e)
+            bj_game, sheet_img = self.bj_states[user.id]
+            await ctx.send('Recovered running Blackjack game.')
+        else:
+            try:
+                await self._check_bj_deck(ctx)
+                bj_game = bj.Blackjack(self.cr, self.bj_deck, bet, self.bot.user, user)
+                sheet_img = self._get_user_card_sheet(user, blank=True)
+                self.bj_states[user.id] = (bj_game, sheet_img)
+            except bj.BlackjackException as e:
+                return await ctx.send(e)
 
         msg = await ctx.send(embed=self._embed_from_bj(user, bj_game, sheet_img))
         if bj_game.get_curr_state() == bj.ONGOING:
