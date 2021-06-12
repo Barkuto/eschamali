@@ -247,7 +247,7 @@ def get_monsters(query, region):
             exact_names = []
             for m in results:
                 if m.name.lower() == query:
-                    mons_to_use = [_get_monster(m_id, region) for m_id in m.evolutions]
+                    mons_to_use = [m] + [mons for mons in [_get_monster(m_id, region) for m_id in m.evolutions] if query in mons.name.lower()]
                     break
                 name_split = m.name.lower().replace(',', '').replace('\'s', '').replace('\'', '').split(' ')
                 found = 0
