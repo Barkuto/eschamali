@@ -320,31 +320,19 @@ class PAD(commands.Cog):
             else:
                 desc += ('' if self.use_emotes else ' ').join(map(str, valid_killers))
 
-        m_info = '```'
-        m_info += '{:11} {}\n'.format('Rarity', m.rarity)
-        m_info += '{:11} {}\n'.format('Cost', m.cost)
-        m_info += '{:11} {}\n'.format('MP', m.mp)
-        m_info += '{:11} {}'.format('Inheritable', 'Yes' if m.inheritable else 'No')
-        m_info += '```'
-
-        stats = '```'
-        stats += '{:3} {:>5}'.format('Lv', m.max_level)
-        stats += '|{:6}|{:6}\n'.format(110, 120) if m.lb_mult else '\n'
-
-        stats += '{:3} {:5}'.format('HP', m.hp_max)
-        stats += '|{:6}|{:6}\n'.format(m.lb_hp(), m.super_lb_hp()) if m.lb_mult else '\n'
-
-        stats += '{:3} {:5}'.format('ATK', m.atk_max)
-        stats += '|{:6}|{:6}\n'.format(m.lb_atk(), m.super_lb_atk()) if m.lb_mult else '\n'
-
-        stats += '{:3} {:5}'.format('RCV', m.rcv_max)
-        stats += '|{:6}|{:6}\n'.format(m.lb_rcv(), m.super_lb_rcv()) if m.lb_mult else '\n'
-
-        stats += '{:3} {:5}'.format('WHT', m.weighted())
-        stats += '|{:6}|{:6}\n'.format(m.lb_weighted(), m.super_lb_weighted()) if m.lb_mult else '\n'
-
-        stats += '{:3} {:5,}'.format('XP', m.exp)
-        stats += '```'
+        info = ("```" +
+                "{:11} {:<7}  {:3} {:>5}{}\n" +
+                "{:11} {:<7}  {:3} {:>5}{}\n" +
+                "{:11} {:<7}  {:3} {:>5}{}\n" +
+                "{:11} {:<7}  {:3} {:>5}{}\n" +
+                "{:13}        {:3} {:5,}" +
+                "```").format(
+            'Rarity', m.rarity, 'Lv', m.max_level, '|{:6}|{:6}'.format(110, 120) if m.lb_mult else '',
+            'Cost', m.cost, 'HP', m.hp_max, '|{:6}|{:6}'.format(m.lb_hp(), m.super_lb_hp()) if m.lb_mult else '',
+            'MP', m.mp, 'ATK', m.atk_max, '|{:6}|{:6}'.format(m.lb_atk(), m.super_lb_atk()) if m.lb_mult else '',
+            'Inheritable', 'Yes' if m.inheritable else 'No', 'RCV', m.rcv_max, '|{:6}|{:6}'.format(m.lb_rcv(), m.super_lb_rcv()) if m.lb_mult else '',
+            '', 'XP', m.exp
+        )
 
         similar = [mons.id for mons in pad_data.get_monsters(query, region)]
         similar = [n for n in filter(lambda n: not n in evolutions, similar)]
@@ -357,8 +345,7 @@ class PAD(commands.Cog):
         e.colour = embed_colour
 
         e.set_thumbnail(url=pad_data.get_portrait_url(str(m.id), region))
-        e.add_field(name='Info', value=m_info, inline=True)
-        e.add_field(name='Stats', value=stats, inline=True)
+        e.add_field(name='```Info{:21}Stats{:29}```'.format('', ''), value=info, inline=True)
         if active:
             e.add_field(name='Active: ' + active.name + f' ({active.turn_max}->{ active.turn_min})',
                         value=active.desc,
