@@ -345,7 +345,7 @@ class PAD(commands.Cog):
         e.colour = embed_colour
 
         e.set_thumbnail(url=pad_data.get_portrait_url(str(m.id), region))
-        e.add_field(name='```Info{:21}Stats{:29}```'.format('', ''), value=info, inline=True)
+        e.add_field(name='```Info{:21}Stats{:29}```'.format('', ''), value=info, inline=False)
         if active:
             e.add_field(name='Active: ' + active.name + f' ({active.turn_max}->{ active.turn_min})',
                         value=active.desc,
