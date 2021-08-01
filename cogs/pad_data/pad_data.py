@@ -18,7 +18,7 @@ Awakening = pad_types.Awakening
 CARDS_DB = os.path.join(os.path.dirname(__file__), 'cards_%s.db')
 CARDS_TMP_DB = os.path.join(os.path.dirname(__file__), '_cards_%s.db')
 
-DADGUIDEURL = 'https://d1kpnpud0qoyxf.cloudfront.net/db/dadguide.sqlite'
+DADGUIDEURL = 'https://d30r6ivozz8w2a.cloudfront.net/db/dadguide.sqlite'
 DADGUIDEDB = os.path.join(os.path.dirname(__file__), 'dadguide.sqlite')
 
 NA = 'na'
@@ -48,6 +48,7 @@ DB UPDATING/PROCESSING
 
 
 def _process_db():
+    print(DADGUIDEURL)
     req = requests.get(DADGUIDEURL)
     with open(DADGUIDEDB, 'wb') as f:
         f.write(req.content)
