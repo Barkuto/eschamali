@@ -335,10 +335,10 @@ def remove_keyword(keyword, query):
 """
 PICTURES
 """
-full_pic_url = 'https://d1kpnpud0qoyxf.cloudfront.net/media/portraits/%05d.png'
-portrait_pic_url = 'https://d1kpnpud0qoyxf.cloudfront.net/media/icons/%05d.png'
-animated_mp4_url = 'https://d1kpnpud0qoyxf.cloudfront.net/media/animated_portraits/%05d.mp4'
-animated_gif_url = 'https://d1kpnpud0qoyxf.cloudfront.net/media/animated_portraits/%05d.gif'
+full_pic_url = 'https://d30r6ivozz8w2a.cloudfront.net/media/portraits/%05d.png'
+portrait_pic_url = 'https://d30r6ivozz8w2a.cloudfront.net/media/icons/%05d.png'
+animated_mp4_url = 'https://d30r6ivozz8w2a.cloudfront.net/media/animated_portraits/%05d.mp4'
+animated_gif_url = 'https://d30r6ivozz8w2a.cloudfront.net/media/animated_portraits/%05d.gif'
 
 
 def _get_pic_url_search(query, region, pic_type):
