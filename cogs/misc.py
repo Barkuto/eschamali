@@ -103,8 +103,8 @@ class Misc(commands.Cog):
     async def inhouse(self, ctx, *players):
         if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
-        maps = ['Haven', 'Bind', 'Split', 'Ascent', 'Icebox', 'Breeze']
-        colors = [Colour.orange(), Colour.from_rgb(165, 42, 42), Colour.blue(), Colour.from_rgb(255, 255, 0), Colour.teal()]
+        maps = ['Haven', 'Bind', 'Split', 'Ascent', 'Icebox', 'Breeze', 'Fracture']
+        colors = [Colour.orange(), Colour.from_rgb(165, 42, 42), Colour.blue(), Colour.from_rgb(255, 255, 0), Colour.teal(), Colour.dark_grey()]
         if len(players) == 1 and players[0].lower() == 'voice':
             voice_state = ctx.author.voice
             if voice_state:
