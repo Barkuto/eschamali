@@ -74,7 +74,8 @@ def _process_db():
             mons_id = r['monster_id']
             m = {
                 'id': r[f'monster_no_{region}'],
-                'name': r['name_en_override'] or r['name_en'],
+                # 'name': r['name_en_override'] or r['name_en'],
+                'name': r['name_en'],
                 'hp_max': r['hp_max'],
                 'atk_max': r['atk_max'],
                 'rcv_max': r['rcv_max'],
@@ -95,7 +96,8 @@ def _process_db():
                 'supers': [],
                 'leader': {},
                 'active': {},
-                'series': series[r['series_id']],
+                # 'series': series[r['series_id']],
+                'series': series[r['series_id']] if 'series_id' in r.keys() else series[0],
                 'has_animation': r['has_animation'],
                 'latent_slots': r['latent_slots']
             }
