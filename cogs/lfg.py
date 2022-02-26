@@ -7,7 +7,8 @@ class LFG(commands.Cog):
 
     def __init__(self, bot):
         self.JOIN_EMOJI = '✅'
-        self.DELETE_EMOJI = '🇽'
+        self.LEAVE_EMOJI = '❎'
+        self.DELETE_EMOJI = '🗑️'
         self.bot = bot
 
     @commands.Cog.listener()
@@ -29,7 +30,23 @@ class LFG(commands.Cog):
             elif e == self.JOIN_EMOJI and not user.id in data['players']:
                 data['players'] += [user.id]
                 leader = self.bot.utils.find_member(guild, data['players'][0])
-                embed.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(leader, data))
+                self._set_lfg_footer(embed, leader, data)
+                embed.description = self._make_player_desc(guild, data['players'])
+                await reaction.message.edit(embed=embed)
+
+                if len(data['players']) >= 4:
+                    await msg.clear_reactions()
+                    mention_message = f'Your Group for `{embed.title}` is: '
+                    for u in data['players']:
+                        user = self.bot.utils.find_member(guild, u)
+                        if user:
+                            mention_message += f'{user.mention} '
+                    await msg.channel.send(mention_message)
+                    await msg.delete()
+            elif e == self.LEAVE_EMOJI and user.id in data['players'] and not user.id == data['players'][0]:
+                data['players'].remove(user.id)
+                leader = self.bot.utils.find_member(guild, data['players'][0])
+                self._set_lfg_footer(embed, leader, data)
                 embed.description = self._make_player_desc(guild, data['players'])
                 await reaction.message.edit(embed=embed)
 
@@ -61,11 +78,12 @@ class LFG(commands.Cog):
 
         e.title = desc
         e.description = self._make_player_desc(ctx.guild, players)
-        e.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(ctx.author, data))
+        self._set_lfg_footer(e, ctx.author, data)
 
         await ctx.message.delete()
         m = await ctx.send(embed=e)
         await m.add_reaction(self.JOIN_EMOJI)
+        await m.add_reaction(self.LEAVE_EMOJI)
         await m.add_reaction(self.DELETE_EMOJI)
 
     def _make_player_desc(self, guild, user_ids):
@@ -78,6 +96,9 @@ class LFG(commands.Cog):
                     desc += f'{member.mention}'
             desc += '\n'
         return desc
+
+    def _set_lfg_footer(self, embed, author, data):
+        embed.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(author, data))
 
 
 def setup(bot):
