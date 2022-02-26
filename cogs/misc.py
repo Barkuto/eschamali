@@ -1,5 +1,6 @@
 import random
 from discord import Embed, Colour
+from discord.errors import NotFound
 from discord.ext import commands
 
 
@@ -42,7 +43,10 @@ class Misc(commands.Cog):
     async def on_reaction_add(self, reaction, user):
         if user == self.bot.user:
             return
-        if not self.bot.user in [u async for u in reaction.users()]:
+        try:
+            if not self.bot.user in [u async for u in reaction.users()]:
+                return
+        except NotFound:
             return
         msg = reaction.message
         ctx = await self.bot.get_context(msg)

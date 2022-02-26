@@ -9,7 +9,8 @@ DEFAULT_PREFIXES = {
     'Roles': '.',
     'PAD': '&',
     'Misc': '!',
-    'Genshin': '*'
+    'Genshin': '*',
+    'LFG': '.'
 }
 
 

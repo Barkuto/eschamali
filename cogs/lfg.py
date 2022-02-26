@@ -1,0 +1,84 @@
+from discord import Embed, Colour
+from discord.ext import commands
+
+
+class LFG(commands.Cog):
+    """LFG commands"""
+
+    def __init__(self, bot):
+        self.JOIN_EMOJI = '✅'
+        self.DELETE_EMOJI = '🇽'
+        self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if user == self.bot.user or not reaction.message.embeds:
+            return
+        msg = reaction.message
+        embed = msg.embeds[0]
+        if not embed.title:
+            return
+        if not self.bot.user in [u async for u in reaction.users()]:
+            return
+        e = reaction.emoji
+        data = self.bot.utils.get_embed_data(embed)
+        guild = reaction.message.guild
+        if data and 'type' in data:
+            if e == self.DELETE_EMOJI and user.id == data['players'][0]:
+                await msg.delete()
+            elif e == self.JOIN_EMOJI and not user.id in data['players']:
+                data['players'] += [user.id]
+                leader = self.bot.utils.find_member(guild, data['players'][0])
+                embed.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(leader, data))
+                embed.description = self._make_player_desc(guild, data['players'])
+                await reaction.message.edit(embed=embed)
+
+                if len(data['players']) >= 4:
+                    await msg.clear_reactions()
+                    mention_message = f'Your Group for `{embed.title}` is: '
+                    for u in data['players']:
+                        user = self.bot.utils.find_member(guild, u)
+                        if user:
+                            mention_message += f'{user.mention} '
+                    await msg.channel.send(mention_message)
+                    await msg.delete()
+
+    @commands.command(description='',
+                      help='',
+                      brief='LFG')
+    async def lfg(self, ctx, *, desc=None):
+        if not self.bot.utils.can_cog_in(self, ctx.channel) or not desc:
+            return
+        print(desc)
+        e = Embed()
+        e.colour = Colour.orange()
+        players = [ctx.author.id]
+        data = {
+            'type': 'LFG',
+            'desc': desc,
+            'players': players
+        }
+
+        e.title = desc
+        e.description = self._make_player_desc(ctx.guild, players)
+        e.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(ctx.author, data))
+
+        await ctx.message.delete()
+        m = await ctx.send(embed=e)
+        await m.add_reaction(self.JOIN_EMOJI)
+        await m.add_reaction(self.DELETE_EMOJI)
+
+    def _make_player_desc(self, guild, user_ids):
+        desc = ''
+        for i in range(4):
+            desc += f'`{i+1}:`'
+            if i < len(user_ids):
+                member = self.bot.utils.find_member(guild, user_ids[i])
+                if member:
+                    desc += f'{member.mention}'
+            desc += '\n'
+        return desc
+
+
+def setup(bot):
+    bot.add_cog(LFG(bot))
