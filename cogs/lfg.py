@@ -1,4 +1,5 @@
 from discord import Embed, Colour
+import discord.utils
 from discord.ext import commands
 
 
@@ -12,10 +13,14 @@ class LFG(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
+    async def on_raw_reaction_add(self, payload):
+        channel = self.bot.get_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        user = self.bot.get_user(payload.user_id)
+        reaction = discord.utils.get(msg.reactions, emoji=payload.emoji.name)
+
         if user == self.bot.user or not reaction.message.embeds:
             return
-        msg = reaction.message
         embed = msg.embeds[0]
         if not embed.title:
             return
@@ -60,9 +65,9 @@ class LFG(commands.Cog):
                     await msg.channel.send(mention_message)
                     await msg.delete()
 
-    @commands.command(description='',
-                      help='',
-                      brief='LFG')
+    @ commands.command(description='',
+                       help='',
+                       brief='LFG')
     async def lfg(self, ctx, *, desc=None):
         if not self.bot.utils.can_cog_in(self, ctx.channel) or not desc:
             return
