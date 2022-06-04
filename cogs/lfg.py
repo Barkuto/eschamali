@@ -1,5 +1,6 @@
-from discord import Embed, Colour
+import math
 import discord.utils
+from discord import Embed, Colour
 from discord.ext import commands
 
 
@@ -65,9 +66,9 @@ class LFG(commands.Cog):
                     await msg.channel.send(mention_message)
                     await msg.delete()
 
-    @ commands.command(description='',
-                       help='',
-                       brief='LFG')
+    @commands.command(description='',
+                      help='',
+                      brief='LFG')
     async def lfg(self, ctx, *, desc=None):
         if not self.bot.utils.can_cog_in(self, ctx.channel) or not desc:
             return
@@ -104,6 +105,26 @@ class LFG(commands.Cog):
 
     def _set_lfg_footer(self, embed, author, data):
         embed.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(author, data))
+
+    @commands.command(description='',
+                      help='',
+                      brief='Auction Split for 4')
+    async def bid4(self, ctx, market_price: int):
+        return await self._bid(ctx, market_price, 4)
+
+    @commands.command(description='',
+                      help='',
+                      brief='Auction Split for 8')
+    async def bid8(self, ctx, market_price: int):
+        return await self._bid(ctx, market_price, 8)
+
+    async def _bid(self, ctx, market_price, players):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
+            return
+        return await ctx.send(math.floor(self._calc_bid_split(market_price, players)))
+
+    def _calc_bid_split(self, market_price, players):
+        return market_price * 0.95 / players * (players - 1)
 
 
 def setup(bot):
