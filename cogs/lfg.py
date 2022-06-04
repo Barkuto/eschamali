@@ -106,13 +106,15 @@ class LFG(commands.Cog):
     def _set_lfg_footer(self, embed, author, data):
         embed.set_footer(text='React Below to Join', icon_url=self.bot.utils.make_data_url(author, data))
 
-    @commands.command(description='',
+    @commands.command(aliases=['b4'],
+                      description='',
                       help='',
                       brief='Auction Split for 4')
     async def bid4(self, ctx, market_price: int):
         return await self._bid(ctx, market_price, 4)
 
-    @commands.command(description='',
+    @commands.command(aliases=['b8'],
+                      description='',
                       help='',
                       brief='Auction Split for 8')
     async def bid8(self, ctx, market_price: int):
