@@ -120,6 +120,13 @@ class LFG(commands.Cog):
     async def bid8(self, ctx, market_price: int):
         return await self._bid(ctx, market_price, 8)
 
+    @commands.command(aliases=['b'],
+                      description='',
+                      help='',
+                      brief='Auction Split for n')
+    async def bid(self, ctx, players: int, market_price: int):
+        return await self._bid(ctx, market_price, players)
+
     async def _bid(self, ctx, market_price, players):
         if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
