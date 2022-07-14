@@ -135,6 +135,15 @@ class LFG(commands.Cog):
     def _calc_bid_split(self, market_price, players):
         return market_price * 0.95 / players * (players - 1)
 
+    @commands.command(aliases=['p'],
+                      description='',
+                      help='',
+                      brief='Pheon Value Cost')
+    async def bid(self, ctx, blue_crystal_price: int):
+        if not self.bot.utils.can_cog_in(self, ctx.channel):
+            return
+        return await ctx.send(math.floor(850 / 95 * blue_crystal_price / 100))
+
 
 def setup(bot):
     bot.add_cog(LFG(bot))
