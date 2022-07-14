@@ -139,7 +139,7 @@ class LFG(commands.Cog):
                       description='',
                       help='',
                       brief='Pheon Value Cost')
-    async def bid(self, ctx, blue_crystal_price: int):
+    async def pheon(self, ctx, blue_crystal_price: int):
         if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
         return await ctx.send(math.floor(850 / 95 * blue_crystal_price / 100))
