@@ -135,7 +135,7 @@ class LFG(commands.Cog):
     def _calc_bid_split(self, market_price, players):
         return market_price * 0.95 / players * (players - 1)
 
-    @commands.command(aliases=['p'],
+    @commands.command(aliases=['ph'],
                       description='',
                       help='',
                       brief='Pheon Value Cost')
