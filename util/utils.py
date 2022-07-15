@@ -2,6 +2,7 @@ import importlib
 import discord
 import base64
 import json
+import re
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse, parse_qs
 from discord.ext import commands
 from util import db, vars
@@ -9,6 +10,13 @@ from util import db, vars
 CONFIRM_EMOJI = '✅'
 DENY_EMOJI = '❌'
 ERR_EMOJI = '⚠️'
+
+EMOJI_PATTERN = re.compile("["
+                           u"\U0001F600-\U0001F64F"  # emoticons
+                           u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                           u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                           u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           "]+", flags=re.UNICODE)
 
 
 def reload():
@@ -79,9 +87,13 @@ def find_member(guild, query):
 
 def find_role(guild, role):
     role_name = str(role).lower()
+    starts_with_match = None
     for r in guild.roles:
-        if r.name.lower() == role_name.lower():
+        r_name = EMOJI_PATTERN.sub(r'', r.name.lower()).strip()
+        if r_name == role_name.lower():
             return r
+        if r_name.startswith(role_name):
+            starts_with_match = r
     try:
         role_id = int(role)
         for r in guild.roles:
@@ -89,7 +101,7 @@ def find_role(guild, role):
                 return r
     except:
         pass
-    return None
+    return starts_with_match
 
 # https://github.com/TsubakiBotPad/discord-menu/
 # discordmenu/intra_message_state.py
