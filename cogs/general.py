@@ -83,7 +83,7 @@ class General(commands.Cog):
         name = user.name
         disc = user.discriminator
         nick = user.nick
-        avatar = user.avatar_url
+        avatar = user.avatar
         created = user.created_at
         joined = user.joined_at
         roles = [r for r in sorted(user.roles, reverse=True) if not r.name == '@everyone']
@@ -142,7 +142,6 @@ class General(commands.Cog):
         name = guild.name
         desc = guild.description
         created = guild.created_at
-        region = guild.region
         owner = guild.owner
         members = guild.member_count
         roles = guild.roles
@@ -163,10 +162,6 @@ class General(commands.Cog):
             value=f'{(now - created).days} days',
             inline=True
         ).add_field(
-            name='Region',
-            value=region,
-            inline=True
-        ).add_field(
             name='Owner',
             value=owner.mention,
             inline=True
@@ -178,7 +173,7 @@ class General(commands.Cog):
             name='Roles',
             value=len(roles),
             inline=True
-        ).set_thumbnail(url=guild.icon_url_as()).set_footer(text=guild.id)
+        ).set_thumbnail(url=guild.icon).set_footer(text=guild.id)
         await ctx.send(embed=e)
 
     @commands.command(description='Make the bot say *msg*',
