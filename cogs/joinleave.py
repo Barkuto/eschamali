@@ -37,5 +37,5 @@ class JoinLeave(commands.Cog):
             await c.send(self._msg(user, 'has been banned.'))
 
 
-def setup(bot):
-    bot.add_cog(JoinLeave(bot))
+async def setup(bot):
+    await bot.add_cog(JoinLeave(bot))

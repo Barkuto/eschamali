@@ -21,6 +21,7 @@ intents.emojis = True
 intents.voice_states = True
 intents.presences = True
 intents.messages = True
+intents.message_content = True
 intents.guild_messages = True
 intents.dm_messages = True
 intents.reactions = True
@@ -59,13 +60,13 @@ class Eschamali(commands.Bot):
     def loaded_cogs(self, lower=True):
         return [c.lower() if lower else c for c in self.cogs]
 
-    def load_cogs(self):
+    async def load_cogs(self):
         to_load = self.all_cogs()
         if 'perms' in to_load:
             to_load.insert(0, to_load.pop(to_load.index('perms')))
         for cog in to_load:
             try:
-                self.load_extension(f'{self.vars.COGS_DIR_NAME}.{cog}')
+                await self.load_extension(f'{self.vars.COGS_DIR_NAME}.{cog}')
             except Exception as e:
                 self.vars.LOGGER.error(e)
 
@@ -77,7 +78,7 @@ class Eschamali(commands.Bot):
     async def on_ready(self):
         for c in DEFAULT_COMMANDS:
             self.add_command(c)
-        self.load_cogs()
+        await self.load_cogs()
         self.pm.load_prefixes()
 
     async def on_message(self, msg):

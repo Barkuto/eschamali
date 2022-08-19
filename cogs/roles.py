@@ -271,5 +271,5 @@ class Roles(commands.Cog):
             await ctx.send(self.INVALID_ROLE)
 
 
-def setup(bot):
-    bot.add_cog(Roles(bot))
+async def setup(bot):
+    await bot.add_cog(Roles(bot))

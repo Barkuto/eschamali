@@ -97,5 +97,5 @@ class CustomCommands(commands.Cog):
             await ctx.send('There are no custom commands.')
 
 
-def setup(bot):
-    bot.add_cog(CustomCommands(bot))
+async def setup(bot):
+    await bot.add_cog(CustomCommands(bot))

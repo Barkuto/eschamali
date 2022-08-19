@@ -52,5 +52,5 @@ class Reactions(commands.Cog):
             await ctx.send('/o/')
 
 
-def setup(bot):
-    bot.add_cog(Reactions(bot))
+async def setup(bot):
+    await bot.add_cog(Reactions(bot))

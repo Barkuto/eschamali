@@ -145,5 +145,5 @@ class LFG(commands.Cog):
         return await ctx.send(math.floor(850 / 95 * blue_crystal_price / 100))
 
 
-def setup(bot):
-    bot.add_cog(LFG(bot))
+async def setup(bot):
+    await bot.add_cog(LFG(bot))

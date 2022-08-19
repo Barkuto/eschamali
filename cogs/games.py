@@ -918,5 +918,5 @@ class Games(commands.Cog):
             codepoint += 1
 
 
-def setup(bot):
-    bot.add_cog(Games(bot))
+async def setup(bot):
+    await bot.add_cog(Games(bot))

@@ -583,5 +583,5 @@ class LatentEmoji(Enum):
             return True
 
 
-def setup(bot):
-    bot.add_cog(PAD(bot))
+async def setup(bot):
+    await bot.add_cog(PAD(bot))

@@ -379,5 +379,5 @@ class Genshin(commands.Cog):
         await ctx.send(embed=e)
 
 
-def setup(bot):
-    bot.add_cog(Genshin(bot))
+async def setup(bot):
+    await bot.add_cog(Genshin(bot))

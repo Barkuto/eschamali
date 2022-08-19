@@ -339,7 +339,7 @@ class General(commands.Cog):
         for cog_name in cogs:
             cog_name = cog_name.lower()
             try:
-                ctx.bot.load_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
+                await ctx.bot.load_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
                 ctx.bot.pm.load_cog_cmd_prefixes(cog_name)
                 await ctx.send(f'`{cog_name}` loaded.')
             except ExtensionError as e:
@@ -369,7 +369,7 @@ class General(commands.Cog):
                     elif not cog_name in self.bot.all_cogs():
                         await ctx.send('Invalid cog.')
                     else:
-                        ctx.bot.reload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
+                        await ctx.bot.reload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
                         ctx.bot.pm.load_cog_cmd_prefixes(cog_name)
                         await ctx.send(f'`{cog_name}` reloaded.')
                 except ExtensionError as e:
@@ -384,7 +384,7 @@ class General(commands.Cog):
         for cog_name in cogs:
             cog_name = cog_name.lower()
             try:
-                ctx.bot.unload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
+                await ctx.bot.unload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog_name}')
                 ctx.bot.pm.load_cog_cmd_prefixes(cog_name)
                 await ctx.send(f'`{cog_name}` unloaded.')
             except ExtensionError as e:
@@ -400,7 +400,7 @@ class General(commands.Cog):
         for cog in reload_cogs:
             if cog in all_cogs:
                 try:
-                    ctx.bot.reload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog}')
+                    await ctx.bot.reload_extension(f'{self.bot.vars.COGS_DIR_NAME}.{cog}')
                     ctx.bot.pm.load_cog_cmd_prefixes(cog)
                     reloaded.append(cog)
                 except ExtensionError:
@@ -437,5 +437,5 @@ class General(commands.Cog):
                 colour=Colour.red()))
 
 
-def setup(bot):
-    bot.add_cog(General(bot))
+async def setup(bot):
+    await bot.add_cog(General(bot))
