@@ -2,7 +2,7 @@ DEFAULT_PREFIX = '~'
 DEFAULT_HELP_PREFIX = '!'
 DEFAULT_PREFIXES = {
     'General': '!',
-    'Admin': '/',
+    'Admin': '//',
     'Perms': ';',
     'Games': '>',
     'CustomCommands': '!',
