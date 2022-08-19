@@ -252,7 +252,7 @@ class Games(commands.Cog):
 
         e.title = 'Blackjack'
         e.description = f'Credits: {user_creds}\nCurrent Bets: {"/".join([str(b) for b in bets])}'
-        e.set_thumbnail(url=user.avatar_url)
+        e.set_thumbnail(url=user.avatar)
 
         img_url = ''
         if self.filehost:
@@ -341,7 +341,7 @@ class Games(commands.Cog):
                     e = Embed()
                     e.title = 'Blackjack'
                     e.description = 'This Blackjack game has already been completed.'
-                    e.set_thumbnail(url=user.avatar_url)
+                    e.set_thumbnail(url=user.avatar)
                     await msg.clear_reactions()
                     return await msg.edit(embed=e)
                 bj_state_final = None
@@ -409,7 +409,7 @@ class Games(commands.Cog):
         e = Embed(colour=Colour.green())
         e.title = 'Games Balance'
         e.description = 'Credits: ' + str(creds)
-        e.set_thumbnail(url=user.avatar_url)
+        e.set_thumbnail(url=user.avatar)
 
         await ctx.send(embed=e)
 
@@ -687,7 +687,7 @@ class Games(commands.Cog):
             text += '{:7} : {:7}\n'.format(k.capitalize(), v)
         e = Embed()
         e.title = 'Card Settings'
-        e.set_thumbnail(url=ctx.author.avatar_url)
+        e.set_thumbnail(url=ctx.author.avatar)
         e.description = text + '```'
         return await ctx.send(embed=e)
 
@@ -781,7 +781,7 @@ class Games(commands.Cog):
         num = random.randint(low, high)
         diff = abs(guess - num)
         e = Embed(colour=Colour.greyple())
-        e.set_thumbnail(url=ctx.author.avatar_url)
+        e.set_thumbnail(url=ctx.author.avatar)
 
         e.add_field(name='Bot Number', value=num)
         e.add_field(name='Your Guess', value=guess)
