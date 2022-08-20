@@ -48,7 +48,6 @@ DB UPDATING/PROCESSING
 
 
 def _process_db():
-    print(DADGUIDEURL)
     req = requests.get(DADGUIDEURL)
     with open(DADGUIDEDB, 'wb') as f:
         f.write(req.content)

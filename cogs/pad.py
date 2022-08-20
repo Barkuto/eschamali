@@ -65,9 +65,9 @@ class PAD(commands.Cog):
     async def update_db(self):
         if not self.updating:
             self.updating = True
-            self.bot.vars.LOGGER.debug('Updating PAD DB.')
+            print('Updating PAD DB.')
             await self._update_db()
-            self.bot.vars.LOGGER.debug('Updated PAD DB.')
+            print('Updated PAD DB.')
             self.updating = False
 
     @update_db.before_loop
