@@ -162,7 +162,7 @@ class Roles(commands.Cog):
             roles = u.roles
             title = title % f'{u.name}#{u.discriminator}'
         else:
-            roles = ctx.guild.roles
+            roles = list(ctx.guild.roles)
             title = title % ctx.guild.name
         roles.remove(ctx.guild.default_role)
         await ctx.send(embed=Embed(
