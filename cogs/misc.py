@@ -21,7 +21,7 @@ class Misc(commands.Cog):
         users = None
         for r in msg.reactions:
             if r.emoji == reaction:
-                users = await r.users().flatten()
+                users = [u async for u in r.users()]
         return users
 
     def get_embed_teams(self, embed):
@@ -50,7 +50,7 @@ class Misc(commands.Cog):
             return
         msg = reaction.message
         ctx = await self.bot.get_context(msg)
-        allowed = await self.bot.is_owner(user) or user.permissions_in(ctx.channel).manage_messages
+        allowed = await self.bot.is_owner(user) or ctx.channel.permissions_for(user).manage_messages
         if reaction.emoji == self.STOP and allowed:
             users = await self.get_reaction_users(msg, self.CHECK)
             if users:
