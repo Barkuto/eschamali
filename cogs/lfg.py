@@ -127,13 +127,33 @@ class LFG(commands.Cog):
     async def bid(self, ctx, players: int, market_price: int):
         return await self._bid(ctx, market_price, players)
 
-    async def _bid(self, ctx, market_price, players):
+    async def _bid(self, ctx, market_price, players, scam=False):
         if not self.bot.utils.can_cog_in(self, ctx.channel):
             return
-        return await ctx.send(math.floor(self._calc_bid_split(market_price, players)))
+        return await ctx.send(math.floor(self._calc_bid_split(market_price, players, scam)))
 
-    def _calc_bid_split(self, market_price, players):
-        return market_price * 0.95 / players * (players - 1)
+    def _calc_bid_split(self, market_price, players, scam=False):
+        return market_price * 0.95 / players * (players - 1) * (0.94 if scam else 1)
+
+    @commands.command(aliases=['s4'],
+                      description='',
+                      help='',
+                      brief='Auction Scam Split for 4')
+    async def scam4(self, ctx, market_price: int):
+        return await self._bid(ctx, market_price, 4, True)
+
+    @commands.command(aliases=['s8'],
+                      description='',
+                      help='',
+                      brief='Auction Scam Split for 8')
+    async def scam8(self, ctx, market_price: int):
+        return await self._bid(ctx, market_price, 8, True)
+
+    @commands.command(description='',
+                      help='',
+                      brief='Auction Scam Split for n')
+    async def scam(self, ctx, players: int, market_price: int):
+        return await self._bid(ctx, market_price, players, True)
 
     @commands.command(aliases=['ph'],
                       description='',
