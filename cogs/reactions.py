@@ -37,7 +37,7 @@ class Reactions(commands.Cog):
         if 'dont quote me' in m.replace('\'', '').lower():
             await ctx.send(f'"{m.strip()}" - {ctx.author.mention}')
         elif 'alot' in split:
-            await ctx.send('http://thewritepractice.com/wp-content/uploads/2012/05/Alot-vs-a-lot1-600x450.png')
+            await ctx.send('https://cdn.discordapp.com/attachments/356568034279686146/1174092586210828410/Alot-vs-a-lot1-600x450.png?ex=656655ee&is=6553e0ee&hm=2f2fed1a99ecb3b82a112e8c0891c72c2b44b19b8c6c9d45e075c5a8aa09f24e&')
         elif 'lambo' in split:
             await ctx.send('https://youtu.be/6w1TieX_I2w')
         # elif msg.author.id == 85844964633747456 and 131547909090050048 in [u.id for u in msg.mentions]:
