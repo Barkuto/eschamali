@@ -33,7 +33,7 @@ class Reactions(commands.Cog):
 
     async def check_for_reaction(self, ctx, msg):
         m = msg.content.strip()
-        split = re.split(' |\n', m)
+        split = [word.lower() for word in re.split(' |\n', m)]
         if 'dont quote me' in m.replace('\'', '').lower():
             await ctx.send(f'"{m.strip()}" - {ctx.author.mention}')
         elif 'alot' in split:
